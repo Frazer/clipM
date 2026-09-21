@@ -24,3 +24,14 @@ Pods
 # Build artifacts
 .build/
 
+# Sparkle / release secrets & outputs (never commit private keys or binaries)
+secrets/*
+!secrets/README.md
+release/
+dist/*.dmg
+dist/*.zip
+dist/appcast.xml
+dist/dmg-root/
+*.p12
+sparkle_eddsa_private.key
+

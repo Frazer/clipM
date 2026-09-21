@@ -2093,12 +2093,13 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         }
     }
 
+    /// Visible 1-based (or 0-based) list index for menu titles — full integers, not mod 10.
+    /// Numeric key equivalents still use `itemNumber % 10` where enabled.
     private func listNumber(for index: Int, settings: ClipMenuSettings) -> Int {
         if settings.numberingStartsAtZero {
-            return index % 10
+            return index
         }
-        let n = index + 1
-        return n > 10 ? n % 10 : n
+        return index + 1
     }
 
     private func shouldShowTrailingNumericShortcut(settings: ClipMenuSettings) -> Bool {

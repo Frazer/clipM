@@ -1,0 +1,123 @@
+name: Release DMG (Sparkle)
+
+# Builds a Developer ID–signed, notarized ClipMenu.dmg and Sparkle appcast.xml,
+# then publishes them to a GitHub Release.
+#
+# Trigger: push a version tag, e.g. `git tag v1.0.0 && git push origin v1.0.0`
+# Or: Actions → Release DMG → Run workflow.
+#
+# Required repository secrets:
+#   SPARKLE_PRIVATE_KEY          EdDSA private key (contents of secrets/sparkle_eddsa_private.key)
+#   BUILD_CERTIFICATE_BASE64     Developer ID Application .p12, base64-encoded
+#   P12_PASSWORD                 Password for that .p12
+#   KEYCHAIN_PASSWORD            Any random password for the ephemeral CI keychain
+#   APPLE_ID                     Apple ID email (notarization)
+#   APPLE_APP_SPECIFIC_PASSWORD  App-specific password from appleid.apple.com
+#   APPLE_TEAM_ID                97988GNC59
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      skip_notarize:
+        description: "Skip notarization (debug only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+      RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.run_id) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Import Developer ID certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$P12_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning
+
+      - name: Resolve Sparkle tools via package build
+        run: |
+          set -euo pipefail
+          xcodegen generate
+          # Pull Sparkle artifacts by building Debug once (ad-hoc OK).
+          xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES \
+            build >/tmp/sparkle-resolve.log 2>&1 || {
+              tail -50 /tmp/sparkle-resolve.log
+              exit 1
+            }
+
+      - name: Build DMG + appcast
+        run: |
+          set -euo pipefail
+          chmod +x scripts/release-dmg.sh
+          ARGS=()
+          if [[ "${{ github.event.inputs.skip_notarize || 'false' }}" == "true" ]]; then
+            ARGS+=(--skip-notarize)
+          fi
+          ./scripts/release-dmg.sh "${ARGS[@]}"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 - <<'PY'
+          import re
+          from pathlib import Path
+          text = Path("project.yml").read_text()
+          m = re.search(r"PRODUCT_NAME: ClipMenu\n.*?MARKETING_VERSION: \"([^\"]+)\"", text, re.S)
+          print(m.group(1) if m else "0.0.0")
+          PY
+          )"
+          TAG="${RELEASE_TAG}"
+          DMG="release/ClipMenu-${VERSION}.dmg"
+          APPCAST="release/appcast.xml"
+          test -f "$DMG"
+          test -f "$APPCAST"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DMG" "$APPCAST" --clobber
+          else
+            gh release create "$TAG" "$DMG" "$APPCAST" \
+              --title "ClipMenu ${VERSION}" \
+              --generate-notes
+          fi
+          echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/${TAG}"
+          echo "Sparkle feed: https://github.com/${{ github.repository }}/releases/latest/download/appcast.xml"

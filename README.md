@@ -6,8 +6,12 @@ ClipMenu is a macOS clipboard manager rebuilt in Swift (SwiftUI + SwiftData).
 
 ## Installation
 
-- Download installer: [ClipMenu.dmg](dist/ClipMenu.dmg)
-- Open the DMG and install `ClipMenu.app`
+- **Mac App Store** (when published): search for ClipMenu, or install from your listing.
+- **Direct download**: get the latest **ClipMenu-*.dmg** from [GitHub Releases](https://github.com/Frazer/ClipMenu/releases/latest)
+
+Open the DMG and drag `ClipMenu.app` into Applications.
+
+App Store installs update through the App Store. Direct downloads update in-app via Sparkle (**Preferences → About**).
 
 ## What Is Updated From The Original
 
@@ -36,6 +40,7 @@ ClipMenu has helped many users for years, and this modernization work stands on 
 - Build system: XcodeGen (`project.yml`)
 - App type: menu bar app (`LSUIElement`)
 - Dependency: `KeyboardShortcuts`
+- Direct builds also link [Sparkle](https://sparkle-project.org/) for updates
 
 ## Build
 
@@ -52,14 +57,21 @@ Generate project:
 xcodegen generate
 ```
 
-Build (Debug):
+Build (Debug, direct / GitHub):
 
 ```sh
 xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug build \
 	CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
 
-For detailed commands and troubleshooting, see `BUILD.md`.
+Build (Debug, App Store channel):
+
+```sh
+xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenuAppStore -configuration Debug build \
+	CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+```
+
+For schemes, Sparkle keys, and release notes, see `BUILD.md`.
 
 ## Testing
 
@@ -67,9 +79,9 @@ UI smoke scripts for previews and `/` filter (plus the in-process filter self-te
 
 ## Repository Cleanup Status
 
-- Legacy Objective-C source and historical release tooling were removed from the repository after migration completion.
-- Historical Sparkle/appcast release scripts are no longer part of this project.
-- Release and documentation flow is now maintained directly in Markdown docs in this repository.
+- Legacy Objective-C source and historical release tooling were removed after migration.
+- Direct downloads are published via **GitHub Releases** (DMG + Sparkle `appcast.xml`), not files under `dist/` on `master`.
+- See `BUILD.md` for the release script and Actions workflow.
 
 ## Distribution Note
 

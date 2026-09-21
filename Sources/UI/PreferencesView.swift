@@ -6,6 +6,7 @@ enum PreferencesTab: Hashable, CaseIterable, Identifiable {
     case snippets
     case actions
     case shortcuts
+    case about
 
     var id: Self { self }
 
@@ -16,6 +17,7 @@ enum PreferencesTab: Hashable, CaseIterable, Identifiable {
         case .snippets: return "Snippets"
         case .actions: return "Actions"
         case .shortcuts: return "Shortcuts"
+        case .about: return "About"
         }
     }
 
@@ -26,6 +28,7 @@ enum PreferencesTab: Hashable, CaseIterable, Identifiable {
         case .snippets: return "text.badge.plus"
         case .actions: return "bolt"
         case .shortcuts: return "keyboard"
+        case .about: return "info.circle"
         }
     }
 }
@@ -86,11 +89,13 @@ struct PreferencesView: View {
                     ActionsPrefsView()
                 case .shortcuts:
                     ShortcutsPrefsView()
+                case .about:
+                    AboutUpdatesPrefsView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(minWidth: 720, minHeight: 620)
+        .frame(minWidth: 800, minHeight: 620)
         .padding(12)
     }
 }

@@ -12,8 +12,12 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: "2.0.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.4"
 
 targets:
+  # Direct / GitHub distribution — includes Sparkle for in-app updates.
   ClipMenu:
     type: application
     platform: macOS
@@ -34,6 +38,7 @@ targets:
 
     dependencies:
       - package: KeyboardShortcuts
+      - package: Sparkle
 
     settings:
       base:
@@ -44,7 +49,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: WTWBLR82TY
+        DEVELOPMENT_TEAM: 97988GNC59
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: ClipMenu
@@ -52,6 +57,9 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/ClipMenu/releases/latest/download/appcast.xml
+        INFOPLIST_KEY_SUEnableAutomaticChecks: YES
+        INFOPLIST_KEY_SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
       configs:
@@ -62,11 +70,77 @@ targets:
           PROVISIONING_PROFILE_SPECIFIER: ""
           DEBUG_INFORMATION_FORMAT: dwarf
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"
-          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG DIRECT_DISTRIBUTION"
         Release:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
           SWIFT_OPTIMIZATION_LEVEL: "-O"
           COPY_PHASE_STRIP: NO
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DIRECT_DISTRIBUTION
+          # Direct downloads must be Developer ID signed (+ notarized) for Gatekeeper.
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: 97988GNC59
+          OTHER_CODE_SIGN_FLAGS: "--timestamp"
+
+  # Mac App Store distribution — no Sparkle; updates via App Store only.
+  ClipMenuAppStore:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+
+    sources:
+      - path: Sources
+      - path: Assets.xcassets
+        buildPhase: resources
+      - path: Resources/scripts
+        buildPhase: resources
+        type: folder
+
+    entitlements:
+      path: ClipMenuAppStore.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.automation.apple-events: true
+
+    dependencies:
+      - package: KeyboardShortcuts
+
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenu
+        PRODUCT_NAME: ClipMenu
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 97988GNC59
+        ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ClipMenu
+        INFOPLIST_KEY_CFBundleIconName: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE
+      configs:
+        Debug:
+          DEBUG_INFORMATION_FORMAT: dwarf
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG APP_STORE"
+          CODE_SIGN_STYLE: Automatic
+          CODE_SIGN_IDENTITY: "Apple Development"
+          DEVELOPMENT_TEAM: 97988GNC59
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          COPY_PHASE_STRIP: NO
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE
+          CODE_SIGN_STYLE: Automatic
+          DEVELOPMENT_TEAM: 97988GNC59
 
   ClipMenuTest:
     type: application
@@ -98,7 +172,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: WTWBLR82TY
+        DEVELOPMENT_TEAM: 97988GNC59
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: ClipMenuTest
@@ -148,9 +222,15 @@ schemes:
       targets:
         - ClipMenuUITests
 
+  ClipMenuAppStore:
+    build:
+      targets:
+        ClipMenuAppStore: all
+
 fileGroups:
   - project.yml
   - ClipMenu.entitlements
+  - ClipMenuAppStore.entitlements
   - Assets.xcassets
   - Resources
   - doc

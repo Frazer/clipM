@@ -42,8 +42,8 @@ final class ClipMenuSettings {
     // MARK: - Menu
 
     var maxMenuItemTitleLength: Int = 40 { didSet { defaults.set(maxMenuItemTitleLength, forKey: "maxMenuItemTitleLength") } }
-    var numberOfItemsInline: Int = 0 { didSet { defaults.set(numberOfItemsInline, forKey: "numberOfItemsPlaceInline") } }
-    var numberOfItemsInsideFolder: Int = 10 { didSet { defaults.set(numberOfItemsInsideFolder, forKey: "numberOfItemsPlaceInsideFolder") } }
+    var numberOfItemsInline: Int = 10 { didSet { defaults.set(numberOfItemsInline, forKey: "numberOfItemsPlaceInline") } }
+    var numberOfItemsInsideFolder: Int = 11 { didSet { defaults.set(numberOfItemsInsideFolder, forKey: "numberOfItemsPlaceInsideFolder") } }
     var numberedMenuItems: Bool = true { didSet { defaults.set(numberedMenuItems, forKey: "menuItemsAreMarkedWithNumbers") } }
     var numberingStartsAtZero: Bool = false { didSet { defaults.set(numberingStartsAtZero, forKey: "menuItemsTitleStartWithZero") } }
     var numericKeyEquivalents: Bool = false { didSet { defaults.set(numericKeyEquivalents, forKey: "addNumericKeyEquivalents") } }
@@ -98,7 +98,7 @@ final class ClipMenuSettings {
 
     // MARK: - Snippets
 
-    var positionOfSnippets: Int = 1 { didSet { defaults.set(positionOfSnippets, forKey: "positionOfSnippets") } }
+    var positionOfSnippets: Int = 0 { didSet { defaults.set(positionOfSnippets, forKey: "positionOfSnippets") } }
 
     // MARK: - Updates
 
@@ -139,8 +139,8 @@ final class ClipMenuSettings {
         excludeApps = (defaults.array(forKey: "excludeApps") as? [[String: String]]) ?? Self.defaultExcludeApps
 
         maxMenuItemTitleLength = intValue("maxMenuItemTitleLength", default: 40)
-        numberOfItemsInline = intValue("numberOfItemsPlaceInline", default: 0)
-        numberOfItemsInsideFolder = intValue("numberOfItemsPlaceInsideFolder", default: 10)
+        numberOfItemsInline = intValue("numberOfItemsPlaceInline", default: 10)
+        numberOfItemsInsideFolder = intValue("numberOfItemsPlaceInsideFolder", default: 11)
         numberedMenuItems = boolValue("menuItemsAreMarkedWithNumbers", default: true)
         numberingStartsAtZero = boolValue("menuItemsTitleStartWithZero", default: false)
         numericKeyEquivalents = boolValue("addNumericKeyEquivalents", default: false)
@@ -184,7 +184,7 @@ final class ClipMenuSettings {
         optionClickBehavior = stringValue("optionClickBehavior", default: "")
         commandClickBehavior = stringValue("commandClickBehavior", default: "")
 
-        positionOfSnippets = intValue("positionOfSnippets", default: 1)
+        positionOfSnippets = intValue("positionOfSnippets", default: 0)
 
         enableAutomaticCheck = boolValue("enableAutomaticCheck", default: true)
         enableAutomaticCheckPreRelease = boolValue("enableAutomaticCheckPreReleaseKey", default: false)
@@ -203,7 +203,7 @@ final class ClipMenuSettings {
         thumbnailHeight = max(thumbnailHeight, 1)
         menuIconSize = [16, 32, 48].contains(menuIconSize) ? menuIconSize : 16
         fontSizeMode = [0, 1].contains(fontSizeMode) ? fontSizeMode : 0
-        positionOfSnippets = [0, 1, 2].contains(positionOfSnippets) ? positionOfSnippets : 1
+        positionOfSnippets = [0, 1, 2].contains(positionOfSnippets) ? positionOfSnippets : 0
         actionModifierKey = [0, 1, 2, 3].contains(actionModifierKey) ? actionModifierKey : 1
 
         // Prefer Command as the default action modifier when upgrading from the old Option default.
@@ -230,8 +230,8 @@ final class ClipMenuSettings {
             "storeTypes": Self.defaultStoreTypes,
             "excludeApps": Self.defaultExcludeApps,
             "maxMenuItemTitleLength": 40,
-            "numberOfItemsPlaceInline": 0,
-            "numberOfItemsPlaceInsideFolder": 10,
+            "numberOfItemsPlaceInline": 10,
+            "numberOfItemsPlaceInsideFolder": 11,
             "menuItemsAreMarkedWithNumbers": true,
             "menuItemsTitleStartWithZero": false,
             "addNumericKeyEquivalents": false,
@@ -271,7 +271,7 @@ final class ClipMenuSettings {
             "shiftClickBehavior": "",
             "optionClickBehavior": "",
             "commandClickBehavior": "",
-            "positionOfSnippets": 1,
+            "positionOfSnippets": 0,
             "enableAutomaticCheck": true,
             "enableAutomaticCheckPreReleaseKey": false,
             "updateCheckInterval": 86_400,

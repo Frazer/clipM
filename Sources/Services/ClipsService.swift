@@ -122,6 +122,8 @@ final class ClipsService {
             }
 
             context.insert(clip)
+            let preview = (clip.stringValue ?? "").prefix(80)
+            Self.log.info("Captured clipboard entry hash=\(clip.contentHash, privacy: .public) preview=\(String(preview), privacy: .public)")
             if clip.imageData != nil {
                 Self.log.info("Inserted image clip hash=\(clip.contentHash, privacy: .public) imageBytes=\(clip.imageData?.count ?? 0, privacy: .public) types=\(clip.types.joined(separator: ","), privacy: .public)")
             }

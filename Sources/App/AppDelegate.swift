@@ -34,6 +34,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         startDataServicesWhenReady(retryCount: 10)
+
+        // Register in System Settings → Accessibility (after reset the app is absent
+        // until it calls AXIsProcessTrustedWithOptions with prompt).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            _ = PasteService.requestAccessibilityPermissionIfNeeded()
+        }
+
+#if canImport(Sparkle)
+        SparkleUpdateService.shared.applySettings(runtime.settings)
+#endif
     }
 
     @MainActor

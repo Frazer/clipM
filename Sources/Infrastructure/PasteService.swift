@@ -76,6 +76,16 @@ actor PasteService {
         )
     }
 
+    /// Prompts the user (and registers the app in System Settings → Accessibility)
+    /// when trust is missing. Call from the main app process at launch.
+    @discardableResult
+    nonisolated static func requestAccessibilityPermissionIfNeeded() -> Bool {
+        if isPasteUITestMode { return true }
+        if AXIsProcessTrusted() { return true }
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        return AXIsProcessTrustedWithOptions(options)
+    }
+
     nonisolated private static var isPasteUITestMode: Bool {
         ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1"
     }
