@@ -2,6 +2,14 @@
 
 This repository contains the active Swift/XcodeGen ClipMenu project.
 
+## Current Stack
+
+- Language: Swift 5.9+
+- Platform: macOS 14+
+- Build system: XcodeGen (`project.yml`)
+- App type: menu bar app (`LSUIElement`)
+- Dependencies: [`KeyboardShortcuts`](https://github.com/sindresorhus/KeyboardShortcuts); direct builds also link [Sparkle](https://sparkle-project.org/) for updates
+
 ## Prerequisites
 
 ```sh
@@ -17,10 +25,17 @@ Run whenever `project.yml` changes:
 xcodegen generate
 ```
 
-## Build (Debug)
+## Build (Debug, direct / GitHub)
 
 ```sh
 xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug build \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+```
+
+## Build (Debug, App Store channel)
+
+```sh
+xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenuAppStore -configuration Debug build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
 
@@ -41,6 +56,10 @@ xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Release b
 
 ClipMenu is a menu bar app (`LSUIElement = YES`), so it does not appear in the Dock while running.
 
+## Testing
+
+UI smoke scripts for previews and `/` filter (plus the in-process filter self-test) are documented in [`doc/testing.md`](doc/testing.md).
+
 ## Distribution Channels
 
 | Scheme | Updates | About tab |
@@ -49,6 +68,8 @@ ClipMenu is a menu bar app (`LSUIElement = YES`), so it does not appear in the D
 | `ClipMenuAppStore` | iTunes Lookup API; “Update in App Store” opens the Mac App Store | Check button only (no self-updater) |
 
 Both builds share the same About copy (GitHub + [United Visions](https://unitedvisions.org)). Linking to the GitHub repo from an App Store build is fine for source/docs; do not use it as an alternate download storefront inside the App Store binary.
+
+Direct downloads are published via **GitHub Releases** (DMG + Sparkle `appcast.xml`), not files under `dist/` on `master`.
 
 ### Sparkle setup (direct builds)
 

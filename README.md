@@ -13,15 +13,24 @@ Open the DMG and drag `ClipMenu.app` into Applications.
 
 App Store installs update through the App Store. Direct downloads update in-app via Sparkle (**Preferences → About**).
 
-## What Is Updated From The Original
+## New Features
 
-This repository now reflects a fully modernized implementation of ClipMenu. Major updates include:
+Features added since forking this modernization:
 
-- Replaced legacy polling-style clipboard handling with an event-driven clipboard pipeline.
-- Adopted Combine-based publishers/observation in the app flow for reactive updates.
-- Migrated persistence to SwiftData models and services.
-- Completed end-to-end implementation of the Actions menu, including action execution wiring in the modern app.
-- Rebuilt the app architecture in Swift with SwiftUI scenes and a generated Xcode project workflow.
+- **Cascading Actions menu** — hold the Actions modifier (default ⌘) while choosing a clip or snippet to open actions beside ClipMenu; a single action runs immediately
+- **In-app JavaScript action editor** — view bundled scripts, edit user scripts, and copy templates into your User’s folder
+- **Inline action renaming** and full-name hover tooltips in Preferences → Actions
+- **Slash filter** — press `/` to search without jumping rows; **Tab** or the photo button for images-only history
+- **Stable popup width** when toggling the images-only filter
+- **Clip previews** beside the menu and submenus, with smarter placement (including when a submenu is open)
+- **Smart popup positioning** — opens above the cursor when triggered on the bottom half of the screen; submenu direction respects which side of the screen you’re on
+- **Snippets prefs UX** — reliable folder/snippet selection, instant rename on add, and title mirrored into empty content while naming
+- **Multi-digit history numbering** in the main popup (10, 11, … instead of wrapping at 9)
+- **Remove apps from the ignore list** in Preferences
+- **About & Updates** preferences tab — GitHub / United Visions links; Sparkle updates for direct downloads; App Store update check for the store build
+- **Dual distribution** — `ClipMenu` (GitHub DMG + Sparkle) and `ClipMenuAppStore` (sandbox) schemes, with a DMG release script and GitHub Actions workflow
+
+A complete migration from the old architecture to run on Mac M chips thanks to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu).
 
 ### Actions shortcut
 
@@ -29,59 +38,11 @@ In **Preferences → Actions**, choose a modifier key (default **Command**). Hol
 
 ## Huge Thanks
 
-A huge thank you to Naotaka Morimoto, the original author of ClipMenu.
+A huge thank you to [Naotaka Morimoto](https://github.com/naotaka/ClipMenu), the original author of ClipMenu.
 
 ClipMenu has helped many users for years, and this modernization work stands on top of that original design and effort.
 
-## Current Stack
-
-- Language: Swift 5.9+
-- Platform: macOS 14+
-- Build system: XcodeGen (`project.yml`)
-- App type: menu bar app (`LSUIElement`)
-- Dependency: `KeyboardShortcuts`
-- Direct builds also link [Sparkle](https://sparkle-project.org/) for updates
-
-## Build
-
-Prerequisites:
-
-```sh
-xcode-select -p
-brew install xcodegen
-```
-
-Generate project:
-
-```sh
-xcodegen generate
-```
-
-Build (Debug, direct / GitHub):
-
-```sh
-xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug build \
-	CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-```
-
-Build (Debug, App Store channel):
-
-```sh
-xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenuAppStore -configuration Debug build \
-	CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-```
-
-For schemes, Sparkle keys, and release notes, see `BUILD.md`.
-
-## Testing
-
-UI smoke scripts for previews and `/` filter (plus the in-process filter self-test) are documented in [`doc/testing.md`](doc/testing.md).
-
-## Repository Cleanup Status
-
-- Legacy Objective-C source and historical release tooling were removed after migration.
-- Direct downloads are published via **GitHub Releases** (DMG + Sparkle `appcast.xml`), not files under `dist/` on `master`.
-- See `BUILD.md` for the release script and Actions workflow.
+Thanks also to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu) for the Mac M-chip port that this work builds on.
 
 ## Distribution Note
 
