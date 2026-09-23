@@ -2,7 +2,8 @@
 
 ClipMenu is a macOS clipboard manager rebuilt in Swift (SwiftUI + SwiftData).
 
-![ClipMenu Screenshot](screenshot.jpg)
+![ClipMenu Screen record](https://github.com/user-attachments/assets/33826f94-5ee7-4239-be0a-63d1bb5e237f)
+
 
 ## Installation
 
