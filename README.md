@@ -69,7 +69,7 @@ Please enjoy the software. And remember to be careful with the thoughts and feel
 
 If you distribute derived work:
 
-1. Do not use `ClipMenu` as your product name.
+1. Do not use `ClipM` or `ClipMenu` as your product name.
 2. Follow the MIT license terms.
 
 ## License
