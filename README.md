@@ -4,9 +4,7 @@
 
 A full-featured copy & paste manager built for Apple silicon M‑chip Macs — search history, preview clips, and paste the right thing in a flash.
 
-<p align="center">
-  <img src="docs/images/previews.png" alt="clip'M with a live preview beside the clipboard history menu" width="720" />
-</p>
+![ClipMenu Screen record](https://github.com/user-attachments/assets/33826f94-5ee7-4239-be0a-63d1bb5e237f)
 
 ## Installation
 
