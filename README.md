@@ -1,40 +1,57 @@
-# <img src="Assets.xcassets/AppIcon.appiconset/AppIcon-32.png" alt="ClipMenu icon" width="24" /> ClipMenu
+# <img src="Assets.xcassets/AppIcon.appiconset/AppIcon-32.png" alt="clip'M icon" width="24" /> clip'M
 
-ClipMenu is a macOS clipboard manager rebuilt in Swift (SwiftUI + SwiftData).
+**Your clipboard, finally easy to use.**
 
-![ClipMenu Screenshot](screenshot.jpg)
+A full-featured copy & paste manager built for Apple silicon M‑chip Macs — search history, preview clips, and paste the right thing in a flash.
+
+<p align="center">
+  <img src="docs/images/previews.png" alt="clip'M with a live preview beside the clipboard history menu" width="720" />
+</p>
 
 ## Installation
 
-- **Mac App Store** (when published): search for ClipMenu, or install from your listing.
-- **Direct download**: get the latest **ClipMenu-*.dmg** from [GitHub Releases](https://github.com/Frazer/ClipMenu/releases/latest)
+- **[Mac App Store](https://apps.apple.com/app/id6757437982)**
+- **Direct download**: latest **clipM-*.dmg** from [GitHub Releases](https://github.com/Frazer/clipM/releases/latest)
 
-Open the DMG and drag `ClipMenu.app` into Applications.
+Open the DMG and drag **clip'M** into Applications.
 
 App Store installs update through the App Store. Direct downloads update in-app via Sparkle (**Preferences → About**).
 
-## New Features
+## Features
 
-Features added since forking this modernization:
+### Search
 
-- **Cascading Actions menu** — hold the Actions modifier (default ⌘) while choosing a clip or snippet to open actions beside ClipMenu; a single action runs immediately
-- **In-app JavaScript action editor** — view bundled scripts, edit user scripts, and copy templates into your User’s folder
-- **Inline action renaming** and full-name hover tooltips in Preferences → Actions
-- **Slash filter** — press `/` to search without jumping rows; **Tab** or the photo button for images-only history
-- **Stable popup width** when toggling the images-only filter
-- **Clip previews** beside the menu and submenus, with smarter placement (including when a submenu is open)
-- **Smart popup positioning** — opens above the cursor when triggered on the bottom half of the screen; submenu direction respects which side of the screen you’re on
-- **Snippets prefs UX** — reliable folder/snippet selection, instant rename on add, and title mirrored into empty content while naming
-- **Multi-digit history numbering** in the main popup (10, 11, … instead of wrapping at 9)
-- **Remove apps from the ignore list** in Preferences
-- **About & Updates** preferences tab — GitHub / United Visions links; Sparkle updates for direct downloads; App Store update check for the store build
-- **Dual distribution** — `ClipMenu` (GitHub DMG + Sparkle) and `ClipMenuAppStore` (sandbox) schemes, with a DMG release script and GitHub Actions workflow
+Press `/` and start typing. clip'M filters your history instantly so you can find the clip you need without scrolling.
 
-A complete migration from the old architecture to run on Mac M chips thanks to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu).
+Need screenshots only? Press `/` then `Tab`, or click the image button, for **image-only search**.
 
-### Actions shortcut
+<p align="center">
+  <img src="docs/images/search.png" alt="Text search filtering clipboard history" width="360" />
+  &nbsp;
+  <img src="docs/images/searchImages.png" alt="Image-only search with image filter active" width="360" />
+</p>
 
-In **Preferences → Actions**, choose a modifier key (default **Command**). Hold that key while selecting a clip or snippet to open the action menu. If only one action is available, it runs immediately instead of showing the menu.
+### Previews
+
+Hover a clip or open a history group and a live preview appears beside the menu — so you see text, screenshots, and documents before you paste.
+
+### Snippets
+
+Organize reusable text into folders (email, phone, addresses, boilerplate) and open them from the same menu as clipboard history.
+
+<p align="center">
+  <img src="docs/images/snippets.png" alt="Snippet folders with nested reusable items" width="560" />
+</p>
+
+### Actions
+
+Transform a clip before you paste it. Built-in actions cover everyday jobs like **uppercase / lowercase** and **URL decoding**. You can also add **user-programmed actions** and plug them into the same menu.
+
+## Built for M‑series Macs
+
+The original [ClipMenu](https://www.clipmenu.com) was a favourite for a decade: simple, fast, and always there when you needed it. Here it is ported to run natively on Apple silicon, with great new features like search, image-only filtering, and live previews layered on top of what made ClipMenu great.
+
+A complete migration from the old architecture thanks to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu).
 
 ## Huge Thanks
 
@@ -42,7 +59,13 @@ A huge thank you to [Naotaka Morimoto](https://github.com/naotaka/ClipMenu), the
 
 ClipMenu has helped many users for years, and this modernization work stands on top of that original design and effort.
 
-Thanks also to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu) for the Mac M-chip port that this work builds on.
+Thanks also to [Juan Cavallotti](https://github.com/juancavallotti/ClipMenu) for the Mac M‑chip port that this work builds on.
+
+## From United Visions
+
+clip'M was developed by team members from [United Visions](https://unitedvisions.org) — all about empowering you to copy the best ways of being, and paste that awesomeness all over the world.
+
+Please enjoy the software. And remember to be careful with the thoughts and feelings you practice every day.
 
 ## Distribution Note
 
@@ -53,4 +76,4 @@ If you distribute derived work:
 
 ## License
 
-ClipMenu is available under the MIT license. See `LICENSE` for details.
+clip'M is available under the MIT license. See `LICENSE` for details.
