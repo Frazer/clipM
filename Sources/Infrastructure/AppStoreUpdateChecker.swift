@@ -75,7 +75,7 @@ final class AppStoreUpdateChecker: ObservableObject {
             NSWorkspace.shared.open(deepLink)
             return
         }
-        let query = bundleID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "ClipMenu"
+        let query = bundleID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "clipM"
         if let search = URL(string: "macappstore://itunes.apple.com/search?term=\(query)&entity=macSoftware") {
             NSWorkspace.shared.open(search)
         }

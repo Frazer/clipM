@@ -1,6 +1,6 @@
 # Build And Release Guide
 
-This repository contains the active Swift/XcodeGen ClipMenu project.
+This repository contains the active Swift/XcodeGen **clip'M** project (scheme/target names remain `ClipMenu` for history; the product displays as clip'M).
 
 ## Current Stack
 
@@ -54,7 +54,7 @@ xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Release b
    - `ClipMenuAppStore` — Mac App Store build (`APP_STORE` flag, no Sparkle)
 3. Run with `Debug` configuration.
 
-ClipMenu is a menu bar app (`LSUIElement = YES`), so it does not appear in the Dock while running.
+clip'M is a menu bar app (`LSUIElement = YES`), so it does not appear in the Dock while running.
 
 ## Testing
 
@@ -77,7 +77,7 @@ Public EdDSA key is already embedded:
 
 ```yaml
 INFOPLIST_KEY_SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
-INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/ClipMenu/releases/latest/download/appcast.xml
+INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
 ```
 
 Private key lives in the login keychain (`generate_keys --account clipmenu`) and was exported to `secrets/sparkle_eddsa_private.key` (gitignored). Add the same string as GitHub Actions secret `SPARKLE_PRIVATE_KEY`. See `secrets/README.md`.
@@ -94,7 +94,7 @@ chmod +x scripts/release-dmg.sh
 ./scripts/release-dmg.sh --publish
 ```
 
-This builds the `ClipMenu` scheme (Release), notarizes, creates `release/ClipMenu-<version>.dmg`, generates Sparkle `appcast.xml`, and uploads both to a GitHub Release.
+This builds the `ClipMenu` scheme (Release), notarizes, creates `release/clipM-<version>.dmg`, generates Sparkle `appcast.xml`, and uploads both to a GitHub Release. The app displays as **clip'M**.
 
 Local packaging without notarization (will not pass Gatekeeper for other Macs):
 

@@ -1041,8 +1041,9 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ClipMenu;
+				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -1053,7 +1054,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
-				PRODUCT_NAME = ClipMenu;
+				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1129,13 +1130,14 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ClipMenu;
+				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/ClipMenu/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
 				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1145,7 +1147,7 @@
 				MARKETING_VERSION = 1.0.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
-				PRODUCT_NAME = ClipMenu;
+				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DIRECT_DISTRIBUTION;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1248,8 +1250,9 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ClipMenu;
+				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -1260,7 +1263,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
-				PRODUCT_NAME = ClipMenu;
+				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APP_STORE;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1282,13 +1285,14 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = ClipMenu;
+				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/ClipMenu/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
 				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1297,7 +1301,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
-				PRODUCT_NAME = ClipMenu;
+				PRODUCT_NAME = clipM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG DIRECT_DISTRIBUTION";

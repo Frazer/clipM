@@ -68,7 +68,7 @@ private final class PreferencesWindowController: NSWindowController, NSWindowDel
             backing: .buffered,
             defer: false
         )
-        window.title = "Preferences"
+        window.title = "\(AppDistribution.displayName) Preferences"
         window.contentMinSize = NSSize(width: 680, height: 500)
         window.setFrameAutosaveName("Preferences")
         window.isReleasedWhenClosed = false

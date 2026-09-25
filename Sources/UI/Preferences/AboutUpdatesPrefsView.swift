@@ -25,8 +25,12 @@ struct AboutUpdatesPrefsView: View {
                             .resizable()
                             .frame(width: 64, height: 64)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("ClipMenu")
+                            Text(AppDistribution.displayName)
                                 .font(.title2.weight(.semibold))
+                            Text(AppDistribution.byline)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                             Text(AppDistribution.versionLabel)
                                 .foregroundStyle(.secondary)
                             Text(AppDistribution.channelDisplayName)
@@ -149,7 +153,7 @@ struct AboutUpdatesPrefsView: View {
             Label("Version \(storeVersion) is available on the App Store.", systemImage: "arrow.down.circle.fill")
                 .foregroundStyle(.primary)
         case .notListed:
-            Text("ClipMenu isn’t listed on the App Store for this bundle ID yet (or the listing isn’t public). You can still open the App Store to search.")
+            Text("\(AppDistribution.displayName) isn’t listed on the App Store for this bundle ID yet (or the listing isn’t public). You can still open the App Store to search.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         case .failed(let message):

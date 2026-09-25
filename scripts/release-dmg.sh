@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a Sparkle-ready ClipMenu.dmg + appcast.xml for GitHub Releases.
+# Build a Sparkle-ready clipM.dmg + appcast.xml for GitHub Releases (displays as clip'M).
 #
 # Usage:
 #   ./scripts/release-dmg.sh                 # build + DMG + appcast (notarize if creds present)
@@ -36,7 +36,7 @@ TEAM_ID="${APPLE_TEAM_ID:-97988GNC59}"
 BUNDLE_ID="app.eetr.ClipMenu"
 SCHEME="ClipMenu"
 CONFIG="Release"
-REPO="${GITHUB_REPOSITORY:-Frazer/ClipMenu}"
+REPO="${GITHUB_REPOSITORY:-Frazer/clipM}"
 
 OUT="$ROOT/release"
 STAGE="$OUT/stage"
@@ -53,8 +53,8 @@ MARKETING_VERSION="$(python3 - <<'PY'
 import re
 from pathlib import Path
 text = Path("project.yml").read_text()
-# First ClipMenu target marketing version
-m = re.search(r"PRODUCT_NAME: ClipMenu\n.*?MARKETING_VERSION: \"([^\"]+)\"", text, re.S)
+# First direct-distribution target marketing version
+m = re.search(r"PRODUCT_NAME: clipM\n.*?MARKETING_VERSION: \"([^\"]+)\"", text, re.S)
 print(m.group(1) if m else "1.0.0")
 PY
 )"
@@ -62,13 +62,13 @@ BUILD_NUMBER="$(python3 - <<'PY'
 import re
 from pathlib import Path
 text = Path("project.yml").read_text()
-m = re.search(r"PRODUCT_NAME: ClipMenu\n.*?CURRENT_PROJECT_VERSION: \"([^\"]+)\"", text, re.S)
+m = re.search(r"PRODUCT_NAME: clipM\n.*?CURRENT_PROJECT_VERSION: \"([^\"]+)\"", text, re.S)
 print(m.group(1) if m else "1")
 PY
 )"
 
 TAG="${RELEASE_TAG:-v${MARKETING_VERSION}}"
-DMG_NAME="ClipMenu-${MARKETING_VERSION}.dmg"
+DMG_NAME="clipM-${MARKETING_VERSION}.dmg"
 DMG_PATH="$OUT/$DMG_NAME"
 
 echo "==> Version ${MARKETING_VERSION} (${BUILD_NUMBER})  tag=${TAG}"
@@ -135,26 +135,26 @@ xcodebuild \
   OTHER_CODE_SIGN_FLAGS="--timestamp" \
   build
 
-APP_SRC="$(find "$DERIVED/Build/Products/$CONFIG" -maxdepth 1 -name 'ClipMenu.app' -print -quit)"
+APP_SRC="$(find "$DERIVED/Build/Products/$CONFIG" -maxdepth 1 -name 'clipM.app' -print -quit)"
 if [[ -z "$APP_SRC" || ! -d "$APP_SRC" ]]; then
-  echo "ClipMenu.app not found in build products" >&2
+  echo "clipM.app not found in build products" >&2
   exit 1
 fi
 
 # Verify Sparkle public key made it into Info.plist
 /usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP_SRC/Contents/Info.plist" >/dev/null
 
-rm -rf "$STAGE/ClipMenu.app"
-ditto "$APP_SRC" "$STAGE/ClipMenu.app"
+rm -rf "$STAGE/clipM.app"
+ditto "$APP_SRC" "$STAGE/clipM.app"
 
 echo "==> codesign verify…"
-codesign --verify --deep --strict --verbose=2 "$STAGE/ClipMenu.app"
-codesign -dv --verbose=2 "$STAGE/ClipMenu.app" 2>&1 | grep -E 'Authority|TeamIdentifier|Identifier' || true
+codesign --verify --deep --strict --verbose=2 "$STAGE/clipM.app"
+codesign -dv --verbose=2 "$STAGE/clipM.app" 2>&1 | grep -E 'Authority|TeamIdentifier|Identifier' || true
 
 if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
   echo "==> Notarizing app (zip)…"
-  APP_ZIP="$OUT/ClipMenu-app.zip"
-  ditto -c -k --keepParent "$STAGE/ClipMenu.app" "$APP_ZIP"
+  APP_ZIP="$OUT/clipM-app.zip"
+  ditto -c -k --keepParent "$STAGE/clipM.app" "$APP_ZIP"
   if [[ -n "${APPLE_API_KEY:-}" && -n "${APPLE_API_ISSUER:-}" && -n "${APPLE_API_KEY_PATH:-}" ]]; then
     xcrun notarytool submit "$APP_ZIP" \
       --key "$APPLE_API_KEY_PATH" \
@@ -172,8 +172,8 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     echo "or set APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD (+ APPLE_TEAM_ID), or App Store Connect API key env vars." >&2
     exit 1
   fi
-  xcrun stapler staple "$STAGE/ClipMenu.app"
-  spctl --assess --type execute -vv "$STAGE/ClipMenu.app" || true
+  xcrun stapler staple "$STAGE/clipM.app"
+  spctl --assess --type execute -vv "$STAGE/clipM.app" || true
 else
   echo "==> Skipping notarization (--skip-notarize)"
 fi
@@ -181,11 +181,11 @@ fi
 echo "==> Creating DMG $DMG_NAME…"
 rm -rf "$DMG_ROOT"
 mkdir -p "$DMG_ROOT"
-ditto "$STAGE/ClipMenu.app" "$DMG_ROOT/ClipMenu.app"
+ditto "$STAGE/clipM.app" "$DMG_ROOT/clipM.app"
 ln -sf /Applications "$DMG_ROOT/Applications"
 rm -f "$DMG_PATH"
 hdiutil create \
-  -volname "ClipMenu" \
+  -volname "clipM" \
   -srcfolder "$DMG_ROOT" \
   -ov -format UDZO \
   "$DMG_PATH"
@@ -259,10 +259,12 @@ if [[ "$PUBLISH" -eq 1 ]]; then
     gh release upload "$TAG" "$DMG_PATH" "$OUT/appcast.xml" --clobber
   else
     gh release create "$TAG" "$DMG_PATH" "$OUT/appcast.xml" \
-      --title "ClipMenu ${MARKETING_VERSION}" \
-      --notes "ClipMenu ${MARKETING_VERSION} (build ${BUILD_NUMBER}).
+      --title "clip'M ${MARKETING_VERSION}" \
+      --notes "clip'M ${MARKETING_VERSION} (build ${BUILD_NUMBER}).
 
-Direct-download build with Sparkle updates. Open the DMG and drag ClipMenu to Applications."
+Full featured copy paste manager for M chip Macs.
+
+Direct-download build with Sparkle updates. Open the DMG and drag clip'M to Applications."
   fi
   echo "Published: https://github.com/${REPO}/releases/tag/${TAG}"
 fi

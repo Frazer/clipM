@@ -155,7 +155,7 @@ private final class PasteHarnessWindowController: NSWindowController, NSWindowDe
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private weak var runtime: AppRuntime?
-    private let menu = NSMenu(title: "ClipMenu")
+    private let menu = NSMenu(title: AppDistribution.displayName)
 
     init(runtime: AppRuntime) {
         self.runtime = runtime
@@ -168,7 +168,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.runtime = runtime
 
         guard let button = statusItem.button else { return }
-        button.image = NSImage(systemSymbolName: "clipboard.fill", accessibilityDescription: "ClipMenu")
+        button.image = NSImage(systemSymbolName: "clipboard.fill", accessibilityDescription: AppDistribution.displayName)
         button.image?.isTemplate = true
 
         // Set RTL once so submenus always open to the left. Done here rather than

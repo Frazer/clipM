@@ -3,19 +3,26 @@
 build with team code
 97988GNC59
 
-set the default number inline and folder size
 
-how to update from within the app if I publish new versions
 
-have an about section in the app
 
-update the readme, linking to juan and the original clipmenu
+Fix
+  Installation
+  Mac App Store (when published): search for ClipMenu, or install from your listing.
+  Direct download: get the latest ClipMenu-*.dmg from GitHub Releases
 
-make a pull request to juan
+fix accessibility menu still says clipmenu
 
-make a pull request to the original clipmenu
+~~fix the actions menu, have it popup on click~~
 
 publish to the app store
 
-post about it on social media
+put a page up on unitedvisions.org
 
+change the About section on github
+
+make a pull request to the original clipmenu - https://github.com/naotaka/ClipMenu
+
+
+post about it on social media
+https://x.com/clipmenu/status/532147223455215617

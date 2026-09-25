@@ -28,10 +28,8 @@ Pods
 secrets/*
 !secrets/README.md
 release/
-dist/*.dmg
-dist/*.zip
-dist/appcast.xml
-dist/dmg-root/
+# Local build staging — never commit .app trees; publish via GitHub Releases
+dist/
 *.p12
 sparkle_eddsa_private.key
 

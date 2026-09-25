@@ -45,7 +45,7 @@ struct SnippetsPrefsView: View {
         VStack(alignment: .leading, spacing: 12) {
             ViewThatFits(in: .horizontal) {
                 HStack {
-                    Text("The position to show snippets in ClipMenu:")
+                    Text("The position to show snippets in \(AppDistribution.displayName):")
                     Spacer()
                     Picker("Snippet position", selection: $s.positionOfSnippets) {
                         Text("Above the clipboard history").tag(0)
@@ -57,7 +57,7 @@ struct SnippetsPrefsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("The position to show snippets in ClipMenu:")
+                    Text("The position to show snippets in \(AppDistribution.displayName):")
                     Picker("Snippet position", selection: $s.positionOfSnippets) {
                         Text("Above the clipboard history").tag(0)
                         Text("Below the clipboard history").tag(1)

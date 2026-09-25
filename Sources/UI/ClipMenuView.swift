@@ -73,7 +73,7 @@ struct ClipMenuView: View {
         Button {
             NSApp.terminate(nil)
         } label: {
-            Label("Quit ClipMenu", systemImage: "power")
+            Label("Quit \(AppDistribution.displayName)", systemImage: "power")
         }
     }
 

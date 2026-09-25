@@ -1,6 +1,6 @@
 name: Release DMG (Sparkle)
 
-# Builds a Developer ID–signed, notarized ClipMenu.dmg and Sparkle appcast.xml,
+# Builds a Developer ID–signed, notarized clipM.dmg and Sparkle appcast.xml,
 # then publishes them to a GitHub Release.
 #
 # Trigger: push a version tag, e.g. `git tag v1.0.0 && git push origin v1.0.0`
@@ -103,12 +103,12 @@ jobs:
           import re
           from pathlib import Path
           text = Path("project.yml").read_text()
-          m = re.search(r"PRODUCT_NAME: ClipMenu\n.*?MARKETING_VERSION: \"([^\"]+)\"", text, re.S)
+          m = re.search(r"PRODUCT_NAME: clipM\n.*?MARKETING_VERSION: \"([^\"]+)\"", text, re.S)
           print(m.group(1) if m else "0.0.0")
           PY
           )"
           TAG="${RELEASE_TAG}"
-          DMG="release/ClipMenu-${VERSION}.dmg"
+          DMG="release/clipM-${VERSION}.dmg"
           APPCAST="release/appcast.xml"
           test -f "$DMG"
           test -f "$APPCAST"
@@ -116,7 +116,7 @@ jobs:
             gh release upload "$TAG" "$DMG" "$APPCAST" --clobber
           else
             gh release create "$TAG" "$DMG" "$APPCAST" \
-              --title "ClipMenu ${VERSION}" \
+              --title "clip'M ${VERSION}" \
               --generate-notes
           fi
           echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/${TAG}"
