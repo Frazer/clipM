@@ -15,6 +15,13 @@ enum ActionMenuBuilder {
             .filter(\.isEnabled)
             .sorted { $0.sortIndex < $1.sortIndex }
 
+        if sortedRoots.isEmpty {
+            let empty = NSMenuItem(title: "No actions configured", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            menu.addItem(empty)
+            return menu
+        }
+
         for node in sortedRoots {
             menu.addItem(
                 makeItem(
@@ -49,7 +56,8 @@ enum ActionMenuBuilder {
                     )
                     // Only Cmd+V after a successful transform — otherwise we'd
                     // re-paste whatever was already on the pasteboard.
-                    if didApply, let postAction {
+                    // Also do not paste if the action was a removal.
+                    if didApply, node.actionName?.trimmingCharacters(in: CharacterSet(charactersIn: ":")) != "removeAction", let postAction {
                         await postAction()
                     }
                 }
@@ -58,21 +66,29 @@ enum ActionMenuBuilder {
         }
 
         let item = NSMenuItem(title: node.title, action: nil, keyEquivalent: "")
+        item.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        item.image?.isTemplate = true
         let submenu = NSMenu(title: node.title)
         let sortedChildren = node.children
             .filter(\.isEnabled)
             .sorted { $0.sortIndex < $1.sortIndex }
 
-        for child in sortedChildren {
-            submenu.addItem(
-                makeItem(
-                    for: child,
-                    target: target,
-                    service: service,
-                    executionContext: executionContext,
-                    postAction: postAction
+        if sortedChildren.isEmpty {
+            let empty = NSMenuItem(title: "(Empty)", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            submenu.addItem(empty)
+        } else {
+            for child in sortedChildren {
+                submenu.addItem(
+                    makeItem(
+                        for: child,
+                        target: target,
+                        service: service,
+                        executionContext: executionContext,
+                        postAction: postAction
+                    )
                 )
-            )
+            }
         }
 
         item.submenu = submenu

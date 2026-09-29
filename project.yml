@@ -65,9 +65,11 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
       configs:
         Debug:
-          CODE_SIGN_IDENTITY: "-"
+          # Stable identity so the Accessibility (TCC) grant survives rebuilds;
+          # ad-hoc signatures change every build and silently revoke it.
+          CODE_SIGN_IDENTITY: "Apple Development"
           CODE_SIGN_STYLE: Manual
-          DEVELOPMENT_TEAM: ""
+          DEVELOPMENT_TEAM: 97988GNC59
           PROVISIONING_PROFILE_SPECIFIER: ""
           DEBUG_INFORMATION_FORMAT: dwarf
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"

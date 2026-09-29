@@ -63,17 +63,10 @@ actor ActionService {
         // after which callers Cmd+V the previous pasteboard contents.
         let prepared = await MainActor.run { () -> PreparedAction? in
             guard node.isEnabled else { return nil }
-            let script: String?
-            if let inline = node.scriptContent, !inline.isEmpty {
-                script = inline
-            } else if let path = node.scriptPath {
-                script = try? String(contentsOfFile: path, encoding: .utf8)
-            } else {
-                script = nil
-            }
+            let script = Self.scriptSource(inline: node.scriptContent, path: node.scriptPath)
             return PreparedAction(
                 actionType: node.actionType,
-                actionName: node.actionName,
+                actionName: node.actionName?.trimmingCharacters(in: CharacterSet(charactersIn: ":")),
                 script: script,
                 stringValue: entry.stringValue,
                 filenames: entry.filenames,
@@ -92,8 +85,7 @@ actor ActionService {
             guard let script = prepared.script else { return false }
             let resultText = engine.run(script: script, clip: ScriptableClip(text: prepared.stringValue))
             guard let resultText else { return false }
-            await replaceClipWithString(resultText, shouldPaste: executionContext.shouldPaste)
-            return true
+            return await replaceClipWithString(resultText, shouldPaste: executionContext.shouldPaste)
 
         case "builtin":
             return await performBuiltin(
@@ -145,14 +137,12 @@ actor ActionService {
 
         case "pasteAsPlainText":
             guard let text = prepared.stringValue else { return false }
-            await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
-            return true
+            return await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
 
         case "pasteAsFilePath":
             guard let files = prepared.filenames, !files.isEmpty else { return false }
             let text = files.joined(separator: "\n")
-            await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
-            return true
+            return await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
 
         case "pasteAsHFSFilePath":
             guard let files = prepared.filenames, !files.isEmpty else { return false }
@@ -161,18 +151,17 @@ actor ActionService {
                 return CFURLCopyFileSystemPath(url, CFURLPathStyle(rawValue: 1)!) as String?
             }
             let text = hfsPaths.joined(separator: "\n")
-            await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
-            return true
+            return await replaceClipWithString(text, shouldPaste: executionContext.shouldPaste)
 
         default:
             return false
         }
     }
 
-    private func replaceClipWithString(_ string: String, shouldPaste: Bool) async {
-        guard let context else { return }
+    private func replaceClipWithString(_ string: String, shouldPaste: Bool) async -> Bool {
+        guard let context else { return false }
 
-        await MainActor.run {
+        let wrotePasteboard = await MainActor.run {
             let transformed = ClipEntry()
             transformed.types = [NSPasteboard.PasteboardType.string.rawValue]
             transformed.stringValue = string
@@ -185,20 +174,46 @@ actor ActionService {
 
             let pboard = NSPasteboard.general
             pboard.clearContents()
-            pboard.setString(string, forType: .string)
+            return pboard.setString(string, forType: .string)
         }
 
-        if shouldPaste {
+        if wrotePasteboard && shouldPaste {
             await paste.paste()
         }
+        return wrotePasteboard
     }
 
     // MARK: - Helpers
 
-    private func scriptSource(for node: ActionNode) -> String? {
-        if let inline = node.scriptContent, !inline.isEmpty { return inline }
-        if let path = node.scriptPath { return try? String(contentsOfFile: path, encoding: .utf8) }
-        return nil
+    /// Bundled script paths in older stores contain an absolute build/app path.
+    /// Resolve their resource-relative suffix against the running app so renaming
+    /// or moving the bundle does not silently disable every imported action.
+    nonisolated static func scriptSource(
+        inline: String?, path: String?, resourceRoot: URL? = Bundle.main.resourceURL
+    ) -> String? {
+        if let inline, !inline.isEmpty { return inline }
+        guard let path, !path.isEmpty else { return nil }
+        var relative: String?
+        if let marker = path.range(of: "/Contents/Resources/", options: .backwards) {
+            let suffix = String(path[marker.upperBound...])
+            for prefix in ["scripts/action/", "script/action/"] where suffix.hasPrefix(prefix) {
+                relative = String(suffix.dropFirst(prefix.count))
+            }
+        } else if !(path as NSString).isAbsolutePath {
+            relative = path
+            for prefix in ["scripts/action/", "script/action/", "action/"] where path.hasPrefix(prefix) {
+                relative = String(path.dropFirst(prefix.count))
+                break
+            }
+        }
+        if let relative, let resourceRoot {
+            for directory in ["scripts/action", "script/action"] {
+                let url = resourceRoot.appendingPathComponent(directory).appendingPathComponent(relative)
+                if let source = try? String(contentsOf: url, encoding: .utf8) { return source }
+            }
+        }
+        // Preserve external user scripts and their explicitly configured paths.
+        return try? String(contentsOfFile: path, encoding: .utf8)
     }
 
     private func seedDefaultActionsIfNeeded() {

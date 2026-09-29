@@ -14,12 +14,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Ensure persisted settings are hydrated and normalized before services read them.
         runtime.settings.reload()
+        #if DEBUG
+        fputs("[ClipMenu] launch path=\(Bundle.main.bundlePath) actions=\(runtime.settings.enableAction) modifier=\(runtime.settings.actionModifierKey) immediate=\(runtime.settings.invokeActionImmediately) autoPaste=\(runtime.settings.autoPasteAfterSelection)\n", stderr)
+        #endif
         let statusItemController = StatusItemController(runtime: runtime)
         statusItemController.install(runtime: runtime)
         self.statusItemController = statusItemController
 
         if isPasteUITestMode {
+            // The harness has a normal foreground window, including when it
+            // exercises real NSMenu tracking instead of the SwiftUI substitute.
+            NSApp.setActivationPolicy(.regular)
             pasteHarnessWindowController.show(modelContainer: runtime.modelContainer)
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--self-test-action-menu") {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 25) {
+                    fputs("[NATIVE ACTION SMOKE] FAIL: test did not finish within 25 seconds\n", stderr)
+                    Darwin.exit(1)
+                }
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    if ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]?.hasPrefix("status-") == true {
+                        self.statusItemController?.openMenuForTesting()
+                    } else {
+                        runtime.hotkeyService.presentMainMenuForTesting()
+                    }
+                }
+            }
+            #endif
             return
         }
 

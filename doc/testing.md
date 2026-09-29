@@ -9,6 +9,7 @@ Grant **Accessibility** (and sometimes Input Monitoring) to Terminal / your IDE 
 | What | How to run | Needs Accessibility |
 |------|------------|---------------------|
 | Preview AX smoke (primary) | `bash Resources/scripts/run_preview_ax_smoke.sh` | Yes |
+| Native action menus and paste | `bash Resources/scripts/run_action_overlay_smoke.sh /path/to/ClipMenuTest.app` | Yes |
 | Real preview smoke (no UI-test mocks) | `swift Resources/scripts/test_real_preview.swift /path/to/ClipMenu.app` | Yes (keyboard post) |
 | External `/` filter smoke | `swift Resources/scripts/test_filter_slash.swift /path/to/ClipMenu.app` | Yes |
 | In-process `/` filter self-test | `ClipMenu --seed-clips --self-test-filter-slash` | No |
@@ -29,6 +30,33 @@ xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug bui
 ```
 
 ---
+
+## Action menus
+
+Build the isolated test app, then run the native menu suite:
+
+```sh
+xcodebuild build -project ClipMenu.xcodeproj -scheme ClipMenuTest \
+  -configuration Debug -derivedDataPath .build/DerivedData -destination 'platform=macOS'
+bash Resources/scripts/run_action_overlay_smoke.sh \
+  .build/DerivedData/Build/Products/Debug/ClipMenuTest.app
+```
+
+The standalone host checks pointer placement without a clip-row caret, two submenu levels, mouse selection, keyboard
+Right/Left/Return, Escape, outside-click cancellation, relocated bundled scripts,
+legacy built-in action names, and actual Cmd+V into an NSTextView. The full-app
+phases exercise modifier activation in both the hotkey and menu-bar popups,
+assert that the main popup remains visible, and verify one transformed paste
+through the isolated harness. Additional phases disable the event tap to exercise
+the run-loop fallback and click directly without waiting for a hover highlight.
+Each phase must print PASS; normal app termination alone
+does not count as success. These tests move the pointer and need an idle desktop.
+
+Hover checks use movement events without warping the action-menu pointer and
+assert that the underlying clipboard menu's selection stays unchanged. They also
+cover dragged movement. Screenshot-key tests verify Cmd-Shift-3/4/5 and their
+Control variants reach a downstream event tap; that test-only tap consumes them
+to avoid creating screenshots or opening system UI during the suite.
 
 ## Preview tests
 

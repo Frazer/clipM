@@ -249,6 +249,14 @@ struct PreviewAXSmokeRunner {
     }
 
     private static func waitForRectLabel(identifier: String, in root: AXUIElement) throws -> (text: String, frame: CGRect) {
+        if identifier == "previewFrameLabel" {
+            // The harness exposes a fallback layout before the delayed preview
+            // exists. A nonempty rectangle alone does not mean it was shown.
+            _ = try waitForLabel(identifier: "previewCountLabel", in: root) { value in
+                guard let count = value.split(separator: ":").last else { return false }
+                return (Int(count.trimmingCharacters(in: .whitespaces)) ?? 0) > 0
+            }
+        }
         var matchedText: String?
         var matchedFrame: CGRect?
         guard spinWait(timeout: 8, condition: {

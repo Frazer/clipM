@@ -6,6 +6,7 @@ struct PasteIntegrationHarnessView: View {
     private let alternateSampleText = "ClipMenu UI test preview target"
     private let submenuSampleText = "ClipMenu UI test submenu preview"
     private let runtime = AppRuntime.shared
+    private let usesNativeMenu = ProcessInfo.processInfo.environment["CLIPMENU_NATIVE_MENU_TEST"] == "1"
 
     @Environment(\.modelContext) private var modelContext
     @StateObject private var popupStore = ClipMenuTestPopupStore.shared
@@ -191,6 +192,9 @@ struct PasteIntegrationHarnessView: View {
         .onAppear {
             configureRuntimeForPopupTest()
             seedSampleClip()
+            if usesNativeMenu {
+                Task { await runtime.actionService.start(context: modelContext) }
+            }
             refreshAccessibilityStatus()
             NSApp.activate(ignoringOtherApps: true)
             isFieldFocused = true
@@ -312,7 +316,11 @@ struct PasteIntegrationHarnessView: View {
     @MainActor
     private func configureRuntimeForMainPopupTest() {
         runtime.settings.autoPasteAfterSelection = true
-        runtime.settings.enableAction = false
+        runtime.settings.enableAction = usesNativeMenu
+        if usesNativeMenu {
+            runtime.settings.actionModifierKey = 1
+            runtime.settings.invokeActionImmediately = false
+        }
         runtime.settings.showLabelsInMenu = false
         runtime.settings.showClearHistoryItem = false
         runtime.settings.numberOfItemsInline = 2
@@ -629,9 +637,6 @@ private enum ClipMenuTestPopupLayout {
         if let previewNode = store.previewNode, let storedLevel = store.previewLevel {
             node = previewNode
             previewLevel = storedLevel
-        } else if let firstFolder = firstFolderNode(in: store), let firstChild = firstFolder.children.first {
-            node = firstChild
-            previewLevel = 1
         } else {
             return .zero
         }

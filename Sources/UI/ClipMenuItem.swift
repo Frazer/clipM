@@ -188,7 +188,8 @@ struct ClipMenuItem: View {
     // MARK: - Action
 
     private func select() {
-        if NSEvent.modifierFlags.intersection([.control, .shift, .option, .command])
+        if settings.enableAction,
+           NSEvent.modifierFlags.intersection([.control, .shift, .option, .command])
             .contains(actionModifierMask(for: settings.actionModifierKey)) {
             showActionMenu()
             return
@@ -211,7 +212,8 @@ struct ClipMenuItem: View {
             let roots = await actionService.rootActions()
             let enabledRoots = roots.filter(\.isEnabled)
 
-            if enabledRoots.count == 1,
+            if settings.invokeActionImmediately,
+               enabledRoots.count == 1,
                let only = enabledRoots.first,
                only.isLeaf {
                 await actionService.perform(action: only, on: entry, executionContext: .pasteContext)
