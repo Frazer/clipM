@@ -103,7 +103,19 @@ final class HotkeyService {
 
     @MainActor
     func presentMainMenuForTesting() {
+        #if DEBUG
+        let phase = ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]
+        let kind: HotkeyMenuKind
+        switch phase {
+        case "footer-history": kind = .history
+        case "footer-snippets": kind = .snippets
+        case "footer-actions": kind = .actions
+        default: kind = .main
+        }
+        popupMenu.show(using: AppRuntime.shared, kind: kind)
+        #else
         popupMenu.show(using: AppRuntime.shared, kind: .main)
+        #endif
     }
 
     @MainActor
@@ -1251,124 +1263,8 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         fputs("[DEBUG] menu:willHighlight item=\(item?.title ?? "nil") in menu=\(menu.title)\n", stderr)
         actionTarget.clipMenuWillHighlight(menu: menu, item: item)
         handleHighlightedItem(item, in: menu)
-        if let item {
-            ensureTypeSelectedItemIsVisible(item, in: menu)
-        }
-    }
-
-    /// NSMenu type-select (e.g. Q → Quit) can highlight a row that sits just below the
-    /// scrolled viewport. Nudge the open menu so trailing chrome stays on-screen.
-    private func ensureTypeSelectedItemIsVisible(_ item: NSMenuItem, in menu: NSMenu) {
-        guard menu.supermenu == nil else { return }
-        let index = menu.index(of: item)
-        guard index >= 0 else { return }
-
-        let footerTitles: Set<String> = [
-            "Quit \(AppDistribution.displayName)",
-            "Preferences…",
-            "Edit Snippets…",
-            "Clear History",
-        ]
-        let isTrailingChrome = footerTitles.contains(item.title) || index >= menu.numberOfItems - 4
-        guard isTrailingChrome else { return }
-
-        updateMenuGeometry(for: menu)
-        let frame = currentMenuFrame
-        guard frame.width > 0, frame.height > 0 else { return }
-
-        let timer = Timer(timeInterval: 0.02, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.scrollOpenMenuToRevealTrailingItem(title: item.title, menuFrame: frame, menu: menu, item: item)
-            }
-        }
-        RunLoop.current.add(timer, forMode: .eventTracking)
-        RunLoop.current.add(timer, forMode: .default)
-    }
-
-    private func scrollOpenMenuToRevealTrailingItem(title: String, menuFrame: NSRect, menu: NSMenu, item: NSMenuItem) {
-        // Prefer Accessibility scroll-into-view when it works.
-        if scrollAXMenuItemIntoView(titled: title) {
-            rehighlight(item, in: menu)
-            return
-        }
-
-        // Fallback: line-scroll the menu window toward its bottom, then re-highlight.
-        let mainH = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
-            ?? NSScreen.main?.frame.height
-            ?? 900
-        let cgPoint = CGPoint(x: menuFrame.midX, y: mainH - menuFrame.midY)
-        for _ in 0..<10 {
-            guard let event = CGEvent(
-                scrollWheelEvent2Source: nil,
-                units: .line,
-                wheelCount: 1,
-                wheel1: -20,
-                wheel2: 0,
-                wheel3: 0
-            ) else { continue }
-            event.location = cgPoint
-            event.post(tap: .cghidEventTap)
-        }
-        rehighlight(item, in: menu)
-    }
-
-    private func rehighlight(_ item: NSMenuItem, in menu: NSMenu) {
-        let sel = Selector(("highlightItem:"))
-        if menu.responds(to: sel) {
-            menu.perform(sel, with: item)
-        }
-    }
-
-    @discardableResult
-    private func scrollAXMenuItemIntoView(titled title: String) -> Bool {
-        let app = AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)
-        var windowsRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &windowsRef) == .success,
-              let windows = windowsRef as? [AXUIElement] else {
-            return false
-        }
-
-        for window in windows {
-            if let element = findAXElement(in: window, role: kAXMenuItemRole as String, title: title)
-                ?? findAXElement(in: window, role: "AXMenuItem", title: title) {
-                let scrollResult = AXUIElementPerformAction(element, "AXScrollToVisible" as CFString)
-                if scrollResult == .success { return true }
-                // Some menu rows expose a parent that accepts scroll-to-visible.
-                var parentRef: CFTypeRef?
-                if AXUIElementCopyAttributeValue(element, kAXParentAttribute as CFString, &parentRef) == .success,
-                   let parent = parentRef {
-                    let parentEl = parent as! AXUIElement
-                    if AXUIElementPerformAction(parentEl, "AXScrollToVisible" as CFString) == .success {
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
-    private func findAXElement(in root: AXUIElement, role: String, title: String) -> AXUIElement? {
-        var roleRef: CFTypeRef?
-        if AXUIElementCopyAttributeValue(root, kAXRoleAttribute as CFString, &roleRef) == .success,
-           let rootRole = roleRef as? String, rootRole == role {
-            var titleRef: CFTypeRef?
-            if AXUIElementCopyAttributeValue(root, kAXTitleAttribute as CFString, &titleRef) == .success,
-               let rootTitle = titleRef as? String, rootTitle == title {
-                return root
-            }
-        }
-
-        var childrenRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(root, kAXChildrenAttribute as CFString, &childrenRef) == .success,
-              let children = childrenRef as? [AXUIElement] else {
-            return nil
-        }
-        for child in children {
-            if let match = findAXElement(in: child, role: role, title: title) {
-                return match
-            }
-        }
-        return nil
+        // AppKit owns hover, keyboard selection, and menu scrolling. Posting
+        // synthetic scroll events here relocates the pointer to their location.
     }
 
     @MainActor
@@ -3529,11 +3425,15 @@ private final class NativeActionMenuSmoke {
     private var shortcutCount = 0
     private var shortcutTap: CFMachPort?
     private var shortcutSource: CFRunLoopSource?
+    private var footerPointer: NSPoint?
+    private var footerRow: NSMenuItem?
+    private var testsFooter: Bool { phase.hasPrefix("footer-") || phase == "status-footer" }
 
     init(menu: NSMenu) {
         root = menu
         clip = menu.items.first(where: { $0.title == "ClipMenu UI test paste" })
         if phase == "direct-mouse" { step = 1 }
+        if testsFooter { step = 0 }
     }
     static func start(menu: NSMenu) {
         let driver = NativeActionMenuSmoke(menu: menu)
@@ -3616,6 +3516,7 @@ private final class NativeActionMenuSmoke {
         if Date().timeIntervalSince(started) > 15 {
             fail("timeout step=\(step), pasteCount=\(pasteCount), text=\(pasteText)")
         }
+        if testsFooter { tickFooter(); return }
         guard let clip else {
             fail("fixture clip missing")
         }
@@ -3707,6 +3608,34 @@ private final class NativeActionMenuSmoke {
             fputs("[NATIVE ACTION SMOKE] PASS \(phase): main popup retained; uppercase pasted once\n", stderr)
             Darwin.exit(0)
         }
+        step += 1
+    }
+
+    private func tickFooter() {
+        if let footerPointer, let footerRow {
+            let actual = NSEvent.mouseLocation
+            require(hypot(actual.x - footerPointer.x, actual.y - footerPointer.y) < 2,
+                    "footer hover moved pointer from \(footerPointer) to \(actual)")
+            if root.highlightedItem !== footerRow, hoverAttempts < 6 {
+                hoverAttempts += 1
+                mouse(.mouseMoved, row: footerRow)
+                return
+            }
+            require(root.highlightedItem === footerRow, "footer row did not stay highlighted: \(footerRow.title)")
+        }
+        let titles = ["Edit Snippets…", "Preferences…", "Quit \(AppDistribution.displayName)"]
+        guard step < titles.count else {
+            require(pasteCount == 0, "hover activated a clip")
+            root.cancelTrackingWithoutAnimation()
+            fputs("[NATIVE ACTION SMOKE] PASS \(phase): pointer stayed on every footer row\n", stderr)
+            Darwin.exit(0)
+        }
+        guard let row = root.items.first(where: { $0.title == titles[step] }) else { fail("footer row missing") }
+        let position = point(row)
+        footerPointer = NSPoint(x: position.x, y: NSScreen.screens[0].frame.maxY - position.y)
+        footerRow = row
+        hoverAttempts = 0
+        mouse(.mouseMoved, row: row)
         step += 1
     }
 }

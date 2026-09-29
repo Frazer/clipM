@@ -58,6 +58,10 @@ cover dragged movement. Screenshot-key tests verify Cmd-Shift-3/4/5 and their
 Control variants reach a downstream event tap; that test-only tap consumes them
 to avoid creating screenshots or opening system UI during the suite.
 
+Footer phases cover the main, history, snippets, actions, and status-bar popups.
+They hover Edit Snippets, Preferences, and Quit and verify that the pointer stays
+on each row, the native highlight remains there, and no clip is activated.
+
 ## Preview tests
 
 ### `run_preview_ax_smoke.sh` / `preview_ax_smoke.swift` (primary)

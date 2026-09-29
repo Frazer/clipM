@@ -31,7 +31,7 @@ fi
 # Optional full-app integration (build ClipMenuTest first). Isolated SwiftData
 # fixtures; only the final paste is captured by the existing test harness.
 if [[ $# -gt 0 ]]; then
-  phases=(mouse keyboard escape status-mouse status-keyboard no-tap-mouse direct-mouse drag-hover shortcuts)
+  phases=(mouse keyboard escape status-mouse status-keyboard no-tap-mouse direct-mouse drag-hover shortcuts footer-main footer-history footer-snippets footer-actions status-footer)
   if [[ $# -gt 1 ]]; then phases=("$2"); fi
   for phase in "${phases[@]}"; do
     CLIPMENU_UI_TEST_MODE=1 CLIPMENU_NATIVE_MENU_TEST=1 CLIPMENU_ACTION_SMOKE_PHASE="$phase" \
