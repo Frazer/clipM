@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppKit
 
 @main
 struct ClipMenuApp: App {
@@ -21,7 +22,20 @@ struct ClipMenuApp: App {
             schema: schema,
             isStoredInMemoryOnly: isPasteUITestMode
         )
-        modelContainer = try! ModelContainer(for: schema, configurations: [configuration])
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            // Never discard a user's history or snippets to recover from a
+            // store-open failure. Report it instead of crashing on a force-try.
+            _ = NSApplication.shared
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = "\(AppDistribution.displayName) couldn’t open its saved data."
+            alert.informativeText = error.localizedDescription
+            alert.addButton(withTitle: "Quit")
+            alert.runModal()
+            exit(1)
+        }
         runtime.modelContainer = modelContainer
     }
 

@@ -5,9 +5,13 @@ import Foundation
 /// CRUD operations over SnippetFolder / Snippet records.
 ///
 /// Reference: `legacy/Source/SnippetsController.{h,m}`.
-actor SnippetService {
+@MainActor
+final class SnippetService {
 
     private var context: ModelContext?
+    private let pasteService = PasteService()
+
+    nonisolated init() {}
 
     func start(context: ModelContext) {
         self.context = context
@@ -79,6 +83,6 @@ actor SnippetService {
         let pboard = NSPasteboard.general
         pboard.clearContents()
         pboard.setString(snippet.content, forType: .string)
-        await PasteService().paste()
+        await pasteService.paste()
     }
 }

@@ -21,6 +21,7 @@ final class LoginItemService {
     }
 
     func setEnabled(_ enabled: Bool) throws {
+        guard enabled != isEnabled else { return }
         if enabled {
             try enable()
         } else {

@@ -23,32 +23,34 @@ final class ScriptEngine {
     func run(script: String, clip: ScriptableClip) -> String? {
         let clipText = clip.text ?? ""
 
-        context.evaluateScript("var __scriptException = '';")
+        context.exception = nil
         context.setObject(clipText, forKeyedSubscript: "clipText" as NSString)
         context.setObject(clip, forKeyedSubscript: "clip" as NSString)
+        defer {
+            context.setObject(JSValue(undefinedIn: context), forKeyedSubscript: "clipText" as NSString)
+            context.setObject(JSValue(undefinedIn: context), forKeyedSubscript: "clip" as NSString)
+        }
 
+        // Compile a fresh function. A syntax error must never call the previous
+        // action's globally named wrapper, which would paste an unrelated result.
         let wrapped = """
-        function __wrapper(clipText, clip) {
-            try { \(script) } catch(e) { __scriptException = e.toString(); return; }
-        }
+        (function(clipText, clip) {
+            \(script)
+        })
         """
-        context.evaluateScript(wrapped)
-
-        let result = context.evaluateScript("__wrapper(clipText, clip)")
-
-        if let exc = context.objectForKeyedSubscript("__scriptException")?.toString(),
-           !exc.isEmpty {
-            return nil
-        }
-        guard let result, !result.isUndefined, !result.isNull else { return nil }
+        guard let function = context.evaluateScript(wrapped), context.exception == nil else { return nil }
+        let result = function.call(withArguments: [clipText, clip])
+        guard context.exception == nil, let result, !result.isUndefined, !result.isNull else { return nil }
         return result.toString()
     }
 
     // MARK: - Private
 
     private func setup() {
-        context.exceptionHandler = { _, exception in
-            print("[ScriptEngine] exception: \(exception?.toString() ?? "?")")
+        context.exceptionHandler = { context, exception in
+            // Exceptions can contain clipboard text; retain them for error
+            // detection without printing their contents to system logs.
+            context?.exception = exception
         }
 
         // ClipMenu.require(relativePath) — loads a lib script and returns success.
@@ -56,7 +58,7 @@ final class ScriptEngine {
             guard let self, !relativePath.isEmpty else { return false }
             guard let source = self.libSource(for: relativePath) else { return false }
             self.context.evaluateScript(source)
-            return true
+            return self.context.exception == nil
         }
 
         // ClipMenu.activate() — compatibility hook for scripts that prompt.

@@ -60,4 +60,17 @@ final class ClipEntry {
         h ^= (rtfData?.count ?? 0)
         return h
     }
+
+    /// Legacy hashes use byte lengths for binary data and can collide. Confirm
+    /// every stored representation before discarding a newly captured clip.
+    func hasSameContent(as other: ClipEntry) -> Bool {
+        types == other.types
+            && stringValue == other.stringValue
+            && isRTFD == other.isRTFD
+            && rtfData == other.rtfData
+            && pdfData == other.pdfData
+            && filenames == other.filenames
+            && urlStrings == other.urlStrings
+            && imageData == other.imageData
+    }
 }

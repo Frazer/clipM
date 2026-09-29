@@ -19,6 +19,7 @@ final class ActionOverlayPresenter: NSObject {
     private weak var parentMenu: NSMenu?
     private var columns: [ActionMenuColumn] = []
     private var openingTimer: Timer?
+    private var presentationID = 0
     private var suppressMouseUp = false
     private var pendingClick: NSMenuItem?
     private var eventTap: CFMachPort?
@@ -27,17 +28,22 @@ final class ActionOverlayPresenter: NSObject {
     private var isDraining = false
     private var typePrefix = ""
     private var lastTypeTime = Date.distantPast
+    private static let typeAheadCharacters = CharacterSet.alphanumerics
+        .union(.punctuationCharacters).union(.symbols).union(.whitespaces)
     var isVisible: Bool { openingTimer != nil || !columns.isEmpty }
+    var isRoutingInput: Bool { eventObserver != nil }
 
     func parentMenuDidClose() { dismiss() }
 
     func dismiss() {
+        presentationID &+= 1
         openingTimer?.invalidate()
         openingTimer = nil
         for column in columns { column.panel.orderOut(nil) }
         columns.removeAll()
         parentMenu = nil
-        // Keep immutable invocations alive until the next request.
+        menu = nil
+        stopInputRoutingIfIdle()
     }
 
     func show(items: [ActionOverlayItem], at screenPoint: NSPoint,
@@ -51,9 +57,10 @@ final class ActionOverlayPresenter: NSObject {
         installInputRouting()
         // Creating windows inside a CGEvent tap can stall that tap. Return the
         // triggering click first, then present in the native menu's run loop.
+        let requestID = presentationID
         let opening = Timer(timeInterval: 0, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, self.menu === root else { return }
+                guard let self, self.presentationID == requestID, let root = self.menu else { return }
                 self.openingTimer = nil
                 self.addColumn(root, topLeft: screenPoint)
             }
@@ -141,9 +148,11 @@ final class ActionOverlayPresenter: NSObject {
     }
 
     func routeEvent(_ type: CGEventType, event: CGEvent) -> Bool {
+        guard isVisible || suppressMouseUp else { return false }
         let point = NSPoint(x: event.location.x, y: (NSScreen.screens.first?.frame.maxY ?? 0) - event.location.y)
         if type == .leftMouseUp, suppressMouseUp {
             suppressMouseUp = false
+            defer { stopInputRoutingIfIdle() }
             let selected = pendingClick
             pendingClick = nil
             if let selected, frame(for: selected).contains(point) { activate(selected) }
@@ -202,7 +211,7 @@ final class ActionOverlayPresenter: NSObject {
         default:
             guard let text = NSEvent(cgEvent: event)?.charactersIgnoringModifiers,
                   !text.isEmpty,
-                  text.unicodeScalars.allSatisfy({ CharacterSet.alphanumerics.union(.punctuationCharacters).union(.symbols).union(.whitespaces).contains($0) }) else { return false }
+                  text.unicodeScalars.allSatisfy({ Self.typeAheadCharacters.contains($0) }) else { return false }
             if Date().timeIntervalSince(lastTypeTime) > 0.7 { typePrefix = "" }
             typePrefix += text.lowercased()
             lastTypeTime = Date()
@@ -236,6 +245,7 @@ final class ActionOverlayPresenter: NSObject {
                 CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString))
             }
         }
+        if let eventTap { CGEvent.tapEnable(tap: eventTap, enable: true) }
         guard eventObserver == nil else { return }
         eventObserver = CFRunLoopObserverCreateWithHandler(kCFAllocatorDefault, CFRunLoopActivity.beforeSources.rawValue, true, -10) { [weak self] _, _ in
             MainActor.assumeIsolated {
@@ -254,6 +264,16 @@ final class ActionOverlayPresenter: NSObject {
         }
         CFRunLoopAddObserver(CFRunLoopGetMain(), eventObserver, .commonModes)
         CFRunLoopAddObserver(CFRunLoopGetMain(), eventObserver, CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString))
+    }
+
+    private func stopInputRoutingIfIdle() {
+        // An outside mouse-down closes the panels before its matching mouse-up.
+        // Keep routing only until that release has been consumed.
+        guard !isVisible, !suppressMouseUp else { return }
+        pendingClick = nil
+        if let eventTap { CGEvent.tapEnable(tap: eventTap, enable: false) }
+        if let eventObserver { CFRunLoopObserverInvalidate(eventObserver) }
+        eventObserver = nil
     }
 
     private func makeMenu(items: [ActionOverlayItem], onPick: @escaping (ActionOverlayItem) -> Void) -> NSMenu {

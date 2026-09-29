@@ -705,7 +705,7 @@ private enum ClipMenuFilterKeyHook {
             },
             userInfo: nil
         ) else {
-            fputs("[ClipMenu] Filter key event tap unavailable — using run-loop monitor\n", stderr)
+            HotkeyService.log.debug("Filter event tap unavailable; using run-loop monitor")
             return
         }
 
@@ -717,7 +717,7 @@ private enum ClipMenuFilterKeyHook {
         let tracking = CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, tracking)
         CGEvent.tapEnable(tap: tap, enable: true)
-        fputs("[ClipMenu] Filter key/mouse event tap installed\n", stderr)
+        HotkeyService.log.debug("Filter key/mouse event tap installed")
     }
 
     private static func startRunLoopMonitorIfNeeded() {
@@ -730,49 +730,51 @@ private enum ClipMenuFilterKeyHook {
             true,
             0
         ) { _, _ in
-            guard ClipMenuFilterKeyHook.activeTarget != nil,
-                  !ClipMenuFilterKeyHook.isDrainingEvents else { return }
-            ClipMenuFilterKeyHook.isDrainingEvents = true
-            defer { ClipMenuFilterKeyHook.isDrainingEvents = false }
+            MainActor.assumeIsolated {
+                guard ClipMenuFilterKeyHook.activeTarget != nil,
+                      !ClipMenuFilterKeyHook.isDrainingEvents else { return }
+                ClipMenuFilterKeyHook.isDrainingEvents = true
+                defer { ClipMenuFilterKeyHook.isDrainingEvents = false }
 
-            // Intercept activation before NSMenu consumes it and closes the popup.
-            // Dequeue only masked events: mouse-moved / pressure traffic often sits
-            // ahead of a click and must stay queued for native highlight tracking.
-            var pendingToRepost: [NSEvent] = []
-            while let event = NSApp.nextEvent(
-                matching: keyMask,
-                // A nil deadline can wait for another event inside this observer,
-                // starving NSMenu's own tracking/drawing and accessibility work.
-                until: .distantPast,
-                inMode: .eventTracking,
-                dequeue: true
-            ) {
-                let consumed: Bool
-                if let target = ClipMenuFilterKeyHook.activeTarget,
-                   let cgEvent = event.cgEvent {
-                    switch event.type {
-                        case .flagsChanged:
-                            consumed = target.handleGlobalActionModifierChange(cgEvent: cgEvent)
-                        case .leftMouseDown:
-                            consumed = target.handleGlobalActionMouseDown(cgEvent: cgEvent)
-                        case .leftMouseUp:
-                            consumed = target.handleGlobalActionMouseUp()
-                        case .keyDown:
-                            consumed = target.handleGlobalKeyDown(cgEvent: cgEvent)
-                                || target.handleGlobalActionKeyDown(cgEvent: cgEvent)
-                        default:
-                            consumed = false
+                // Intercept activation before NSMenu consumes it and closes the popup.
+                // Dequeue only masked events: mouse-moved / pressure traffic often sits
+                // ahead of a click and must stay queued for native highlight tracking.
+                var pendingToRepost: [NSEvent] = []
+                while let event = NSApp.nextEvent(
+                    matching: keyMask,
+                    // A nil deadline can wait for another event inside this observer,
+                    // starving NSMenu's own tracking/drawing and accessibility work.
+                    until: .distantPast,
+                    inMode: .eventTracking,
+                    dequeue: true
+                ) {
+                    let consumed: Bool
+                    if let target = ClipMenuFilterKeyHook.activeTarget,
+                       let cgEvent = event.cgEvent {
+                        switch event.type {
+                            case .flagsChanged:
+                                consumed = target.handleGlobalActionModifierChange(cgEvent: cgEvent)
+                            case .leftMouseDown:
+                                consumed = target.handleGlobalActionMouseDown(cgEvent: cgEvent)
+                            case .leftMouseUp:
+                                consumed = target.handleGlobalActionMouseUp()
+                            case .keyDown:
+                                consumed = target.handleGlobalKeyDown(cgEvent: cgEvent)
+                                    || target.handleGlobalActionKeyDown(cgEvent: cgEvent)
+                            default:
+                                consumed = false
+                        }
+                    } else {
+                        consumed = false
                     }
-                } else {
-                    consumed = false
+                    if !consumed {
+                        pendingToRepost.append(event)
+                    }
                 }
-                if !consumed {
-                    pendingToRepost.append(event)
-                }
-            }
 
-            for event in pendingToRepost.reversed() {
-                NSApp.postEvent(event, atStart: true)
+                for event in pendingToRepost.reversed() {
+                    NSApp.postEvent(event, atStart: true)
+                }
             }
         }
 
@@ -780,7 +782,7 @@ private enum ClipMenuFilterKeyHook {
         let mode = CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString)
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, mode)
         runLoopMonitorInstalled = true
-        fputs("[ClipMenu] Filter key run-loop monitor installed\n", stderr)
+        HotkeyService.log.debug("Filter key run-loop monitor installed")
     }
 
     private static func stopRunLoopMonitor() {
@@ -802,6 +804,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     private var targetAppForPaste: NSRunningApplication?
     private var lastTargetApplication: NSRunningApplication?
     private var highlightPollingTimer: Timer?
+    private weak var polledMenu: NSMenu?
     private var pendingPreviewItem: ClipPreviewItem?
     private var previewedItemID: PersistentIdentifier?
     private var currentSettings: ClipMenuSettings?
@@ -888,12 +891,12 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         anchorWindow.orderFront(nil)
         beginSlashKeyMonitorForOpenMenu()
 
+        #if DEBUG
         let selfTestFilterSlash = ProcessInfo.processInfo.arguments.contains("--self-test-filter-slash")
         if selfTestFilterSlash {
             scheduleFilterSlashSelfTest(for: menu)
         }
 
-        #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--self-test-action-menu") {
             NativeActionMenuSmoke.start(menu: menu)
         }
@@ -910,6 +913,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         HotkeyService.log.notice("Presented fallback NSMenu popup")
     }
 
+    #if DEBUG
     private func scheduleFilterSlashSelfTest(for menu: NSMenu) {
         fputs("[FILTER SELFTEST] scheduled\n", stderr)
         let timer = Timer(timeInterval: 0.5, repeats: false) { [weak self] _ in
@@ -1080,6 +1084,8 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         RunLoop.main.add(evaluate, forMode: .eventTracking)
         RunLoop.main.add(evaluate, forMode: .common)
     }
+
+    #endif
 
     private func popupPresentationPoint() -> NSPoint {
         guard ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1",
@@ -1260,7 +1266,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
-        fputs("[DEBUG] menu:willHighlight item=\(item?.title ?? "nil") in menu=\(menu.title)\n", stderr)
         actionTarget.clipMenuWillHighlight(menu: menu, item: item)
         handleHighlightedItem(item, in: menu)
         // AppKit owns hover, keyboard selection, and menu scrolling. Posting
@@ -1283,8 +1288,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     @MainActor
     private func showPreview(for previewItem: ClipPreviewItem) {
         guard !ActionOverlayPresenter.shared.isVisible else { return }
-        fputs("[DEBUG] showPreview called for item! anchor=\(previewAnchorPoint ?? .zero) currentMenuFrame=\(currentMenuFrame)\n", stderr)
-        HotkeyService.log.notice("showPreview called for item: \(String(describing: previewItem.persistentModelID), privacy: .public)")
         previewedItemID = previewItem.persistentModelID
         if !isUITestMode, let menu = highlightedMenu {
             updateMenuGeometry(for: menu)
@@ -1430,13 +1433,11 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     private func showPendingPreview() {
-        fputs("[DEBUG] showPendingPreview called! pendingPreviewItem=\(pendingPreviewItem != nil)\n", stderr)
         guard let item = pendingPreviewItem else { return }
         showPreview(for: item)
     }
 
     private func handleHighlightedItem(_ item: NSMenuItem?, in menu: NSMenu?) {
-        fputs("[DEBUG] handleHighlightedItem item=\(item?.title ?? "nil"), showTooltips=\(self.currentSettings?.showTooltipsInMenu ?? false)\n", stderr)
         guard currentSettings?.showTooltipsInMenu == true else {
             dismissPreview()
             return
@@ -1455,7 +1456,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         } else if let snippet = item?.representedObject as? Snippet {
             previewItem = .snippet(snippet)
         } else {
-            HotkeyService.log.notice("handleHighlightedItem: item has no clip or snippet representedObject. Title=\(item?.title ?? "nil", privacy: .public)")
             dismissPreview()
             return
         }
@@ -1502,14 +1502,14 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
 
     private func startHighlightPolling(for menu: NSMenu) {
         stopHighlightPolling()
+        polledMenu = menu
 
-        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self, weak menu] _ in
+        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, let menu else { return }
+                guard let self, let menu = self.polledMenu else { return }
                 if let (item, subMenu) = self.findHighlightedItemAndMenu(in: menu) {
                     self.handleHighlightedItem(item, in: subMenu)
                 } else {
-                    fputs("[DEBUG] poll: no highlighted item found in \(menu.title)\n", stderr)
                     self.handleHighlightedItem(nil, in: menu)
                 }
             }
@@ -1537,6 +1537,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     private func stopHighlightPolling() {
         highlightPollingTimer?.invalidate()
         highlightPollingTimer = nil
+        polledMenu = nil
     }
 
     private func previewAnchorPoint(for item: NSMenuItem, in menu: NSMenu) -> NSPoint {
@@ -1740,18 +1741,18 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             actionTarget.filterTitleMenuItem = nil
         }
 
-        let fetchedClips = (try? context.fetch(FetchDescriptor<ClipEntry>(
+        var clipsDescriptor = FetchDescriptor<ClipEntry>(
             sortBy: [SortDescriptor(\ClipEntry.lastUsedAt, order: .reverse)]
-        ))) ?? []
-        let clips = Array(fetchedClips.prefix(max(settings.maxHistorySize, 0)))
+        )
+        clipsDescriptor.fetchLimit = kind == .actions ? 1 : max(settings.maxHistorySize, 1)
+        let clips = kind == .snippets ? [] : ((try? context.fetch(clipsDescriptor)) ?? [])
 
-        let folders = (try? context.fetch(FetchDescriptor<SnippetFolder>(
+        let folders = kind == .history || kind == .actions ? [] : ((try? context.fetch(FetchDescriptor<SnippetFolder>(
             sortBy: [SortDescriptor(\SnippetFolder.sortIndex, order: .forward)]
-        ))) ?? []
+        ))) ?? [])
 
         let showSnippetsInMain = kind == .main
         let showHistory = kind != .snippets && kind != .actions
-        let showActionsInMain = false
 
         if showSnippetsInMain && settings.positionOfSnippets == 0 {
             addSnippets(to: menu, folders: folders, settings: settings)
@@ -1773,11 +1774,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         if showSnippetsInMain && settings.positionOfSnippets == 1 {
             if showHistory { menu.addItem(.separator()) }
             addSnippets(to: menu, folders: folders, settings: settings)
-        }
-
-        if showActionsInMain {
-            menu.addItem(.separator())
-            addActionsSubmenu(to: menu, clips: clips, context: context, runtime: runtime)
         }
 
         if showHistory && settings.showClearHistoryItem {
@@ -1818,9 +1814,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             actionTarget.lockedFilterMenuWidth = nil
         }
 
-        for (idx, item) in menu.items.enumerated() {
-            fputs("[DEBUG MENU ITEM \(idx)] '\(item.title)' isSeparator=\(item.isSeparatorItem) hasSubmenu=\(item.submenu != nil) rep=\(String(describing: type(of: item.representedObject as Any)))\n", stderr)
-        }
         return menu
     }
 
@@ -1846,49 +1839,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
 
         menu.addItem(filterItem)
         menu.addItem(.separator())
-    }
-
-    private func addActionsSubmenu(to menu: NSMenu, clips: [ClipEntry], context: ModelContext, runtime: AppRuntime) {
-        let actionsItem = NSMenuItem(title: "Actions", action: nil, keyEquivalent: "")
-        actionsItem.image = NSImage(systemSymbolName: "bolt", accessibilityDescription: nil)
-
-        guard let targetClip = clips.first else {
-            let submenu = NSMenu(title: "Actions")
-            submenu.minimumWidth = 240.0
-            let empty = NSMenuItem(title: "No clips available", action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            submenu.addItem(empty)
-            actionsItem.submenu = submenu
-            menu.addItem(actionsItem)
-            return
-        }
-
-        let roots = (try? context.fetch(FetchDescriptor<ActionNode>(
-            predicate: #Predicate<ActionNode> { $0.parent == nil },
-            sortBy: [SortDescriptor(\ActionNode.sortIndex)]
-        ))) ?? []
-
-            let actionMenu = ActionMenuBuilder.makeMenu(
-                from: roots,
-                target: targetClip,
-                service: runtime.actionService,
-                executionContext: .transformOnly,
-                postAction: { [weak self] in
-                    await self?.pasteAfterActionIfNeeded(runtime: runtime)
-                }
-            )
-        if actionMenu.items.isEmpty {
-            let submenu = NSMenu(title: "Actions")
-            submenu.minimumWidth = 240.0
-            let empty = NSMenuItem(title: "No actions configured", action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            submenu.addItem(empty)
-            actionsItem.submenu = submenu
-        } else {
-            actionsItem.submenu = actionMenu
-        }
-
-        menu.addItem(actionsItem)
     }
 
     private func addActions(to menu: NSMenu, clips: [ClipEntry], context: ModelContext, runtime: AppRuntime) {
@@ -2410,7 +2360,6 @@ private final class ClipPreviewPanelController {
         } else {
             panel.orderFrontRegardless()
         }
-        fputs("[DEBUG] ClipPreviewPanelController.show size=\(size) frame=\(panel.frame) isVisible=\(panel.isVisible) level=\(panel.level.rawValue)\n", stderr)
 
         if isUITestMode {
             let (title, hasImage): (String, Bool)
@@ -2689,7 +2638,6 @@ private final class HotkeyPopupActionTarget: NSObject {
     private var lastClickModifierFlags: NSEvent.ModifierFlags = []
     private var lastClickLocation: NSPoint?
     private var modifierMonitor: Any?
-    private var modifierPollTimer: Timer?
     /// Last row from `menu:willHighlight:` — used for modifier+click action overlay.
     private weak var lastHighlightedMenuItem: NSMenuItem?
     /// Swallow the matching mouseUp after we intercept a modifier+click.
@@ -2710,47 +2658,41 @@ private final class HotkeyPopupActionTarget: NSObject {
         modifierMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.flagsChanged, .leftMouseDown, .leftMouseUp, .rightMouseDown, .keyDown]
         ) { [weak self] event in
-            guard let self else { return event }
-            if ActionOverlayPresenter.shared.isVisible { return event }
-            if event.type == .flagsChanged, let cgEvent = event.cgEvent {
-                return self.handleGlobalActionModifierChange(cgEvent: cgEvent) ? nil : event
-            }
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            self.trackedModifierFlags = flags
+            let consume = MainActor.assumeIsolated { () -> Bool in
+                guard let self else { return false }
+                if ActionOverlayPresenter.shared.isVisible { return false }
+                if event.type == .flagsChanged, let cgEvent = event.cgEvent {
+                    return self.handleGlobalActionModifierChange(cgEvent: cgEvent)
+                }
+                let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+                self.trackedModifierFlags = flags
 
-            if event.type == .leftMouseDown || event.type == .rightMouseDown {
-                self.lastClickModifierFlags = flags
-                self.lastClickLocation = NSEvent.mouseLocation
-            } else if event.type == .leftMouseUp {
-                if !flags.isEmpty {
+                if event.type == .leftMouseDown || event.type == .rightMouseDown {
                     self.lastClickModifierFlags = flags
+                    self.lastClickLocation = NSEvent.mouseLocation
+                } else if event.type == .leftMouseUp {
+                    if !flags.isEmpty { self.lastClickModifierFlags = flags }
+                    if self.suppressNextMouseUpForActionOverlay {
+                        self.suppressNextMouseUpForActionOverlay = false
+                        return true
+                    }
                 }
-                if self.suppressNextMouseUpForActionOverlay {
-                    self.suppressNextMouseUpForActionOverlay = false
-                    return nil
-                }
-            }
 
-            if event.type == .leftMouseDown || event.type == .keyDown {
-                var swallow = false
-                MainActor.assumeIsolated {
-                    swallow = self.tryPresentActionOverlay(from: event)
-                }
-                if swallow {
+                if event.type == .leftMouseDown || event.type == .keyDown,
+                   self.tryPresentActionOverlay(from: event) {
                     if event.type == .leftMouseDown {
                         self.suppressNextMouseUpForActionOverlay = true
                         self.ignoreNextClipSelectionForActionOverlay = true
                     }
-                    return nil
+                    return true
                 }
+                return false
             }
-            return event
+            return consume ? nil : event
         }
     }
 
     private func removeModifierMonitor() {
-        modifierPollTimer?.invalidate()
-        modifierPollTimer = nil
         if let modifierMonitor {
             NSEvent.removeMonitor(modifierMonitor)
             self.modifierMonitor = nil
@@ -2831,7 +2773,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         clearMenuHighlight()
         filterSearchField?.activateForTypingFromMenuHighlight()
         applyCurrentFilterQuery()
-        fputs("[ClipMenu] Filter mode ON\n", stderr)
+        HotkeyService.log.debug("Filter mode ON")
     }
 
     private func exitFilterMode(clearQuery: Bool) {
@@ -2845,7 +2787,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         if let window = filterSearchField?.window ?? NSApp.keyWindow {
             window.makeFirstResponder(nil)
         }
-        fputs("[ClipMenu] Filter mode OFF\n", stderr)
+        HotkeyService.log.debug("Filter mode OFF")
     }
 
     func toggleImagesOnlyFilter() {
@@ -2863,6 +2805,7 @@ private final class HotkeyPopupActionTarget: NSObject {
     }
 
     private func clearMenuHighlight() {
+        #if !APP_STORE
         guard let menu = filterTitleMenuItem?.menu else { return }
         // Modern AppKit exposes `highlightItem:` (private). `setHighlightedItem:` does not exist.
         for name in ["highlightItem:", "setHighlightedItem:", "_highlightItem:"] {
@@ -2871,6 +2814,9 @@ private final class HotkeyPopupActionTarget: NSObject {
             menu.perform(sel, with: nil)
             return
         }
+        #endif
+        // App Store builds use AppKit's native highlight. Filter input is
+        // consumed by our event router without invoking private menu selectors.
     }
 
     private func appendFilterCharacters(_ chars: String) {
@@ -3021,7 +2967,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         if wantsActions {
             // Fallback if the event tap/local monitor missed the click (menu may already be closing).
             actionDebugLog("click reached row activation (intercept missed)")
-            MainActor.assumeIsolated {
+            _ = MainActor.assumeIsolated {
                 self.presentActionMenu(for: clip, at: clickPoint, runtime: runtime, from: sender)
             }
             return
@@ -3134,7 +3080,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         }
 
         let presented = presentActionMenu(for: clip, at: NSEvent.mouseLocation, runtime: runtime, from: item)
-        actionDebugLog("mouseDown swallowed=\(presented) row=\(item.title)")
+        actionDebugLog("mouseDown swallowed=\(presented)")
         if presented {
             suppressNextMouseUpForActionOverlay = true
             ignoreNextClipSelectionForActionOverlay = true
@@ -3318,7 +3264,7 @@ private final class HotkeyPopupActionTarget: NSObject {
             let mockClip = ClipEntry()
             mockClip.stringValue = snippet.content
             mockClip.types = ["public.utf8-plain-text"]
-            MainActor.assumeIsolated {
+            _ = MainActor.assumeIsolated {
                 self.presentActionMenu(for: mockClip, at: clickPoint, runtime: runtime, from: sender)
             }
             return

@@ -104,14 +104,14 @@ struct ActionsPrefsView: View {
         .padding(4)
         .onAppear {
             ensureTreeSelection()
-            try? UserActionScriptsStore.ensureDirectory()
+            _ = try? UserActionScriptsStore.ensureDirectory()
         }
         .onChange(of: rootNodes.count) { _, _ in
             ensureTreeSelection()
         }
         .onChange(of: rightTab) { _, tab in
             if tab == .users {
-                try? UserActionScriptsStore.ensureDirectory()
+                _ = try? UserActionScriptsStore.ensureDirectory()
                 catalogEpoch += 1
             }
         }

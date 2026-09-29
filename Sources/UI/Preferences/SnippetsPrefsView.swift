@@ -82,6 +82,8 @@ struct SnippetsPrefsView: View {
         .onAppear { ensureSelection() }
         .onChange(of: folders.count) { _, _ in ensureSelection() }
         .onDisappear {
+            commitFolderRenameIfNeeded()
+            commitSnippetRenameIfNeeded()
             flushContentIfNeeded()
             persist()
         }

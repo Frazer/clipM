@@ -44,10 +44,6 @@ DMG_ROOT="$OUT/dmg-root"
 INBOX="$OUT/sparkle-inbox"
 mkdir -p "$OUT" "$STAGE" "$DMG_ROOT" "$INBOX"
 
-version_plist_key() {
-  /usr/libexec/PlistBuddy -c "Print :$1" "$ROOT/project.yml" 2>/dev/null || true
-}
-
 # Prefer MARKETING_VERSION / CURRENT_PROJECT_VERSION from project.yml via xcodebuild later.
 MARKETING_VERSION="$(python3 - <<'PY'
 import re
@@ -173,7 +169,7 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     exit 1
   fi
   xcrun stapler staple "$STAGE/clipM.app"
-  spctl --assess --type execute -vv "$STAGE/clipM.app" || true
+  spctl --assess --type execute -vv "$STAGE/clipM.app"
 else
   echo "==> Skipping notarization (--skip-notarize)"
 fi

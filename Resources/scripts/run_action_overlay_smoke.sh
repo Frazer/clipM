@@ -21,7 +21,7 @@ swiftc \
   "$ROOT/Resources/scripts/test_action_overlay_host.swift"
 
 # These phases drive AppKit input through the real native tracking loop.
-for phase in event-routing event-hover shortcuts mouse keyboard escape outside; do
+for phase in event-routing event-hover shortcuts mouse keyboard escape outside reopen; do
   ACTION_OVERLAY_SMOKE_PHASE="$phase" "$OUT/ActionOverlaySmoke"
 done
 

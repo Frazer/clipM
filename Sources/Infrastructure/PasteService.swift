@@ -14,6 +14,7 @@ actor PasteService {
     static let simulatedPasteNotification = Notification.Name("PasteService.simulatedPasteNotification")
     private var cachedVKeyCode: CGKeyCode?
     private var loggedMissingAXThisSession = false
+    private var inputSourceObserver: NSObjectProtocol?
 
     struct AccessibilityStatus {
         let isTrusted: Bool
@@ -21,14 +22,19 @@ actor PasteService {
         let executablePath: String
     }
 
-    init() {
-        NotificationCenter.default.addObserver(
+    private func observeInputSourceIfNeeded() {
+        guard inputSourceObserver == nil else { return }
+        inputSourceObserver = NotificationCenter.default.addObserver(
             forName: NSTextInputContext.keyboardSelectionDidChangeNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             Task { await self?.invalidateCachedKeyCode() }
         }
+    }
+
+    deinit {
+        if let inputSourceObserver { NotificationCenter.default.removeObserver(inputSourceObserver) }
     }
 
     func paste() async {
@@ -111,6 +117,7 @@ actor PasteService {
 
     /// HIToolbox input-source APIs must run on the main thread.
     private func resolvedVKeyCode() async -> CGKeyCode? {
+        observeInputSourceIfNeeded()
         if let cachedVKeyCode {
             return cachedVKeyCode
         }

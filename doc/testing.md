@@ -10,6 +10,7 @@ Grant **Accessibility** (and sometimes Input Monitoring) to Terminal / your IDE 
 |------|------------|---------------------|
 | Preview AX smoke (primary) | `bash Resources/scripts/run_preview_ax_smoke.sh` | Yes |
 | Native action menus and paste | `bash Resources/scripts/run_action_overlay_smoke.sh /path/to/ClipMenuTest.app` | Yes |
+| Clipboard and script regressions | `bash Resources/scripts/run_core_services_smoke.sh` | No |
 | Real preview smoke (no UI-test mocks) | `swift Resources/scripts/test_real_preview.swift /path/to/ClipMenu.app` | Yes (keyboard post) |
 | External `/` filter smoke | `swift Resources/scripts/test_filter_slash.swift /path/to/ClipMenu.app` | Yes |
 | In-process `/` filter self-test | `ClipMenu --seed-clips --self-test-filter-slash` | No |
@@ -61,6 +62,16 @@ to avoid creating screenshots or opening system UI during the suite.
 Footer phases cover the main, history, snippets, actions, and status-bar popups.
 They hover Edit Snippets, Preferences, and Quit and verify that the pointer stays
 on each row, the native highlight remains there, and no clip is activated.
+The standalone suite also verifies that input routing stops on dismissal and
+resumes when the action menu reopens.
+
+## Core services
+
+`bash Resources/scripts/run_core_services_smoke.sh` uses an in-memory SwiftData
+store, disposable preferences, and a private pasteboard. It checks script syntax
+and runtime failures, recovery on the next action, binary hash collisions, large
+history-limit reductions, the reorder preference, and text/file/URL/image
+pasteboard round trips. It does not synthesize paste or modify the user's history.
 
 ## Preview tests
 

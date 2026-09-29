@@ -16,7 +16,7 @@ extension EnvironmentValues {
 // MARK: - SnippetService
 
 private struct SnippetServiceKey: EnvironmentKey {
-    static let defaultValue: SnippetService = SnippetService()
+    static let defaultValue: SnippetService = AppRuntime.shared.snippetService
 }
 
 extension EnvironmentValues {
@@ -29,7 +29,7 @@ extension EnvironmentValues {
 // MARK: - ActionService
 
 private struct ActionServiceKey: EnvironmentKey {
-    static let defaultValue: ActionService = ActionService()
+    static let defaultValue: ActionService = AppRuntime.shared.actionService
 }
 
 extension EnvironmentValues {

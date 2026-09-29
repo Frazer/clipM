@@ -16,13 +16,16 @@ enum ActionExecutionContext {
 /// Reference: `legacy/Source/ActionController.{h,m}`,
 ///            `ActionNode.{h,m}`, `ActionNodeFactory.{h,m}`,
 ///            `BuiltInActionController.{h,m}`, `JavaScriptSupport.{h,m}`.
-actor ActionService {
+@MainActor
+final class ActionService {
 
     private var context: ModelContext?
-    private let engine = ScriptEngine()
+    private let engine = ActionScriptRunner()
     private let paste  = PasteService()
 
-    func start(context: ModelContext) {
+    nonisolated init() {}
+
+    func start(context: ModelContext) async {
         self.context = context
         seedDefaultActionsIfNeeded()
     }
@@ -58,32 +61,21 @@ actor ActionService {
     /// - Returns: `true` when the pasteboard was updated (or a remove completed).
     @discardableResult
     func perform(action node: ActionNode, on entry: ClipEntry, executionContext: ActionExecutionContext = .pasteContext) async -> Bool {
-        // SwiftData models must be read on the main actor; reading `actionType` /
-        // `stringValue` from this actor often yields nil and the action no-ops —
-        // after which callers Cmd+V the previous pasteboard contents.
-        let prepared = await MainActor.run { () -> PreparedAction? in
-            guard node.isEnabled else { return nil }
-            let script = Self.scriptSource(inline: node.scriptContent, path: node.scriptPath)
-            return PreparedAction(
-                actionType: node.actionType,
-                actionName: node.actionName?.trimmingCharacters(in: CharacterSet(charactersIn: ":")),
-                script: script,
-                stringValue: entry.stringValue,
-                filenames: entry.filenames,
-                urlStrings: entry.urlStrings,
-                rtfData: entry.rtfData,
-                isRTFD: entry.isRTFD,
-                pdfData: entry.pdfData,
-                imageData: entry.imageData,
-                types: entry.types
-            )
-        }
-        guard let prepared else { return false }
+        // Keep SwiftData reads on the context's main actor. Only immutable
+        // strings cross into the script runner, so execution cannot block menus.
+        guard node.isEnabled else { return false }
+        let prepared = PreparedAction(
+            actionType: node.actionType,
+            actionName: node.actionName?.trimmingCharacters(in: CharacterSet(charactersIn: ":")),
+            script: Self.scriptSource(inline: node.scriptContent, path: node.scriptPath),
+            stringValue: entry.stringValue,
+            filenames: entry.filenames
+        )
 
         switch prepared.actionType {
         case "javaScript":
             guard let script = prepared.script else { return false }
-            let resultText = engine.run(script: script, clip: ScriptableClip(text: prepared.stringValue))
+            let resultText = await engine.run(script: script, text: prepared.stringValue)
             guard let resultText else { return false }
             return await replaceClipWithString(resultText, shouldPaste: executionContext.shouldPaste)
 
@@ -109,12 +101,6 @@ actor ActionService {
         var script: String?
         var stringValue: String?
         var filenames: [String]?
-        var urlStrings: [String]?
-        var rtfData: Data?
-        var isRTFD: Bool
-        var pdfData: Data?
-        var imageData: Data?
-        var types: [String]
     }
 
     private func performBuiltin(
@@ -125,15 +111,14 @@ actor ActionService {
     ) async -> Bool {
         switch name {
         case "removeAction":
-            guard let context else { return false }
-            let removed = await MainActor.run { () -> Bool in
-                // Only delete persisted history clips, never transient snapshots.
-                guard originalEntry.modelContext != nil else { return false }
-                context.delete(originalEntry)
-                try? context.save()
+            guard let context, originalEntry.modelContext != nil else { return false }
+            context.delete(originalEntry)
+            do {
+                try context.save()
                 return true
+            } catch {
+                return false
             }
-            return removed
 
         case "pasteAsPlainText":
             guard let text = prepared.stringValue else { return false }
@@ -160,22 +145,15 @@ actor ActionService {
 
     private func replaceClipWithString(_ string: String, shouldPaste: Bool) async -> Bool {
         guard let context else { return false }
+        let transformed = ClipEntry()
+        transformed.types = [NSPasteboard.PasteboardType.string.rawValue]
+        transformed.stringValue = string
+        context.insert(transformed)
+        try? context.save()
 
-        let wrotePasteboard = await MainActor.run {
-            let transformed = ClipEntry()
-            transformed.types = [NSPasteboard.PasteboardType.string.rawValue]
-            transformed.stringValue = string
-            transformed.createdAt = .now
-            transformed.lastUsedAt = .now
-
-            context.insert(transformed)
-
-            try? context.save()
-
-            let pboard = NSPasteboard.general
-            pboard.clearContents()
-            return pboard.setString(string, forType: .string)
-        }
+        let pboard = NSPasteboard.general
+        pboard.clearContents()
+        let wrotePasteboard = pboard.setString(string, forType: .string)
 
         if wrotePasteboard && shouldPaste {
             await paste.paste()
@@ -253,7 +231,7 @@ actor ActionService {
         return node
     }
 
-    private func scriptSearchRoots() -> [URL] {
+    nonisolated private func scriptSearchRoots() -> [URL] {
         var roots: [URL] = []
 
         if let bundleRoot = Bundle.main.resourceURL {
@@ -323,5 +301,14 @@ actor ActionService {
         }
 
         return result
+    }
+}
+
+/// JavaScriptCore contexts are serialized independently of SwiftData/UI work.
+private actor ActionScriptRunner {
+    private let engine = ScriptEngine()
+
+    func run(script: String, text: String?) -> String? {
+        engine.run(script: script, clip: ScriptableClip(text: text))
     }
 }

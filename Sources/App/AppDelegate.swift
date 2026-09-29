@@ -89,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task {
             runtime.clipsService.start(context: modelContext)
-            await runtime.snippetService.start(context: modelContext)
+            runtime.snippetService.start(context: modelContext)
             await runtime.actionService.start(context: modelContext)
         }
 
@@ -205,8 +205,6 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         if let button = statusItem.button {
             button.performClick(nil)
-        } else {
-            statusItem.popUpMenu(menu)
         }
     }
 

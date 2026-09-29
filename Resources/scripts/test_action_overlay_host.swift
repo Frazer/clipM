@@ -154,7 +154,20 @@ final class SmokeHost: NSObject, NSApplicationDelegate, NSMenuDelegate {
             presenter.dismiss()
             pass()
         }
-        if phase == "mouse" || phase == "event-hover" { mouseStep() }
+        if phase == "reopen" {
+            switch stage {
+            case 0:
+                presenter.dismiss()
+                check(!presenter.isRoutingInput, "closed menu still routing input")
+                presenter.show(items: items, at: NSPoint(x: 700, y: 650), replacing: rootMenu) { _ in }
+            case 1: move(to: row("Case"))
+            default:
+                check(presenter.highlightedItem(in: presenter.menu)?.title == "Case", "reopened menu did not resume hover routing")
+                presenter.dismiss()
+                pass()
+            }
+        }
+        else if phase == "mouse" || phase == "event-hover" { mouseStep() }
         else if phase == "keyboard" { keyboardStep() }
         else if phase == "escape" {
             if stage == 0 { key(53, "\u{1b}") }
@@ -280,6 +293,7 @@ final class SmokeHost: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Darwin.exit(1)
     }
     private func pass() -> Never {
+        check(!presenter.isRoutingInput, "input routing stayed active after dismissal")
         fputs("[ACTION MENU SMOKE] PASS \(phase)\n", stderr)
         Darwin.exit(0)
     }

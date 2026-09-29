@@ -12,7 +12,15 @@ final class ClipboardMonitor {
 
     private var cancellables = Set<AnyCancellable>()
     private var lastChangeCount: Int = 0
-    private let pasteboard = NSPasteboard.general
+    private let pasteboard: NSPasteboard
+
+    init(pasteboard: NSPasteboard = .general) {
+        self.pasteboard = pasteboard
+    }
+
+    func ignoreCurrentChange() {
+        lastChangeCount = pasteboard.changeCount
+    }
 
     func start(interval: TimeInterval = 0.75) {
         stop()
