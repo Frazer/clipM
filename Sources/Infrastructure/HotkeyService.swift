@@ -628,6 +628,9 @@ private enum ClipMenuFilterKeyHook {
     private static var runLoopSource: CFRunLoopSource?
     private static var runLoopObserver: CFRunLoopObserver?
     private static var isDrainingEvents = false
+    /// Mouse-up for the click that opened the menu. A session tap or a
+    /// dequeued-and-reposted mouse-up makes a status-item menu close at once.
+    private static var passOpeningMouseUp = false
     private static weak var activeTarget: HotkeyPopupActionTarget?
     private(set) static var eventTapInstalled = false
     private(set) static var runLoopMonitorInstalled = false
@@ -639,8 +642,11 @@ private enum ClipMenuFilterKeyHook {
     static func setActiveTarget(_ target: HotkeyPopupActionTarget?) {
         prepareAtLaunch()
         activeTarget = target
+        // A status-item menu is opened by this click. The tap must stay off
+        // until that mouse-up has reached AppKit, or the menu closes at once.
+        passOpeningMouseUp = NSEvent.pressedMouseButtons != 0
         startRunLoopMonitorIfNeeded()
-        if let eventTap {
+        if let eventTap, !passOpeningMouseUp {
             CGEvent.tapEnable(tap: eventTap, enable: true)
         }
     }
@@ -648,7 +654,21 @@ private enum ClipMenuFilterKeyHook {
     static func clearActiveTarget(_ target: HotkeyPopupActionTarget) {
         if activeTarget === target {
             activeTarget = nil
+            passOpeningMouseUp = false
             stopRunLoopMonitor()
+            if let eventTap {
+                CGEvent.tapEnable(tap: eventTap, enable: false)
+            }
+        }
+    }
+
+    private static func finishOpeningClickIfIdle() {
+        guard passOpeningMouseUp, NSEvent.pressedMouseButtons == 0 else { return }
+        passOpeningMouseUp = false
+        guard let eventTap else { return }
+        DispatchQueue.main.async {
+            guard activeTarget != nil, !passOpeningMouseUp else { return }
+            CGEvent.tapEnable(tap: eventTap, enable: true)
         }
     }
 
@@ -670,9 +690,18 @@ private enum ClipMenuFilterKeyHook {
             eventsOfInterest: mask,
             callback: { _, type, event, _ in
                 if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-                    if let tap = ClipMenuFilterKeyHook.eventTap {
+                    // Stay disabled with no open menu, and during the click that
+                    // opened a status-item menu. Re-enabling here undoes both.
+                    if ClipMenuFilterKeyHook.activeTarget != nil,
+                       !ClipMenuFilterKeyHook.passOpeningMouseUp,
+                       let tap = ClipMenuFilterKeyHook.eventTap {
                         CGEvent.tapEnable(tap: tap, enable: true)
                     }
+                    return Unmanaged.passUnretained(event)
+                }
+                if ClipMenuFilterKeyHook.passOpeningMouseUp,
+                   type == .leftMouseDown || type == .leftMouseUp || type == .rightMouseDown {
+                    if type == .leftMouseUp { ClipMenuFilterKeyHook.passOpeningMouseUp = false }
                     return Unmanaged.passUnretained(event)
                 }
                 guard let target = ClipMenuFilterKeyHook.activeTarget else {
@@ -716,14 +745,17 @@ private enum ClipMenuFilterKeyHook {
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         let tracking = CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, tracking)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        // Leave the tap disabled until a menu is open. Enabling it at launch
+        // puts the status-item click through the tap, and that menu then closes.
         HotkeyService.log.debug("Filter key/mouse event tap installed")
     }
 
     private static func startRunLoopMonitorIfNeeded() {
         guard runLoopObserver == nil else { return }
 
-        let keyMask: NSEvent.EventTypeMask = [.keyDown, .flagsChanged, .leftMouseDown, .leftMouseUp, .rightMouseDown]
+        // Keys only. Dequeuing the opening mouse-up and posting it back closes
+        // a status-item menu. Modifier-clicks are handled by the event tap.
+        let keyMask: NSEvent.EventTypeMask = [.keyDown, .flagsChanged]
         let observer = CFRunLoopObserverCreateWithHandler(
             kCFAllocatorDefault,
             CFRunLoopActivity.beforeSources.rawValue,
@@ -735,6 +767,7 @@ private enum ClipMenuFilterKeyHook {
                       !ClipMenuFilterKeyHook.isDrainingEvents else { return }
                 ClipMenuFilterKeyHook.isDrainingEvents = true
                 defer { ClipMenuFilterKeyHook.isDrainingEvents = false }
+                ClipMenuFilterKeyHook.finishOpeningClickIfIdle()
 
                 // Intercept activation before NSMenu consumes it and closes the popup.
                 // Dequeue only masked events: mouse-moved / pressure traffic often sits
@@ -754,10 +787,6 @@ private enum ClipMenuFilterKeyHook {
                         switch event.type {
                             case .flagsChanged:
                                 consumed = target.handleGlobalActionModifierChange(cgEvent: cgEvent)
-                            case .leftMouseDown:
-                                consumed = target.handleGlobalActionMouseDown(cgEvent: cgEvent)
-                            case .leftMouseUp:
-                                consumed = target.handleGlobalActionMouseUp()
                             case .keyDown:
                                 consumed = target.handleGlobalKeyDown(cgEvent: cgEvent)
                                     || target.handleGlobalActionKeyDown(cgEvent: cgEvent)

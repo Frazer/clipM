@@ -16,7 +16,7 @@ struct GeneralPrefsView: View {
         Form {
             // MARK: Startup
             Section("Startup") {
-                Toggle("Launch ClipMenu at login", isOn: Binding(
+                Toggle("Launch \(AppDistribution.displayName) at login", isOn: Binding(
                     get: { settings.launchAtLogin },
                     set: { val in
                         settings.launchAtLogin = val
