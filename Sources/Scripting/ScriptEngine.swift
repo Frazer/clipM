@@ -58,7 +58,10 @@ final class ScriptEngine {
             guard let self, !relativePath.isEmpty else { return false }
             guard let source = self.libSource(for: relativePath) else { return false }
             self.context.evaluateScript(source)
-            return self.context.exception == nil
+            let loaded = self.context.exception == nil
+            // A library error is require's result. Leave it set and the whole action fails.
+            self.context.exception = nil
+            return loaded
         }
 
         // ClipMenu.activate() — compatibility hook for scripts that prompt.

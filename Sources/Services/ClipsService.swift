@@ -49,7 +49,6 @@ final class ClipsService {
     /// Copies the given entry back onto the system pasteboard and triggers paste.
     func select(_ entry: ClipEntry, pasteImmediately: Bool = true) async {
         let pboard = pasteboard
-        pboard.clearContents()
 
         var declaredTypes = entry.types.map(NSPasteboard.PasteboardType.init(rawValue:))
         if declaredTypes.isEmpty {
@@ -96,11 +95,19 @@ final class ClipsService {
                 break
             }
         }
-        guard pboard.writeObjects(items) else { return }
+        guard writeReplacingContents(items, on: pboard) else { return }
 
         monitor.ignoreCurrentChange()
-        if settings.reorderClipsAfterPasting { entry.lastUsedAt = .now }
-        try? context?.save()
+        // lastUsedAt marks the clip actions should use, even when the history
+        // menu is shown in capture order.
+        entry.lastUsedAt = .now
+        if let context {
+            do {
+                try context.save()
+            } catch {
+                Self.log.error("Failed saving clip selection: \(error.localizedDescription, privacy: .public)")
+            }
+        }
 
         if pasteImmediately && settings.autoPasteAfterSelection {
             Self.log.debug("Auto-paste after clip selection is ON (immediate)")
@@ -123,7 +130,7 @@ final class ClipsService {
             let existing = try context.fetch(FetchDescriptor<ClipEntry>())
             let hash = clip.contentHash
             if let matched = existing.first(where: { $0.contentHash == hash && $0.hasSameContent(as: clip) }) {
-                if settings.reorderClipsAfterPasting { matched.lastUsedAt = .now }
+                matched.lastUsedAt = .now
                 if matched.imageData != nil || clip.imageData != nil {
                     Self.log.debug("Matched existing image clip")
                 }
@@ -159,7 +166,7 @@ final class ClipsService {
             // Flush both so a new or recently used clip cannot be mistaken for
             // an entry beyond the retained range.
             if context.hasChanges { try context.save() }
-            var descriptor = FetchDescriptor<ClipEntry>(sortBy: [SortDescriptor(\ClipEntry.createdAt, order: .reverse)])
+            var descriptor = FetchDescriptor<ClipEntry>(sortBy: [SortDescriptor(\ClipEntry.lastUsedAt, order: .reverse)])
             descriptor.fetchOffset = max(settings.maxHistorySize, 0)
             let clips = try context.fetch(descriptor)
 
@@ -167,7 +174,7 @@ final class ClipsService {
                 context.delete(clip)
             }
         } catch {
-            return
+            Self.log.error("Failed trimming history: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -237,6 +244,26 @@ final class ClipsService {
         }
 
         return results
+    }
+
+    /// Clears, then writes. A failed write puts the previous contents back.
+    private func writeReplacingContents(_ items: [NSPasteboardItem], on pboard: NSPasteboard) -> Bool {
+        let backup = (pboard.pasteboardItems ?? []).map { item in
+            item.types.compactMap { type in
+                item.data(forType: type).map { (type, $0) }
+            }
+        }
+        pboard.clearContents()
+        if pboard.writeObjects(items) { return true }
+        let restored = backup.map { pairs -> NSPasteboardItem in
+            let item = NSPasteboardItem()
+            for (type, data) in pairs { item.setData(data, forType: type) }
+            return item
+        }
+        if !restored.isEmpty {
+            pboard.writeObjects(restored)
+        }
+        return false
     }
 
     private func shouldStore(_ type: NSPasteboard.PasteboardType) -> Bool {

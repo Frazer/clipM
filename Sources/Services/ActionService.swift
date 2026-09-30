@@ -1,6 +1,7 @@
 import SwiftData
 import AppKit
 import Foundation
+import os
 
 enum ActionExecutionContext {
     case pasteContext
@@ -19,6 +20,7 @@ enum ActionExecutionContext {
 @MainActor
 final class ActionService {
 
+    private static let log = Logger(subsystem: "com.naotaka.ClipMenu", category: "Actions")
     private var context: ModelContext?
     private let engine = ActionScriptRunner()
     private let paste  = PasteService()
@@ -117,6 +119,8 @@ final class ActionService {
                 try context.save()
                 return true
             } catch {
+                context.rollback()
+                Self.log.error("Failed removing clip: \(error.localizedDescription, privacy: .public)")
                 return false
             }
 
@@ -149,16 +153,42 @@ final class ActionService {
         transformed.types = [NSPasteboard.PasteboardType.string.rawValue]
         transformed.stringValue = string
         context.insert(transformed)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            Self.log.error("Failed saving transformed clip: \(error.localizedDescription, privacy: .public)")
+        }
 
         let pboard = NSPasteboard.general
-        pboard.clearContents()
-        let wrotePasteboard = pboard.setString(string, forType: .string)
+        let item = NSPasteboardItem()
+        item.setString(string, forType: .string)
+        let wrotePasteboard = writeReplacingContents([item], on: pboard)
 
         if wrotePasteboard && shouldPaste {
             await paste.paste()
         }
         return wrotePasteboard
+    }
+
+    /// Clears, then writes. A failed write puts the previous contents back.
+    private func writeReplacingContents(_ items: [NSPasteboardItem], on pboard: NSPasteboard) -> Bool {
+        let backup = (pboard.pasteboardItems ?? []).map { item in
+            item.types.compactMap { type in
+                item.data(forType: type).map { (type, $0) }
+            }
+        }
+        pboard.clearContents()
+        if pboard.writeObjects(items) { return true }
+        let restored = backup.map { pairs -> NSPasteboardItem in
+            let item = NSPasteboardItem()
+            for (type, data) in pairs { item.setData(data, forType: type) }
+            return item
+        }
+        if !restored.isEmpty {
+            pboard.writeObjects(restored)
+        }
+        return false
     }
 
     // MARK: - Helpers

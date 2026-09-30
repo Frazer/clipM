@@ -70,7 +70,7 @@ resumes when the action menu reopens.
 `bash Resources/scripts/run_core_services_smoke.sh` uses an in-memory SwiftData
 store, disposable preferences, and a private pasteboard. It checks script syntax
 and runtime failures, recovery on the next action, binary hash collisions, large
-history-limit reductions, the reorder preference, and text/file/URL/image
+history-limit reductions, current-clip marking, and text/file/URL/image
 pasteboard round trips. It does not synthesize paste or modify the user's history.
 
 ## Preview tests

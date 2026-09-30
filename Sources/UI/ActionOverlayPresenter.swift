@@ -232,7 +232,11 @@ final class ActionOverlayPresenter: NSObject {
                 MainActor.assumeIsolated {
                     let presenter = ActionOverlayPresenter.shared
                     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-                        if let tap = presenter.eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
+                        // Disabling the tap on purpose also arrives as tapDisabledByUserInput.
+                        // Turn it back on only while the menu is up or a closing click is unfinished.
+                        if presenter.isVisible || presenter.suppressMouseUp, let tap = presenter.eventTap {
+                            CGEvent.tapEnable(tap: tap, enable: true)
+                        }
                         return Unmanaged.passUnretained(event)
                     }
                     return presenter.routeEvent(type, event: event) ? nil : Unmanaged.passUnretained(event)

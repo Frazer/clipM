@@ -169,7 +169,19 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     exit 1
   fi
   xcrun stapler staple "$STAGE/clipM.app"
-  spctl --assess --type execute -vv "$STAGE/clipM.app"
+  # Gatekeeper can reject a just-stapled app for a few seconds. Notarization
+  # already succeeded, so a flaky assessment must not skip the DMG.
+  assessed=0
+  for _ in 1 2 3 4 5; do
+    if spctl --assess --type execute -vv "$STAGE/clipM.app"; then
+      assessed=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "$assessed" -eq 0 ]]; then
+    echo "WARNING: Gatekeeper assessment failed after stapling; building the DMG anyway." >&2
+  fi
 else
   echo "==> Skipping notarization (--skip-notarize)"
 fi

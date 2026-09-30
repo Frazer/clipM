@@ -62,14 +62,10 @@ enum CoreServicesSmoke {
 
         let first = try context.fetch(FetchDescriptor<ClipEntry>())[0]
         first.types = [NSPasteboard.PasteboardType.string.rawValue]
-        let timestamp = first.lastUsedAt
-        await service.select(first, pasteImmediately: false)
-        check(first.lastUsedAt == timestamp, "selection ignored reorder preference")
-        check(board.string(forType: .string) == first.stringValue, "text pasteboard round trip")
-        settings.reorderClipsAfterPasting = true
         first.lastUsedAt = .distantPast
         await service.select(first, pasteImmediately: false)
-        check(first.lastUsedAt > .distantPast, "enabled reorder preference ignored")
+        check(first.lastUsedAt > .distantPast, "selection did not mark the current clip")
+        check(board.string(forType: .string) == first.stringValue, "text pasteboard round trip")
 
         let files = ["/tmp/one file.txt", "/tmp/two-📝.txt"]
         board.clearContents()

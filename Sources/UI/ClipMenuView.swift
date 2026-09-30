@@ -36,7 +36,7 @@ struct ClipMenuView: View {
 
         Divider()
         Menu {
-            if let targetClip = clips.first {
+            if let targetClip = actionTargetClip {
                 let enabledRoots = rootActions.filter(\.isEnabled)
                 if enabledRoots.isEmpty {
                     Text("No actions configured")
@@ -82,9 +82,25 @@ struct ClipMenuView: View {
     // Computed outside @ViewBuilder so SwiftUI's dependency tracking reliably
     // sees the @Query `clips` property on every render.
 
+    /// History order follows last use when “Move used clip to top” is on, and
+    /// capture time when it is off. Actions still target the latest lastUsedAt.
+    private var orderedClips: [ClipEntry] {
+        let sorted = clips.sorted { lhs, rhs in
+            if settings.reorderClipsAfterPasting {
+                return lhs.lastUsedAt > rhs.lastUsedAt
+            }
+            return lhs.createdAt > rhs.createdAt
+        }
+        return Array(sorted.prefix(max(settings.maxHistorySize, 0)))
+    }
+
+    private var actionTargetClip: ClipEntry? {
+        clips.max { $0.lastUsedAt < $1.lastUsedAt }
+    }
+
     private var inlineClips: [ClipEntry] {
         let n = settings.numberOfItemsInline
-        let capped = Array(clips.prefix(max(settings.maxHistorySize, 0)))
+        let capped = orderedClips
         // Legacy: n == 0 → all items go into folder submenus (mirrors ObjC behaviour).
         return n == 0 ? [] : Array(capped.prefix(n))
     }
@@ -93,7 +109,7 @@ struct ClipMenuView: View {
     private var folderGroups: [[ClipEntry]] {
         let n = settings.numberOfItemsInline
         let groupSize = max(settings.numberOfItemsInsideFolder, 1)
-        let capped = Array(clips.prefix(max(settings.maxHistorySize, 0)))
+        let capped = orderedClips
         let remaining = n == 0 ? capped : Array(capped.dropFirst(n))
         guard !remaining.isEmpty else { return [] }
         return stride(from: 0, to: remaining.count, by: groupSize).map {

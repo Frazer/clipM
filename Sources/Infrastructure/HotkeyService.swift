@@ -1770,9 +1770,12 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             actionTarget.filterTitleMenuItem = nil
         }
 
-        var clipsDescriptor = FetchDescriptor<ClipEntry>(
-            sortBy: [SortDescriptor(\ClipEntry.lastUsedAt, order: .reverse)]
-        )
+        var clipsDescriptor: FetchDescriptor<ClipEntry>
+        if kind == .actions || settings.reorderClipsAfterPasting {
+            clipsDescriptor = FetchDescriptor(sortBy: [SortDescriptor(\ClipEntry.lastUsedAt, order: .reverse)])
+        } else {
+            clipsDescriptor = FetchDescriptor(sortBy: [SortDescriptor(\ClipEntry.createdAt, order: .reverse)])
+        }
         clipsDescriptor.fetchLimit = kind == .actions ? 1 : max(settings.maxHistorySize, 1)
         let clips = kind == .snippets ? [] : ((try? context.fetch(clipsDescriptor)) ?? [])
 
