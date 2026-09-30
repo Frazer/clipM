@@ -2675,6 +2675,10 @@ private final class HotkeyPopupActionTarget: NSObject {
     /// When true, only clipboard rows with image data remain visible.
     private(set) var isImagesOnlyFilter = false
     private var isSuppressingContentHighlight = false
+    /// Rows briefly disabled so AppKit drops the tracking highlight. Restored
+    /// before the menu can draw them gray, or on the next turn when a highlight
+    /// is still being committed.
+    private var highlightMutedItems: [NSMenuItem] = []
     private let pasteService = PasteService()
     /// Modifiers observed while the popup menu is open (flags can clear before the item action runs).
     private var trackedModifierFlags: NSEvent.ModifierFlags = []
@@ -2820,6 +2824,7 @@ private final class HotkeyPopupActionTarget: NSObject {
     }
 
     private func exitFilterMode(clearQuery: Bool) {
+        restoreHighlightMutedItems()
         isFilterModeActive = false
         if clearQuery, let field = filterSearchField {
             field.stringValue = ""
@@ -2847,19 +2852,36 @@ private final class HotkeyPopupActionTarget: NSObject {
         filterImagesButtonHost?.setImagesFilterActive(enabled)
     }
 
-    private func clearMenuHighlight() {
-        #if !APP_STORE
-        guard let menu = filterTitleMenuItem?.menu else { return }
-        // Modern AppKit exposes `highlightItem:` (private). `setHighlightedItem:` does not exist.
-        for name in ["highlightItem:", "setHighlightedItem:", "_highlightItem:"] {
-            let sel = NSSelectorFromString(name)
-            guard menu.responds(to: sel) else { continue }
-            menu.perform(sel, with: nil)
-            return
+    /// Drops the blue menu highlight without a private `highlightItem:` call.
+    /// Disabling the tracked row clears it. Enabling the row again does not
+    /// bring the highlight back. A row AppKit is about to highlight has to stay
+    /// disabled until `menu(_:willHighlight:)` returns, then it is restored.
+    private func clearMenuHighlight(cancelling pending: NSMenuItem? = nil, restoreImmediately: Bool = true) {
+        guard let menu = filterTitleMenuItem?.menu ?? filterRootMenu else { return }
+        muteHighlight(on: menu.highlightedItem)
+        muteHighlight(on: pending)
+        guard !highlightMutedItems.isEmpty else { return }
+        if restoreImmediately {
+            restoreHighlightMutedItems()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.restoreHighlightMutedItems()
+            }
         }
-        #endif
-        // App Store builds use AppKit's native highlight. Filter input is
-        // consumed by our event router without invoking private menu selectors.
+    }
+
+    private func muteHighlight(on item: NSMenuItem?) {
+        guard let item, item.isEnabled, item.view == nil, !item.isSeparatorItem else { return }
+        guard !highlightMutedItems.contains(where: { $0 === item }) else { return }
+        item.isEnabled = false
+        highlightMutedItems.append(item)
+    }
+
+    private func restoreHighlightMutedItems() {
+        for item in highlightMutedItems {
+            item.isEnabled = true
+        }
+        highlightMutedItems.removeAll()
     }
 
     private func appendFilterCharacters(_ chars: String) {
@@ -2938,13 +2960,14 @@ private final class HotkeyPopupActionTarget: NSObject {
             if item != nil, !isSuppressingContentHighlight {
                 isSuppressingContentHighlight = true
                 defer { isSuppressingContentHighlight = false }
-                clearMenuHighlight()
+                clearMenuHighlight(cancelling: item, restoreImmediately: false)
             }
             return
         }
     }
 
     func clipMenuFilterMenuDidClose() {
+        restoreHighlightMutedItems()
         MainActor.assumeIsolated { ActionOverlayPresenter.shared.parentMenuDidClose() }
         isFilterModeActive = false
         setImagesOnlyFilter(false)
