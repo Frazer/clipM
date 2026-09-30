@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import AppKit
+import UniformTypeIdentifiers
 
 /// Snippets tab in the Preferences window.
 ///
@@ -22,6 +24,9 @@ struct SnippetsPrefsView: View {
     @State private var lastMirroredTitle = ""
     /// Content edits are kept in-memory until selection changes (avoids save lag on every click).
     @State private var contentDirty = false
+    @State private var importAlertTitle = ""
+    @State private var importAlertMessage = ""
+    @State private var showingImportAlert = false
 
     @FocusState private var isFolderNameFocused: Bool
     @FocusState private var isSnippetNameFocused: Bool
@@ -77,6 +82,18 @@ struct SnippetsPrefsView: View {
                     .frame(minWidth: 220, idealWidth: 360, maxWidth: .infinity)
             }
             .frame(maxHeight: .infinity)
+
+            HStack {
+                Spacer()
+                Button("Export Snippets.xml…") {
+                    exportLegacySnippetsFile()
+                }
+                .help("Saves your snippets as a Snippets.xml file. On another Mac, use Import Snippets.xml to bring them in.")
+                Button("Import Snippets.xml…") {
+                    importLegacySnippetsFile()
+                }
+                .help("Imports snippets. Either export them from ClipM, or for the old ClipMenu copy ~/Library/Application Support/ClipMenu/Snippets.xml - duplicate snippets will not be imported.")
+            }
         }
         .padding()
         .onAppear { ensureSelection() }
@@ -86,6 +103,11 @@ struct SnippetsPrefsView: View {
             commitSnippetRenameIfNeeded()
             flushContentIfNeeded()
             persist()
+        }
+        .alert(importAlertTitle, isPresented: $showingImportAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importAlertMessage)
         }
     }
 
@@ -356,6 +378,72 @@ struct SnippetsPrefsView: View {
         modelContext.delete(selectedSnippet)
         persist()
         selectedSnippetID = selectedSnippets.first?.persistentModelID
+    }
+
+    private func exportLegacySnippetsFile() {
+        commitFolderRenameIfNeeded()
+        commitSnippetRenameIfNeeded()
+        flushContentIfNeeded()
+        persist()
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.xml]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "Snippets.xml"
+        panel.prompt = "Export"
+        panel.message = "Save a Snippets.xml file you can import on another Mac."
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+        do {
+            try LegacyMigration.exportSnippets(to: url, from: modelContext)
+            importAlertTitle = "Snippets Exported"
+            importAlertMessage = "Saved \(url.lastPathComponent). On the other Mac, open Preferences → Snippets and choose Import Snippets.xml."
+        } catch {
+            importAlertTitle = "Couldn’t Export Snippets"
+            importAlertMessage = error.localizedDescription
+        }
+        showingImportAlert = true
+    }
+
+    private func importLegacySnippetsFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.xml]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.prompt = "Import"
+        panel.message = "Choose a Snippets.xml file from the original ClipMenu app."
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+
+        guard let result = LegacyMigration.importSnippets(from: url, into: modelContext) else {
+            importAlertTitle = "Couldn’t Import Snippets"
+            importAlertMessage = "That file isn’t a ClipMenu Snippets.xml file."
+            showingImportAlert = true
+            return
+        }
+
+        importAlertTitle = "Snippets Imported"
+        if result.snippetsAdded == 0 && result.snippetsSkipped == 0 {
+            importAlertMessage = "That file doesn’t contain any snippets."
+        } else if result.snippetsAdded == 0 {
+            importAlertMessage = "Those snippets are already in the library."
+        } else {
+            let added = result.snippetsAdded == 1 ? "1 snippet" : "\(result.snippetsAdded) snippets"
+            let folders = result.foldersAdded == 1 ? "1 new folder" : "\(result.foldersAdded) new folders"
+            var message = "Added \(added) in \(folders)."
+            if result.snippetsSkipped > 0 {
+                let skipped = result.snippetsSkipped == 1 ? "1 snippet was" : "\(result.snippetsSkipped) snippets were"
+                message += " \(skipped) already there."
+            }
+            importAlertMessage = message
+        }
+        showingImportAlert = true
+        ensureSelection()
     }
 
     private func ensureSelection() {

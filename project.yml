@@ -127,6 +127,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_NSAppleEventsUsageDescription: "clip'M pastes the clip you choose into the app you are using."
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE

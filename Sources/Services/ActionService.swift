@@ -272,7 +272,7 @@ final class ActionService {
         if let appSupport = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first {
-            roots.append(appSupport.appendingPathComponent("ClipMenu/script/action"))
+            roots.append(appSupport.appendingPathComponent("ClipM/script/action"))
         }
 
         var seen = Set<String>()

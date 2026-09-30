@@ -95,7 +95,7 @@ final class ScriptEngine {
             let userURL = FileManager.default
                 .urls(for: .applicationSupportDirectory, in: .userDomainMask)
                 .first?
-                .appendingPathComponent("ClipMenu/script/lib")
+                .appendingPathComponent("ClipM/script/lib")
                 .appendingPathComponent(path)
 
             for url in [bundleLegacyURL, bundleModernURL, userURL].compactMap({ $0 }) {

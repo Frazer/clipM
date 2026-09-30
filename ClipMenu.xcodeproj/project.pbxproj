@@ -245,6 +245,7 @@
 		C0C2DEA9193BEC16FD145658 /* 【 】.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "【 】.js"; sourceTree = "<group>"; };
 		C0F0FAA9BB77661670F28FA6 /* （ ）.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "（ ）.js"; sourceTree = "<group>"; };
 		C47B7A1E32A72B3C15931D0E /* Title Case.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Title Case.js"; sourceTree = "<group>"; };
+		C4FF6003B6A03BD09B4D4CA8 /* run_core_services_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_core_services_smoke.sh; sourceTree = "<group>"; };
 		C53F23FA57EE7251E7DC8C6E /* MenuPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuPrefsView.swift; sourceTree = "<group>"; };
 		C6107A96E18C02167CD2BF95 /* { }.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "{ }.js"; sourceTree = "<group>"; };
 		CC0D05E32BADC3B23BA7F652 /* ' '.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "' '.js"; sourceTree = "<group>"; };
@@ -272,6 +273,7 @@
 		F20169FFCAD9D79CBE1EB179 /* 〈 〉.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "〈 〉.js"; sourceTree = "<group>"; };
 		F425B2066AB9B7524D4770CD /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		F73F6340FDA6E31238939062 /* ClipMenuAppStore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMenuAppStore.entitlements; sourceTree = "<group>"; };
+		FF1FF4635FC447B0F449DB11 /* test_core_services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_core_services.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -587,8 +589,10 @@
 			children = (
 				AAB47334161AE4F7A750A465 /* preview_ax_smoke.swift */,
 				B568AF6FB9258E40D337D6ED /* run_action_overlay_smoke.sh */,
+				C4FF6003B6A03BD09B4D4CA8 /* run_core_services_smoke.sh */,
 				DC8DDD48BF33B68B77682962 /* run_preview_ax_smoke.sh */,
 				46DD7EBA7FF447ECBBF2F124 /* test_action_overlay_host.swift */,
+				FF1FF4635FC447B0F449DB11 /* test_core_services.swift */,
 				520A1C33A4ED0E4BEEDD86E3 /* test_filter_slash.swift */,
 				6D517EEF41F574940FADD6EB /* test_real_preview.swift */,
 				407969EF539F438C8347EF38 /* action */,
@@ -1067,6 +1071,7 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "clip'M pastes the clip you choose into the app you are using.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1276,6 +1281,7 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "clip'M pastes the clip you choose into the app you are using.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

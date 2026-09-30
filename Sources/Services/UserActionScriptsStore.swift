@@ -2,13 +2,16 @@ import AppKit
 import Foundation
 
 /// File-backed store for user JavaScript actions under
-/// `~/Library/Application Support/ClipMenu/script/action/`.
+/// `~/Library/Application Support/ClipM/script/action/`.
 enum UserActionScriptsStore {
     static var directory: URL {
+        if let url = ClipStoreLocation.userActionScriptsURL {
+            return url
+        }
         let support = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first!
-        return support.appendingPathComponent("ClipMenu/script/action", isDirectory: true)
+        return support.appendingPathComponent("ClipM/script/action", isDirectory: true)
     }
 
     static var defaultTemplate: String {
