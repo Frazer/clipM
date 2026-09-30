@@ -1786,13 +1786,17 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         let showSnippetsInMain = kind == .main
         let showHistory = kind != .snippets && kind != .actions
 
+        let showSnippetsSection = (showSnippetsInMain && settings.positionOfSnippets != 2) || kind == .snippets
+
         if showSnippetsInMain && settings.positionOfSnippets == 0 {
             addSnippets(to: menu, folders: folders, settings: settings)
+            addEditSnippetsItem(to: menu)
             if showHistory { menu.addItem(.separator()) }
         }
 
         if kind == .snippets {
             addSnippets(to: menu, folders: folders, settings: settings)
+            addEditSnippetsItem(to: menu)
         }
 
         if kind == .actions {
@@ -1806,6 +1810,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         if showSnippetsInMain && settings.positionOfSnippets == 1 {
             if showHistory { menu.addItem(.separator()) }
             addSnippets(to: menu, folders: folders, settings: settings)
+            addEditSnippetsItem(to: menu)
         }
 
         if showHistory && settings.showClearHistoryItem {
@@ -1817,10 +1822,9 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let editSnippets = NSMenuItem(title: "Edit Snippets…", action: #selector(HotkeyPopupActionTarget.openSnippetsEditor(_:)), keyEquivalent: "")
-        editSnippets.target = actionTarget
-        editSnippets.image = NSImage(systemSymbolName: "text.badge.plus", accessibilityDescription: nil)
-        menu.addItem(editSnippets)
+        if !showSnippetsSection {
+            addEditSnippetsItem(to: menu)
+        }
 
         let prefs = NSMenuItem(title: "Preferences…", action: #selector(HotkeyPopupActionTarget.openPreferences(_:)), keyEquivalent: "")
         prefs.target = actionTarget
@@ -1920,6 +1924,13 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             try? await Task.sleep(nanoseconds: 180_000_000)
             await actionTarget.pasteFromHotkeyAction()
         }
+    private func addEditSnippetsItem(to menu: NSMenu) {
+        let editSnippets = NSMenuItem(title: "Edit Snippets…", action: #selector(HotkeyPopupActionTarget.openSnippetsEditor(_:)), keyEquivalent: "")
+        editSnippets.target = actionTarget
+        editSnippets.image = NSImage(systemSymbolName: "text.badge.plus", accessibilityDescription: nil)
+        menu.addItem(editSnippets)
+    }
+
     private func addSnippets(to menu: NSMenu, folders: [SnippetFolder], settings: ClipMenuSettings) {
         let enabledFolders = folders.filter(\.isEnabled)
         guard !enabledFolders.isEmpty else { return }

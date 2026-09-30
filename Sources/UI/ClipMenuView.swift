@@ -22,6 +22,7 @@ struct ClipMenuView: View {
         // Snippets above clips
         if settings.positionOfSnippets == 0 {
             SnippetSection(folders: folders.filter(\.isEnabled))
+            editSnippetsButton
             Divider()
         }
 
@@ -32,6 +33,7 @@ struct ClipMenuView: View {
         if settings.positionOfSnippets == 1 {
             Divider()
             SnippetSection(folders: folders.filter(\.isEnabled))
+            editSnippetsButton
         }
 
         Divider()
@@ -60,10 +62,8 @@ struct ClipMenuView: View {
 
         Divider()
 
-        Button {
-            runtime.showPreferences(tab: .snippets)
-        } label: {
-            Label("Edit Snippets…", systemImage: "text.badge.plus")
+        if settings.positionOfSnippets == 2 {
+            editSnippetsButton
         }
         Button {
             runtime.showPreferences()
@@ -74,6 +74,14 @@ struct ClipMenuView: View {
             NSApp.terminate(nil)
         } label: {
             Label("Quit \(AppDistribution.displayName)", systemImage: "power")
+        }
+    }
+
+    private var editSnippetsButton: some View {
+        Button {
+            runtime.showPreferences(tab: .snippets)
+        } label: {
+            Label("Edit Snippets…", systemImage: "text.badge.plus")
         }
     }
 
