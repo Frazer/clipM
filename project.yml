@@ -83,6 +83,8 @@ targets:
           CODE_SIGN_STYLE: Manual
           DEVELOPMENT_TEAM: 97988GNC59
           OTHER_CODE_SIGN_FLAGS: "--timestamp"
+          # get-task-allow is for the debugger. Notarization rejects it.
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
   # Mac App Store distribution — no Sparkle; updates via App Store only.
   ClipMenuAppStore:

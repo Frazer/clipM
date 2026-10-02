@@ -128,6 +128,7 @@ xcodebuild \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="$IDENTITY" \
+  CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
   OTHER_CODE_SIGN_FLAGS="--timestamp" \
   build
 
@@ -142,6 +143,20 @@ fi
 
 rm -rf "$STAGE/clipM.app"
 ditto "$APP_SRC" "$STAGE/clipM.app"
+
+echo "==> Re-signing Sparkle helpers with Developer ID…"
+SPARKLE="$STAGE/clipM.app/Contents/Frameworks/Sparkle.framework/Versions/B"
+sign_developer_id() {
+  codesign --force --sign "$IDENTITY" --options runtime --timestamp --preserve-metadata=entitlements "$1"
+}
+sign_developer_id "$SPARKLE/XPCServices/Downloader.xpc"
+sign_developer_id "$SPARKLE/XPCServices/Installer.xpc"
+sign_developer_id "$SPARKLE/Autoupdate"
+sign_developer_id "$SPARKLE/Updater.app"
+sign_developer_id "$STAGE/clipM.app/Contents/Frameworks/Sparkle.framework"
+codesign --force --sign "$IDENTITY" --options runtime --timestamp \
+  --entitlements "$ROOT/ClipMenu.entitlements" \
+  "$STAGE/clipM.app"
 
 echo "==> codesign verify…"
 codesign --verify --deep --strict --verbose=2 "$STAGE/clipM.app"
