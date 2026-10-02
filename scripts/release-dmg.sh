@@ -186,7 +186,7 @@ else
   echo "==> Skipping notarization (--skip-notarize)"
 fi
 
-echo "==> Creating DMG $DMG_NAME…"
+echo "==> Creating DMG ${DMG_NAME}…"
 rm -rf "$DMG_ROOT"
 mkdir -p "$DMG_ROOT"
 ditto "$STAGE/clipM.app" "$DMG_ROOT/clipM.app"
