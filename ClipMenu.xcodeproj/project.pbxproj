@@ -990,7 +990,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1081,7 +1081,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE";
@@ -1115,7 +1115,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
@@ -1137,7 +1137,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuUITests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = ClipMenuTest;
 			};
@@ -1172,7 +1172,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DIRECT_DISTRIBUTION;
@@ -1193,7 +1193,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuUITests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = ClipMenuTest;
 			};
@@ -1289,7 +1289,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APP_STORE;
@@ -1325,7 +1325,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.9;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

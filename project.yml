@@ -44,7 +44,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipM
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipM
         PRODUCT_NAME: clipM
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -112,7 +112,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipM
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipM
         PRODUCT_NAME: clipM
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -171,7 +171,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenuTest
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipMenuTest
         PRODUCT_NAME: ClipMenuTest
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -214,7 +214,7 @@ targets:
     settings:
       base:
         TEST_TARGET_NAME: ClipMenuTest
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenuUITests
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipMenuUITests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

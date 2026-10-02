@@ -19,7 +19,7 @@ final class AppStoreUpdateChecker: ObservableObject {
     private let session: URLSession
 
     init(
-        bundleID: String = Bundle.main.bundleIdentifier ?? "app.eetr.ClipM",
+        bundleID: String = Bundle.main.bundleIdentifier ?? "org.unitedvisions.ClipM",
         session: URLSession = .shared
     ) {
         self.bundleID = bundleID

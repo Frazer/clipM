@@ -33,7 +33,7 @@ for arg in "$@"; do
 done
 
 TEAM_ID="${APPLE_TEAM_ID:-97988GNC59}"
-BUNDLE_ID="app.eetr.ClipM"
+BUNDLE_ID="org.unitedvisions.ClipM"
 SCHEME="ClipMenu"
 CONFIG="Release"
 REPO="${GITHUB_REPOSITORY:-Frazer/clipM}"
