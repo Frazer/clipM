@@ -250,6 +250,7 @@
 		C6107A96E18C02167CD2BF95 /* { }.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "{ }.js"; sourceTree = "<group>"; };
 		CC0D05E32BADC3B23BA7F652 /* ' '.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "' '.js"; sourceTree = "<group>"; };
 		CDB67016D05B5750B90F5809 /* ‘ ’.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "‘ ’.js"; sourceTree = "<group>"; };
+		D050F5167EB6B1429953D863 /* DirectDistributionInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = DirectDistributionInfo.plist; sourceTree = "<group>"; };
 		D186E13F5DC693ABF86C6D65 /* ClipMenuAppStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMenuAppStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2071986765235444ED5C4B6 /* ActionMenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuBuilder.swift; sourceTree = "<group>"; };
 		D443B0D12EBBA794375C2643 /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
@@ -519,6 +520,7 @@
 		A06183AEA97ACC53713DC2B8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D050F5167EB6B1429953D863 /* DirectDistributionInfo.plist */,
 				A665B545F09CB77A65913253 /* scripts */,
 				E03CEE8F2C7117BD9BE6E1E5 /* scripts */,
 			);
@@ -1156,15 +1158,13 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Resources/DirectDistributionInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1312,15 +1312,13 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Resources/DirectDistributionInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

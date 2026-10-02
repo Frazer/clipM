@@ -52,15 +52,14 @@ targets:
         DEVELOPMENT_TEAM: 97988GNC59
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
+        # Sparkle keys are not on Xcode's generated-Info.plist allowlist.
+        INFOPLIST_FILE: Resources/DirectDistributionInfo.plist
         INFOPLIST_KEY_CFBundleDisplayName: "clip'M"
         INFOPLIST_KEY_CFBundleName: "clip'M"
         INFOPLIST_KEY_CFBundleIconName: AppIcon
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
-        INFOPLIST_KEY_SUEnableAutomaticChecks: YES
-        INFOPLIST_KEY_SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
         MARKETING_VERSION: "0.9"
         CURRENT_PROJECT_VERSION: "1"
       configs:
