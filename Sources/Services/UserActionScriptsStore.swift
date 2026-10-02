@@ -125,7 +125,7 @@ enum UserActionScriptsStore {
         var errorDescription: String? {
             switch self {
             case .notUserScript:
-                return "Only scripts in the ClipMenu user actions folder can be modified."
+                return "Only scripts in the ClipM user actions folder can be modified."
             }
         }
     }

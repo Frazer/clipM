@@ -17,16 +17,16 @@ extension Notification.Name {
 // MARK: - Shortcut Names
 
 extension KeyboardShortcuts.Name {
-    /// Opens the main clipboard history + snippets menu (legacy: "ClipMenu", Cmd+Shift+V).
+    /// Opens the main clipboard history + snippets menu (⌥⌘V).
     static let openClipMenu = Self("openClipMenu",
-                                   default: .init(.v, modifiers: [.command, .shift]))
-    /// Opens the history-only view (legacy: "HistoryMenu", Cmd+Ctrl+V).
+                                   default: .init(.v, modifiers: [.command, .option]))
+    /// Opens the history-only view (⌃⌘V).
     static let openHistory  = Self("openHistory",
                                    default: .init(.v, modifiers: [.command, .control]))
-    /// Opens the snippets view (legacy: "SnippetsMenu", Cmd+Shift+B).
+    /// Opens the snippets view (⌥⌘B).
     static let openSnippets = Self("openSnippets",
-                                   default: .init(.b, modifiers: [.command, .shift]))
-    /// Opens the actions menu for the most recent clip (Cmd+Shift+A).
+                                   default: .init(.b, modifiers: [.command, .option]))
+    /// Opens the actions menu for the most recent clip (⇧⌘A).
     static let openActions = Self("openActions",
                                   default: .init(.a, modifiers: [.command, .shift]))
 }
@@ -36,9 +36,7 @@ extension KeyboardShortcuts.Name {
 /// Registers and unregisters global keyboard shortcuts using the
 /// `KeyboardShortcuts` package.
 ///
-/// Default key combos mirror `legacy/Source/AppController.m
-/// +_defaultHotKeyCombos` (keyCode 9 = V, 11 = B; modifiers 768 = ⌘⇧,
-/// 4352 = ⌘⌃).
+/// Default key combos: ⌥⌘V, ⌃⌘V, ⌥⌘B, ⇧⌘A.
 final class HotkeyService {
     fileprivate static let log = Logger(subsystem: "com.naotaka.ClipMenu", category: "Hotkeys")
     @MainActor private lazy var popupMenu = HotkeyPopupMenuPresenter()
@@ -745,8 +743,10 @@ private enum ClipMenuFilterKeyHook {
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         let tracking = CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, tracking)
-        // Leave the tap disabled until a menu is open. Enabling it at launch
-        // puts the status-item click through the tap, and that menu then closes.
+        // Taps are enabled when created. Leave this one off until a menu is open.
+        // An enabled tap at launch puts the status-item click through the tap,
+        // and that menu then closes. It can also swallow global hotkeys.
+        CGEvent.tapEnable(tap: tap, enable: false)
         HotkeyService.log.debug("Filter key/mouse event tap installed")
     }
 

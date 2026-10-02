@@ -987,7 +987,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				SDKROOT = macosx;
@@ -1078,8 +1078,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE";
@@ -1112,7 +1112,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1170,9 +1170,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.9;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DIRECT_DISTRIBUTION;
@@ -1288,8 +1288,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APP_STORE;
@@ -1326,8 +1326,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipM;
 				PRODUCT_NAME = clipM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

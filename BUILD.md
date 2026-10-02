@@ -119,10 +119,10 @@ Paste simulation uses CGEvent and requires Accessibility permission:
 
 - System Settings -> Privacy & Security -> Accessibility
 
-Direct (`ClipMenu`) and App Store (`ClipMenuAppStore`) builds share bundle ID `app.eetr.ClipMenu`, but different entitlements/signatures. After switching channels, reset Accessibility and re-grant it for the build you just launched:
+Direct (`ClipMenu`) and App Store (`ClipMenuAppStore`) builds share bundle ID `app.eetr.ClipM`, but different entitlements/signatures. After switching channels, reset Accessibility and re-grant it for the build you just launched:
 
 ```sh
-tccutil reset Accessibility app.eetr.ClipMenu
+tccutil reset Accessibility app.eetr.ClipM
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 ```
 
