@@ -47,6 +47,7 @@ struct AboutUpdatesPrefsView: View {
                     HStack(spacing: 16) {
                         Link("GitHub", destination: AppDistribution.githubURL)
                         Link(AppDistribution.unitedVisionsName, destination: AppDistribution.unitedVisionsURL)
+                        Link("Privacy Policy", destination: AppDistribution.privacyPolicyURL)
                     }
                     .font(.body.weight(.medium))
                 }

@@ -39,6 +39,8 @@ enum AppDistribution {
     static let unitedVisionsURL = URL(string: "https://unitedvisions.org")!
     static let unitedVisionsName = "United Visions"
 
+    static let privacyPolicyURL = URL(string: "https://frazer.github.io/clipM/privacy.html")!
+
     /// Set this once the app is listed (numeric App Store ID). Used to deep-link the product page.
     static let appStoreProductID: String? = "6818600547"
 
@@ -54,6 +56,8 @@ enum AppDistribution {
         This project is open source. Source code and direct-download releases live on GitHub. \(displayName) is supported by \(unitedVisionsName), which helps you train your mind to be the best version of yourself.
 
         Thanks to ClipMenu for the original design this work builds on.
+
+        \(displayName) does not track any of your information. Your settings and data stay entirely on your machine.
         """
     }
 }
