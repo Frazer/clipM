@@ -40,7 +40,7 @@ enum AppDistribution {
     static let unitedVisionsName = "United Visions"
 
     /// Set this once the app is listed (numeric App Store ID). Used to deep-link the product page.
-    static let appStoreProductID: String? = nil
+    static let appStoreProductID: String? = "6818600547"
 
     /// Sparkle appcast for direct builds. Host this file on GitHub Releases (or your site).
     static let sparkleFeedURL = URL(string: "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml")!

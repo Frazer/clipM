@@ -11,6 +11,8 @@ A full-featured copy & paste manager built for Apple silicon M‑chip Macs — s
 - **[Mac App Store](https://apps.apple.com/app/id6757437982)**
 - **Direct download**: latest **clipM-*.dmg** from [GitHub Releases](https://github.com/Frazer/clipM/releases/latest)
 
+Requires **macOS 14 (Sonoma) or later**.
+
 Open the DMG and drag **clip'M** into Applications.
 
 App Store installs update through the App Store. Direct downloads update in-app via Sparkle (**Preferences → About**).
