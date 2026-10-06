@@ -8,7 +8,13 @@ import Combine
 /// Check `legacy/Source/ClipsController.m` for the polling interval and the
 /// change-count comparison logic before changing this implementation.
 final class ClipboardMonitor {
-    let pasteboardChanged = PassthroughSubject<NSPasteboard, Never>()
+    struct Change {
+        let pasteboard: NSPasteboard
+        let changeCount: Int
+        let sourceBundleIdentifier: String?
+    }
+
+    let pasteboardChanged = PassthroughSubject<Change, Never>()
 
     private var cancellables = Set<AnyCancellable>()
     private var lastChangeCount: Int = 0
@@ -33,7 +39,11 @@ final class ClipboardMonitor {
                 let current = self.pasteboard.changeCount
                 guard current != self.lastChangeCount else { return }
                 self.lastChangeCount = current
-                self.pasteboardChanged.send(self.pasteboard)
+                self.pasteboardChanged.send(Change(
+                    pasteboard: self.pasteboard,
+                    changeCount: current,
+                    sourceBundleIdentifier: NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+                ))
             }
             .store(in: &cancellables)
     }

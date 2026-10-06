@@ -2430,6 +2430,7 @@ private final class ClipPreviewPanelController {
         parentWindow?.removeChildWindow(panel)
         parentWindow = nil
         panel.orderOut(nil)
+        hostingController.rootView = AnyView(EmptyView())
 
         if isUITestMode {
             NotificationCenter.default.post(name: .clipMenuPreviewDidHide, object: nil)
@@ -3298,17 +3299,23 @@ private final class HotkeyPopupActionTarget: NSObject {
 
     func selectClipEntry(_ clip: ClipEntry) {
         guard let runtime else { return }
+        let pasteTarget = targetAppForPaste
         Task { @MainActor in
+            let generation = HistoryErasure.generation
             reactivateTargetAppIfNeeded()
             // Allow menu interaction to settle before writing pasteboard.
             try? await Task.sleep(nanoseconds: Self.menuDismissSettleDelay)
-            await runtime.clipsService.select(clip, pasteImmediately: false)
+            guard generation == HistoryErasure.generation else { return }
+            guard await runtime.clipsService.select(clip, pasteImmediately: false) else { return }
+            let copiedChangeCount = NSPasteboard.general.changeCount
             if runtime.settings.autoPasteAfterSelection {
                 // Give AppKit a beat to finish foreground activation.
                 try? await Task.sleep(nanoseconds: Self.reactivationSettleDelay)
                 reactivateTargetAppIfNeeded()
                 try? await Task.sleep(nanoseconds: Self.prePasteDelay)
-                await pasteService.paste()
+                if let pasteTarget {
+                    await pasteService.paste(expectedTarget: pasteTarget, expectedChangeCount: copiedChangeCount)
+                }
             }
         }
     }
@@ -3340,22 +3347,26 @@ private final class HotkeyPopupActionTarget: NSObject {
 
     func selectSnippetModel(_ snippet: Snippet) {
         guard let runtime else { return }
+        let pasteTarget = targetAppForPaste
         Task { @MainActor in
             reactivateTargetAppIfNeeded()
             try? await Task.sleep(nanoseconds: Self.menuDismissSettleDelay)
-            await runtime.clipsService.copyStringToPasteboard(snippet.content, pasteImmediately: false)
+            guard await runtime.clipsService.copyStringToPasteboard(snippet.content, pasteImmediately: false) else { return }
+            let copiedChangeCount = NSPasteboard.general.changeCount
             if runtime.settings.autoPasteAfterSelection {
                 try? await Task.sleep(nanoseconds: Self.reactivationSettleDelay)
                 reactivateTargetAppIfNeeded()
                 try? await Task.sleep(nanoseconds: Self.prePasteDelay)
-                await pasteService.paste()
+                if let pasteTarget {
+                    await pasteService.paste(expectedTarget: pasteTarget, expectedChangeCount: copiedChangeCount)
+                }
             }
         }
     }
 
     @objc func clearHistory(_ sender: NSMenuItem) {
         guard let runtime else { return }
-        Task { try? await runtime.clipsService.clearAll() }
+        Task { await runtime.clipsService.clearHistoryWithConfirmation() }
     }
 
     @objc func openPreferences(_ sender: NSMenuItem) {
@@ -3378,16 +3389,22 @@ private final class HotkeyPopupActionTarget: NSObject {
 
     @MainActor
     func pasteFromHotkeyAction() async {
-        await pasteService.paste()
+        if let targetAppForPaste {
+            await pasteService.paste(expectedTarget: targetAppForPaste)
+        }
     }
 
     @MainActor
     private func finishHotkeyActionPaste() async {
+        let pasteTarget = targetAppForPaste
+        let copiedChangeCount = NSPasteboard.general.changeCount
         reactivateTargetAppIfNeeded()
         try? await Task.sleep(nanoseconds: Self.reactivationSettleDelay)
         reactivateTargetAppIfNeeded()
         if runtime?.settings.autoPasteAfterSelection != false {
-            await pasteService.paste()
+            if let pasteTarget {
+                await pasteService.paste(expectedTarget: pasteTarget, expectedChangeCount: copiedChangeCount)
+            }
         }
     }
 }

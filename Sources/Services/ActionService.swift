@@ -66,6 +66,7 @@ final class ActionService {
         // Keep SwiftData reads on the context's main actor. Only immutable
         // strings cross into the script runner, so execution cannot block menus.
         guard node.isEnabled else { return false }
+        let generation = HistoryErasure.generation
         let prepared = PreparedAction(
             actionType: node.actionType,
             actionName: node.actionName?.trimmingCharacters(in: CharacterSet(charactersIn: ":")),
@@ -78,7 +79,7 @@ final class ActionService {
         case "javaScript":
             guard let script = prepared.script else { return false }
             let resultText = await engine.run(script: script, text: prepared.stringValue)
-            guard let resultText else { return false }
+            guard let resultText, generation == HistoryErasure.generation else { return false }
             return await replaceClipWithString(resultText, shouldPaste: executionContext.shouldPaste)
 
         case "builtin":
@@ -120,7 +121,7 @@ final class ActionService {
                 return true
             } catch {
                 context.rollback()
-                Self.log.error("Failed removing clip: \(error.localizedDescription, privacy: .public)")
+                Self.log.error("Failed removing clip: \(error.localizedDescription, privacy: .private)")
                 return false
             }
 
@@ -157,7 +158,7 @@ final class ActionService {
             try context.save()
         } catch {
             context.rollback()
-            Self.log.error("Failed saving transformed clip: \(error.localizedDescription, privacy: .public)")
+            Self.log.error("Failed saving transformed clip: \(error.localizedDescription, privacy: .private)")
         }
 
         let pboard = NSPasteboard.general
@@ -199,7 +200,9 @@ final class ActionService {
     nonisolated static func scriptSource(
         inline: String?, path: String?, resourceRoot: URL? = Bundle.main.resourceURL
     ) -> String? {
-        if let inline, !inline.isEmpty { return inline }
+        if let inline, !inline.isEmpty {
+            return inline.utf8.count <= ScriptEngine.maximumSourceBytes ? inline : nil
+        }
         guard let path, !path.isEmpty else { return nil }
         var relative: String?
         if let marker = path.range(of: "/Contents/Resources/", options: .backwards) {
@@ -215,13 +218,17 @@ final class ActionService {
             }
         }
         if let relative, let resourceRoot {
+            guard ScriptFileAccess.isRelativeScriptPath(relative) else { return nil }
             for directory in ["scripts/action", "script/action"] {
-                let url = resourceRoot.appendingPathComponent(directory).appendingPathComponent(relative)
-                if let source = try? String(contentsOf: url, encoding: .utf8) { return source }
+                let root = resourceRoot.appendingPathComponent(directory)
+                let url = root.appendingPathComponent(relative)
+                guard ScriptFileAccess.isDescendant(url, of: root) else { continue }
+                if let source = ScriptFileAccess.readSource(at: url) { return source }
             }
         }
         // Preserve external user scripts and their explicitly configured paths.
-        return try? String(contentsOfFile: path, encoding: .utf8)
+        guard (path as NSString).isAbsolutePath else { return nil }
+        return ScriptFileAccess.readSource(at: URL(fileURLWithPath: path))
     }
 
     private func seedDefaultActionsIfNeeded() {
@@ -284,11 +291,12 @@ final class ActionService {
         }
     }
 
-    private func discoverActionNodes(in directory: URL) -> [ActionNode] {
+    private func discoverActionNodes(in directory: URL, depth: Int = 0) -> [ActionNode] {
+        guard depth < 16 else { return [] }
         let fm = FileManager.default
         guard let entries = try? fm.contentsOfDirectory(
             at: directory,
-            includingPropertiesForKeys: [.isDirectoryKey],
+            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey, .isRegularFileKey],
             options: [.skipsHiddenFiles]
         ) else {
             return []
@@ -302,10 +310,10 @@ final class ActionService {
         var index = 0
 
         for url in sortedEntries {
-            let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
-
-            if isDirectory {
-                let children = discoverActionNodes(in: url)
+            guard let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey, .isRegularFileKey]),
+                  values.isSymbolicLink != true else { continue }
+            if values.isDirectory == true {
+                let children = discoverActionNodes(in: url, depth: depth + 1)
                 guard !children.isEmpty else { continue }
                 let folder = ActionNode(title: url.lastPathComponent, isLeaf: false, sortIndex: index)
                 index += 1
@@ -318,7 +326,7 @@ final class ActionService {
                 continue
             }
 
-            guard url.pathExtension.lowercased() == "js" else { continue }
+            guard values.isRegularFile == true, url.pathExtension.lowercased() == "js" else { continue }
             let node = ActionNode(
                 title: url.deletingPathExtension().lastPathComponent,
                 isLeaf: true,

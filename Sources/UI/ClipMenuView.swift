@@ -162,15 +162,7 @@ struct ClipMenuView: View {
     }
 
     private func clearHistory() {
-        if settings.showAlertBeforeClearHistory {
-            let alert = NSAlert()
-            alert.messageText = "Clear History"
-            alert.informativeText = "Are you sure you want to clear all clipboard history?"
-            alert.addButton(withTitle: "Clear")
-            alert.addButton(withTitle: "Cancel")
-            guard alert.runModal() == .alertFirstButtonReturn else { return }
-        }
-        Task { try? await clipsService.clearAll() }
+        Task { await clipsService.clearHistoryWithConfirmation() }
     }
 }
 

@@ -38,6 +38,9 @@ struct ClipMenuApp: App {
         }
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
+            if !isPasteUITestMode {
+                try ClipStoreLocation.protectStoreFiles(in: configuration.url.deletingLastPathComponent())
+            }
         } catch {
             // Never discard a user's history or snippets to recover from a
             // store-open failure. Report it instead of crashing on a force-try.
@@ -61,79 +64,5 @@ struct ClipMenuApp: App {
                 .environment(\.loginItemService, runtime.loginItemService)
         }
         .modelContainer(modelContainer)
-    }
-}
-
-/// Live data lives in `~/Library/Application Support/ClipM`.
-/// `Snippets.xml` is still read once from that folder. The old clip archive
-/// and action plist are not imported.
-enum ClipStoreLocation {
-    static let folderName = "ClipM"
-    static let storeName = "default.store"
-
-    static var folderURL: URL? {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first?
-            .appendingPathComponent(folderName, isDirectory: true)
-    }
-
-    static var snippetsURL: URL? {
-        folderURL?.appendingPathComponent("Snippets.xml")
-    }
-
-    static var userActionScriptsURL: URL? {
-        folderURL?.appendingPathComponent("script/action", isDirectory: true)
-    }
-
-    static var userScriptLibraryURL: URL? {
-        folderURL?.appendingPathComponent("script/lib", isDirectory: true)
-    }
-
-    static func prepareURL() throws -> URL {
-        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            throw CocoaError(.fileNoSuchFile)
-        }
-        let folder = support.appendingPathComponent(folderName, isDirectory: true)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        relocateLegacySupportFiles(into: folder)
-        let destination = folder.appendingPathComponent(storeName)
-        if !FileManager.default.fileExists(atPath: destination.path) {
-            try moveLooseStoreIfNeeded(from: support, to: destination)
-        }
-        return destination
-    }
-
-    /// Moves a copied `Snippets.xml` and `script` folder from the original
-    /// ClipMenu support directory. Leaves `clips.data` and `actions.plist` behind.
-    private static func relocateLegacySupportFiles(into folder: URL) {
-        guard let legacy = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first?
-            .appendingPathComponent("ClipMenu", isDirectory: true)
-        else { return }
-        let fileManager = FileManager.default
-        for name in ["Snippets.xml", "script"] {
-            let source = legacy.appendingPathComponent(name)
-            let destination = folder.appendingPathComponent(name)
-            guard fileManager.fileExists(atPath: source.path),
-                  !fileManager.fileExists(atPath: destination.path) else { continue }
-            try? fileManager.moveItem(at: source, to: destination)
-        }
-    }
-
-    private static func moveLooseStoreIfNeeded(from support: URL, to destination: URL) throws {
-        let source = support.appendingPathComponent(storeName)
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: source.path) else { return }
-        try fileManager.moveItem(at: source, to: destination)
-        do {
-            for suffix in ["-wal", "-shm"] {
-                let extra = URL(fileURLWithPath: source.path + suffix)
-                guard fileManager.fileExists(atPath: extra.path) else { continue }
-                try fileManager.moveItem(at: extra, to: URL(fileURLWithPath: destination.path + suffix))
-            }
-        } catch {
-            try? fileManager.moveItem(at: destination, to: source)
-            throw error
-        }
     }
 }

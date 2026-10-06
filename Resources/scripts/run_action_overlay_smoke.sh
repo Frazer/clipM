@@ -16,6 +16,7 @@ swiftc \
   "$ROOT/Sources/Models/ClipEntry.swift" \
   "$ROOT/Sources/Services/ActionService.swift" \
   "$ROOT/Sources/Infrastructure/PasteService.swift" \
+  "$ROOT/Sources/Infrastructure/HistoryErasure.swift" \
   "$ROOT/Sources/Scripting/ScriptEngine.swift" \
   "$ROOT/Sources/Scripting/ScriptableClip.swift" \
   "$ROOT/Resources/scripts/test_action_overlay_host.swift"

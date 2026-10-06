@@ -73,11 +73,11 @@ Direct downloads are published via **GitHub Releases** (DMG + Sparkle `appcast.x
 
 ### Sparkle setup (direct builds)
 
-Public EdDSA key is already embedded:
+The direct target generates `Resources/ClipMenu-Info.plist` from `project.yml`. Its public EdDSA key and feed are embedded explicitly (custom `INFOPLIST_KEY_SU*` settings are not sufficient):
 
 ```yaml
-INFOPLIST_KEY_SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
-INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
+SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
+SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
 ```
 
 Private key lives in the login keychain (`generate_keys --account clipmenu`) and was exported to `secrets/sparkle_eddsa_private.key` (gitignored). Add the same string as GitHub Actions secret `SPARKLE_PRIVATE_KEY`. See `secrets/README.md`.
@@ -157,3 +157,9 @@ Code signing errors in local/CI builds
 - Use `CODE_SIGN_IDENTITY=""`
 - Use `CODE_SIGNING_REQUIRED=NO`
 - Use `CODE_SIGNING_ALLOWED=NO`
+
+## Security validation before publication
+
+Read [the audit and remaining limits](doc/security-audit.md) and run the [security regression checks](doc/testing.md#security-regression-checks). The release script requires notarization and successful Gatekeeper assessment for public artifacts. `--skip-notarize` creates a local test DMG under `release/local-test/`, with no update feed, and cannot be combined with `--publish`. The dependency versions are pinned; update the pins and packaging verification together after reviewing advisories.
+
+Do not describe stored clipboard history as encrypted. Clear History cleans the live database and clipboard; it cannot remove backups or copies held by other applications.

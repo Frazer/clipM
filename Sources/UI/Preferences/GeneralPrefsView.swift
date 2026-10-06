@@ -1,10 +1,11 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 /// General tab in the Preferences window.
 ///
 /// Covers: login item, paste command, reorder, history size,
-/// save-on-quit, status item, store types, app exclusions.
+/// storage disclosure, status item, store types, app exclusions.
 /// Reference: `legacy/Source/PrefsWindowController.{h,m}` General tab.
 struct GeneralPrefsView: View {
 
@@ -33,7 +34,9 @@ struct GeneralPrefsView: View {
                     TextField("", value: $s.maxHistorySize, format: .number)
                         .frame(width: 60)
                 }
-                Toggle("Save history when quitting", isOn: $s.saveHistoryOnQuit)
+                Text("History is saved automatically on this Mac. Saved history and snippets are not encrypted by clip'M. Clear History removes saved entries from the live database and empties the clipboard. Copies in backups or other apps cannot be removed.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             // MARK: Store Types
@@ -94,19 +97,29 @@ private struct ExcludeAppsEditor: View {
             .frame(minHeight: 80)
 
             HStack {
-                Button("Add") { addFrontmostApp() }
+                Button("Add…") { chooseApplication() }
                 Button("Remove") { removeSelected() }
                     .disabled(selection == nil)
             }
         }
     }
 
-    private func addFrontmostApp() {
-        guard let app = NSWorkspace.shared.frontmostApplication,
-              let id = app.bundleIdentifier,
-              let name = app.localizedName,
+    private func chooseApplication() {
+        let panel = NSOpenPanel()
+        panel.title = "Exclude an Application"
+        panel.message = "Clipboard history will skip copies while this application is active."
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+        guard panel.runModal() == .OK, let url = panel.url,
+              let bundle = Bundle(url: url),
+              let id = bundle.bundleIdentifier,
               !settings.excludeApps.contains(where: { $0["bundleIdentifier"] == id })
         else { return }
+        let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? url.deletingPathExtension().lastPathComponent
         settings.excludeApps.append(["bundleIdentifier": id, "name": name])
     }
 

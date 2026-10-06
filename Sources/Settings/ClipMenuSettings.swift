@@ -20,7 +20,6 @@ final class ClipMenuSettings {
     var autoPasteAfterSelection: Bool = true { didSet { defaults.set(autoPasteAfterSelection, forKey: "inputPasteCommand") } }
     var reorderClipsAfterPasting: Bool = true { didSet { defaults.set(reorderClipsAfterPasting, forKey: "reorderClipsAfterPasting") } }
     var maxHistorySize: Int = 20 { didSet { defaults.set(maxHistorySize, forKey: "maxHistorySize") } }
-    var saveHistoryOnQuit: Bool = true { didSet { defaults.set(saveHistoryOnQuit, forKey: "saveHistoryOnQuit") } }
     var exportHistoryAsSingleFile: Bool = true { didSet { defaults.set(exportHistoryAsSingleFile, forKey: "exportHistoryAsSingleFile") } }
     var exportSeparatorTag: Int = 1 { didSet { defaults.set(exportSeparatorTag, forKey: "tagOfSeparatorForExportHistoryToFile") } }
     var showStatusItem: Bool = true { didSet { defaults.set(showStatusItem, forKey: "showStatusItem") } }
@@ -131,7 +130,6 @@ final class ClipMenuSettings {
         autoPasteAfterSelection = boolValue("inputPasteCommand", default: true)
         reorderClipsAfterPasting = boolValue("reorderClipsAfterPasting", default: true)
         maxHistorySize = intValue("maxHistorySize", default: 20)
-        saveHistoryOnQuit = boolValue("saveHistoryOnQuit", default: true)
         exportHistoryAsSingleFile = boolValue("exportHistoryAsSingleFile", default: true)
         exportSeparatorTag = intValue("tagOfSeparatorForExportHistoryToFile", default: 1)
         showStatusItem = boolValue("showStatusItem", default: true)
@@ -223,7 +221,6 @@ final class ClipMenuSettings {
             "inputPasteCommand": true,
             "reorderClipsAfterPasting": true,
             "maxHistorySize": 20,
-            "saveHistoryOnQuit": true,
             "exportHistoryAsSingleFile": true,
             "tagOfSeparatorForExportHistoryToFile": 1,
             "showStatusItem": true,

@@ -139,3 +139,16 @@ swift Resources/scripts/test_filter_slash.swift "$APP"
 
 - `CLIPMENU_UI_TEST_MODE=1` — enables paste/preview harness behavior used by AX smoke and some UI test helpers. **Omit** it for `test_real_preview.swift`.
 - Scripts under `Resources/scripts/` that talk to the live UI may force-quit existing ClipMenu instances for the target bundle ID before launching.
+
+## Security regression checks
+
+Run these with synthetic data; they do not read or clear the real clipboard/history:
+
+```sh
+bash Resources/scripts/run_clipboard_security_smoke.sh
+bash Resources/scripts/run_script_security_smoke.sh
+bash Resources/scripts/run_storage_security_smoke.sh
+python3 scripts/test-release-security.py
+```
+
+The storage check uses a disposable disk-backed SwiftData store and private pasteboard. It verifies live database/WAL cleanup, preservation of snippets/actions, stale-work rejection, and reopening after clearing. This does not test SSD physical erasure, old backups, or signed-app Accessibility behavior. See [the security audit](security-audit.md) for remaining limits.

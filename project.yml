@@ -11,10 +11,10 @@ options:
 packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
-    from: "2.0.0"
+    exactVersion: "2.4.0"
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    from: "2.6.4"
+    exactVersion: "2.10.0"
 
 targets:
   # Direct / GitHub distribution — includes Sparkle for in-app updates.
@@ -22,6 +22,19 @@ targets:
     type: application
     platform: macOS
     deploymentTarget: "14.0"
+
+    # Custom Sparkle keys are not emitted by Xcode's generated Info.plist
+    # build settings. Keep them in an explicit input plist, with Boolean types.
+    info:
+      path: Resources/ClipMenu-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
+        SUEnableAutomaticChecks: true
+        SURequireSignedFeed: true
+        SUVerifyUpdateBeforeExtraction: true
+        SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
 
     sources:
       - path: Sources
@@ -33,8 +46,7 @@ targets:
 
     entitlements:
       path: ClipMenu.entitlements
-      properties:
-        com.apple.security.automation.apple-events: true
+      properties: {}
 
     dependencies:
       - package: KeyboardShortcuts
@@ -58,9 +70,6 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        INFOPLIST_KEY_SUFeedURL: https://github.com/Frazer/clipM/releases/latest/download/appcast.xml
-        INFOPLIST_KEY_SUEnableAutomaticChecks: YES
-        INFOPLIST_KEY_SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
       configs:
@@ -104,7 +113,6 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
-        com.apple.security.automation.apple-events: true
 
     dependencies:
       - package: KeyboardShortcuts
@@ -127,7 +135,6 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        INFOPLIST_KEY_NSAppleEventsUsageDescription: "clip'M pastes the clip you choose into the app you are using."
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE
@@ -162,8 +169,7 @@ targets:
 
     entitlements:
       path: ClipMenu.entitlements
-      properties:
-        com.apple.security.automation.apple-events: true
+      properties: {}
 
     dependencies:
       - package: KeyboardShortcuts

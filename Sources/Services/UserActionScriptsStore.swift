@@ -34,13 +34,15 @@ enum UserActionScriptsStore {
     }
 
     static func isUserScript(at path: String) -> Bool {
-        let userRoot = directory.standardizedFileURL.path
-        let standardized = URL(fileURLWithPath: path).standardizedFileURL.path
-        return standardized == userRoot || standardized.hasPrefix(userRoot + "/")
+        let url = URL(fileURLWithPath: path)
+        guard url.pathExtension.lowercased() == "js",
+              ScriptFileAccess.isDescendant(url, of: directory) else { return false }
+        // Directories (including the actions root) are never editable scripts.
+        return (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory != true
     }
 
     static func load(at url: URL) -> String? {
-        try? String(contentsOf: url, encoding: .utf8)
+        ScriptFileAccess.readSource(at: url)
     }
 
     static func load(path: String) -> String? {
@@ -52,6 +54,8 @@ enum UserActionScriptsStore {
     static func saveNewScript(preferredTitle: String, content: String) throws -> URL {
         try ensureDirectory()
         let url = uniqueURL(forPreferredTitle: preferredTitle)
+        guard content.utf8.count <= ScriptEngine.maximumSourceBytes else { throw StoreError.scriptTooLarge }
+        guard isUserScript(at: url.path) else { throw StoreError.notUserScript }
         try content.write(to: url, atomically: true, encoding: .utf8)
         return url
     }
@@ -61,6 +65,8 @@ enum UserActionScriptsStore {
             throw StoreError.notUserScript
         }
         try ensureDirectory()
+        guard content.utf8.count <= ScriptEngine.maximumSourceBytes else { throw StoreError.scriptTooLarge }
+        guard isUserScript(at: url.path) else { throw StoreError.notUserScript }
         try content.write(to: url, atomically: true, encoding: .utf8)
     }
 
@@ -121,11 +127,14 @@ enum UserActionScriptsStore {
 
     enum StoreError: LocalizedError {
         case notUserScript
+        case scriptTooLarge
 
         var errorDescription: String? {
             switch self {
             case .notUserScript:
-                return "Only scripts in the ClipMenu user actions folder can be modified."
+                return "Only JavaScript files in the ClipMenu user actions folder can be modified."
+            case .scriptTooLarge:
+                return "Action scripts must be no larger than 1 MB."
             }
         }
     }

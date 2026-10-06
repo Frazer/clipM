@@ -2,7 +2,7 @@
 # Build a Sparkle-ready clipM.dmg + appcast.xml for GitHub Releases (displays as clip'M).
 #
 # Usage:
-#   ./scripts/release-dmg.sh                 # build + DMG + appcast (notarize if creds present)
+#   ./scripts/release-dmg.sh                 # build + notarize + DMG + signed appcast
 #   ./scripts/release-dmg.sh --skip-notarize # local packaging without notarization
 #   ./scripts/release-dmg.sh --publish       # also create/upload a GitHub release (requires gh)
 #
@@ -32,6 +32,18 @@ for arg in "$@"; do
   esac
 done
 
+if [[ "$PUBLISH" -eq 1 && "$SKIP_NOTARIZE" -eq 1 ]]; then
+  echo "ERROR: --publish cannot be combined with --skip-notarize." >&2
+  exit 1
+fi
+
+# Build tools do not need the update signing key or notarization password.
+# Keep these as shell-local values rather than passing them to every child.
+release_sparkle_key="${SPARKLE_PRIVATE_KEY:-}"
+release_notary_password="${APPLE_APP_SPECIFIC_PASSWORD:-}"
+export -n release_sparkle_key release_notary_password
+unset SPARKLE_PRIVATE_KEY APPLE_APP_SPECIFIC_PASSWORD
+
 TEAM_ID="${APPLE_TEAM_ID:-97988GNC59}"
 BUNDLE_ID="app.eetr.ClipMenu"
 SCHEME="ClipMenu"
@@ -39,6 +51,9 @@ CONFIG="Release"
 REPO="${GITHUB_REPOSITORY:-Frazer/clipM}"
 
 OUT="$ROOT/release"
+if [[ "$SKIP_NOTARIZE" -eq 1 ]]; then
+  OUT="$OUT/local-test"
+fi
 STAGE="$OUT/stage"
 DMG_ROOT="$OUT/dmg-root"
 INBOX="$OUT/sparkle-inbox"
@@ -64,6 +79,14 @@ PY
 )"
 
 TAG="${RELEASE_TAG:-v${MARKETING_VERSION}}"
+if [[ ! "$MARKETING_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || ! "$BUILD_NUMBER" =~ ^[0-9]+$ || "$TAG" != "v${MARKETING_VERSION}" ]]; then
+  echo "ERROR: Release tag must match project version (v${MARKETING_VERSION}); versions must be numeric." >&2
+  exit 1
+fi
+if [[ ! "$REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+  echo "ERROR: Invalid GitHub repository." >&2
+  exit 1
+fi
 DMG_NAME="clipM-${MARKETING_VERSION}.dmg"
 DMG_PATH="$OUT/$DMG_NAME"
 
@@ -75,39 +98,9 @@ if ! command -v xcodegen >/dev/null; then
 fi
 xcodegen generate
 
-find_sparkle_bin() {
-  local name="$1"
-  local found
-  found="$(find "$HOME/Library/Developer/Xcode/DerivedData" -path '*/artifacts/sparkle/Sparkle/bin/'"$name" -type f 2>/dev/null | head -1 || true)"
-  if [[ -n "$found" ]]; then
-    echo "$found"
-    return 0
-  fi
-  return 1
-}
-
-ensure_sparkle_tools() {
-  if find_sparkle_bin generate_appcast >/dev/null && find_sparkle_bin sign_update >/dev/null; then
-    SPARKLE_BIN_DIR="$(dirname "$(find_sparkle_bin generate_appcast)")"
-    return 0
-  fi
-  echo "==> Downloading Sparkle tools…"
-  local tmp zip
-  tmp="$(mktemp -d)"
-  zip="$tmp/Sparkle.tar.xz"
-  curl -fsSL -o "$zip" "https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/Sparkle-2.6.4.tar.xz"
-  tar -xJf "$zip" -C "$tmp"
-  SPARKLE_BIN_DIR="$(find "$tmp" -type d -name bin | head -1)"
-  export PATH="$SPARKLE_BIN_DIR:$PATH"
-}
-
-ensure_sparkle_tools
-export PATH="${SPARKLE_BIN_DIR}:${PATH}"
-echo "==> Sparkle tools: $SPARKLE_BIN_DIR"
-
 IDENTITY=""
-if security find-identity -v -p codesigning | grep -q 'Developer ID Application'; then
-  IDENTITY="$(security find-identity -v -p codesigning | awk -F'"' '/Developer ID Application/ {print $2; exit}')"
+IDENTITY="$(security find-identity -v -p codesigning | awk -F'"' -v team="($TEAM_ID)" '/Developer ID Application/ && index($2, team) {print $2; exit}')"
+if [[ -n "$IDENTITY" ]]; then
   echo "==> Using signing identity: $IDENTITY"
 else
   echo "ERROR: No 'Developer ID Application' certificate found." >&2
@@ -124,12 +117,21 @@ xcodebuild \
   -scheme "$SCHEME" \
   -configuration "$CONFIG" \
   -derivedDataPath "$DERIVED" \
+  -onlyUsePackageVersionsFromResolvedFile \
   -destination 'platform=macOS,arch=arm64' \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="$IDENTITY" \
   OTHER_CODE_SIGN_FLAGS="--timestamp" \
   build
+
+# Use the checksum-verified Sparkle artifact resolved for this exact build.
+# Never execute tools from unrelated DerivedData or an unchecked download.
+SPARKLE_BIN_DIR="$DERIVED/SourcePackages/artifacts/sparkle/Sparkle/bin"
+if [[ ! -x "$SPARKLE_BIN_DIR/generate_appcast" || ! -x "$SPARKLE_BIN_DIR/sign_update" ]]; then
+  echo "ERROR: Sparkle tools missing from this build's resolved artifact." >&2
+  exit 1
+fi
 
 APP_SRC="$(find "$DERIVED/Build/Products/$CONFIG" -maxdepth 1 -name 'clipM.app' -print -quit)"
 if [[ -z "$APP_SRC" || ! -d "$APP_SRC" ]]; then
@@ -139,6 +141,11 @@ fi
 
 # Verify Sparkle public key made it into Info.plist
 /usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP_SRC/Contents/Info.plist" >/dev/null
+SPARKLE_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_SRC/Contents/Frameworks/Sparkle.framework/Resources/Info.plist")"
+if [[ "$SPARKLE_VERSION" != "2.10.0" ]]; then
+  echo "ERROR: Expected audited Sparkle 2.10.0, found $SPARKLE_VERSION." >&2
+  exit 1
+fi
 
 rm -rf "$STAGE/clipM.app"
 ditto "$APP_SRC" "$STAGE/clipM.app"
@@ -157,10 +164,10 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
       --key-id "$APPLE_API_KEY" \
       --issuer "$APPLE_API_ISSUER" \
       --wait
-  elif [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+  elif [[ -n "${APPLE_ID:-}" && -n "$release_notary_password" ]]; then
     xcrun notarytool submit "$APP_ZIP" \
       --apple-id "$APPLE_ID" \
-      --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+      --password "$release_notary_password" \
       --team-id "$TEAM_ID" \
       --wait
   else
@@ -169,8 +176,8 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     exit 1
   fi
   xcrun stapler staple "$STAGE/clipM.app"
-  # Gatekeeper can reject a just-stapled app for a few seconds. Notarization
-  # already succeeded, so a flaky assessment must not skip the DMG.
+  xcrun stapler validate "$STAGE/clipM.app"
+  # Gatekeeper can take a few seconds to observe a newly stapled ticket.
   assessed=0
   for _ in 1 2 3 4 5; do
     if spctl --assess --type execute -vv "$STAGE/clipM.app"; then
@@ -180,7 +187,8 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     sleep 2
   done
   if [[ "$assessed" -eq 0 ]]; then
-    echo "WARNING: Gatekeeper assessment failed after stapling; building the DMG anyway." >&2
+    echo "ERROR: Gatekeeper assessment failed; refusing to package a public release." >&2
+    exit 1
   fi
 else
   echo "==> Skipping notarization (--skip-notarize)"
@@ -212,11 +220,20 @@ if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
   else
     xcrun notarytool submit "$DMG_PATH" \
       --apple-id "$APPLE_ID" \
-      --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+      --password "$release_notary_password" \
       --team-id "$TEAM_ID" \
       --wait
   fi
   xcrun stapler staple "$DMG_PATH"
+  xcrun stapler validate "$DMG_PATH"
+  codesign --verify --strict --verbose=2 "$DMG_PATH"
+  spctl --assess --type open --context context:primary-signature -vv "$DMG_PATH"
+fi
+unset release_notary_password
+
+if [[ "$SKIP_NOTARIZE" -eq 1 ]]; then
+  echo "Local test DMG: $DMG_PATH (not notarized; no update feed generated)."
+  exit 0
 fi
 
 echo "==> Generating Sparkle appcast…"
@@ -225,10 +242,11 @@ mkdir -p "$INBOX"
 cp "$DMG_PATH" "$INBOX/"
 
 KEY_FILE=""
-if [[ -n "${SPARKLE_PRIVATE_KEY:-}" ]]; then
+if [[ -n "$release_sparkle_key" ]]; then
   KEY_FILE="$(mktemp)"
-  printf '%s' "$SPARKLE_PRIVATE_KEY" > "$KEY_FILE"
   trap 'rm -f "$KEY_FILE"' EXIT
+  chmod 600 "$KEY_FILE"
+  printf '%s' "$release_sparkle_key" > "$KEY_FILE"
 elif [[ -f "$ROOT/secrets/sparkle_eddsa_private.key" ]]; then
   KEY_FILE="$ROOT/secrets/sparkle_eddsa_private.key"
 else
@@ -236,9 +254,10 @@ else
   echo "Expected secrets/sparkle_eddsa_private.key or SPARKLE_PRIVATE_KEY env." >&2
   exit 1
 fi
+unset release_sparkle_key
 
 DOWNLOAD_PREFIX="https://github.com/${REPO}/releases/download/${TAG}/"
-generate_appcast \
+"$SPARKLE_BIN_DIR/generate_appcast" \
   --account clipmenu \
   --ed-key-file "$KEY_FILE" \
   --download-url-prefix "$DOWNLOAD_PREFIX" \
@@ -247,6 +266,11 @@ generate_appcast \
   "$INBOX"
 
 cp "$INBOX/appcast.xml" "$OUT/appcast.xml"
+"$SPARKLE_BIN_DIR/sign_update" --ed-key-file "$KEY_FILE" "$OUT/appcast.xml"
+"$SPARKLE_BIN_DIR/sign_update" --verify --ed-key-file "$KEY_FILE" "$OUT/appcast.xml"
+xcrun swift "$ROOT/scripts/verify-release.swift" \
+  "$STAGE/clipM.app/Contents/Info.plist" "$DMG_PATH" "$OUT/appcast.xml" \
+  "${DOWNLOAD_PREFIX}${DMG_NAME}"
 ls -la "$OUT"
 
 echo
@@ -263,10 +287,11 @@ if [[ "$PUBLISH" -eq 1 ]]; then
     exit 1
   fi
   echo "==> Publishing GitHub release ${TAG}…"
-  if gh release view "$TAG" >/dev/null 2>&1; then
-    gh release upload "$TAG" "$DMG_PATH" "$OUT/appcast.xml" --clobber
+  if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+    gh release upload "$TAG" "$DMG_PATH" "$OUT/appcast.xml" --repo "$REPO"
   else
     gh release create "$TAG" "$DMG_PATH" "$OUT/appcast.xml" \
+      --repo "$REPO" --verify-tag \
       --title "clip'M ${MARKETING_VERSION}" \
       --notes "clip'M ${MARKETING_VERSION} (build ${BUILD_NUMBER}).
 

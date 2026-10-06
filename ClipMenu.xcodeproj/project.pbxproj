@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00CE4E605010BDF7D2B57FCB /* ActionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A663BD7362E0C5445528C4F1 /* ActionNode.swift */; };
+		01A4EF421D8CE5A407F642E2 /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
 		03BE0E0A2BE4CD13C915121A /* ScriptableClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620B8F52759F74FEBF46E0F1 /* ScriptableClip.swift */; };
 		087BF8DABB46D5A3DE940CA9 /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60996BF476330FFB6501381 /* Snippet.swift */; };
 		08D9C76F74364FAC08180DC0 /* ScriptableClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620B8F52759F74FEBF46E0F1 /* ScriptableClip.swift */; };
@@ -18,6 +19,7 @@
 		0EA12A2EF1AF8B19F1B348C2 /* ClipMenuApp+Scenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED996E53C34CFD8C7D0310C /* ClipMenuApp+Scenes.swift */; };
 		0EED262A561A43265F24BBF2 /* ActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD6C21C72EE5244BB1D7613 /* ActionService.swift */; };
 		11B632FC9BBBFC5A6DFBA69C /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
+		124328A20DF97E0A5FC27DCD /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
 		12D107DF0CA979EF876EF969 /* SnippetFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD0F7706C0E03012259C58E /* SnippetFolder.swift */; };
 		173795708D239F1143E525DB /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
 		19F9D1AAD40C778CCA0486DE /* AboutUpdatesPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467431578860C24FDB6E6AED /* AboutUpdatesPrefsView.swift */; };
@@ -63,6 +65,7 @@
 		6A93B768E10A1C885F412F99 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 9063A675539A44CFACDFF516 /* KeyboardShortcuts */; };
 		6A9FBD0E7674740848F7DA2A /* scripts in Resources */ = {isa = PBXBuildFile; fileRef = A665B545F09CB77A65913253 /* scripts */; };
 		6F1C323AB9B0297F0E353CCF /* ClipMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0016B43E0CACE631C4CC81B1 /* ClipMenuItem.swift */; };
+		72AEBC427F5792E14C2FC739 /* ClipStoreLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */; };
 		76969A92D3459A30D0C7A6E2 /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
 		7A1B438249CE74198A1CA0C7 /* GeneralPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761ACB3529E51DE835B8478 /* GeneralPrefsView.swift */; };
 		7A7416876ADB8BAB01EAD0F4 /* MenuPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C53F23FA57EE7251E7DC8C6E /* MenuPrefsView.swift */; };
@@ -79,7 +82,9 @@
 		951A172FEC26A436F6BC3232 /* ClipEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA18E6BAC3B61463FBA61589 /* ClipEntry.swift */; };
 		954714A3BDC8854290831734 /* SnippetsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19473B9E42EE0B4041018F4D /* SnippetsPrefsView.swift */; };
 		95B224167556F72B3789F74E /* ClipsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83BE5811A4FB6A1DB019AC2 /* ClipsService.swift */; };
+		972B734547DFDCBEA39CA291 /* ClipStoreLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */; };
 		9866BBEA5F596B3A3DEF6933 /* FuzzyTextMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */; };
+		9889F98B05DDD59AFC73C538 /* ClipStoreLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */; };
 		9A0F4AD4A4E25F5D01D5A479 /* PasteIntegrationHarnessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9F12072DC8BC14BB901E66 /* PasteIntegrationHarnessView.swift */; };
 		9A4C53BF9C1CD72C0D832BAF /* ActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD6C21C72EE5244BB1D7613 /* ActionService.swift */; };
 		9BB7C546A30CC1666078A52B /* ShortcutsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137B169B289424AA2C053F6E /* ShortcutsPrefsView.swift */; };
@@ -126,6 +131,7 @@
 		DF1F162C1C37060707D78EF2 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A0E2A4B1C92D3E67A301A3 /* SparkleUpdateService.swift */; };
 		E1DFEA8B6C7669DFC34FBC0C /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */; };
 		E3A5BEAC6D55B0DBE1B56388 /* ActionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6321E93388B5BFB5F35292 /* ActionSection.swift */; };
+		E50145944D8D1B744D658A50 /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
 		E56D1644071E5CD182DCB5B9 /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */; };
 		E89F01FB00AA3CC1117AB2E5 /* ClipMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0016B43E0CACE631C4CC81B1 /* ClipMenuItem.swift */; };
 		EAA8E570AEAA9695CC422081 /* ActionMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2071986765235444ED5C4B6 /* ActionMenuBuilder.swift */; };
@@ -155,6 +161,7 @@
 
 /* Begin PBXFileReference section */
 		0016B43E0CACE631C4CC81B1 /* ClipMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMenuItem.swift; sourceTree = "<group>"; };
+		017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipStoreLocation.swift; sourceTree = "<group>"; };
 		05040ED7DB4E9E6B59B441AB /* ` `.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "` `.js"; sourceTree = "<group>"; };
 		091565A092F406927E15ED61 /* Convert Markdown to HTML.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Convert Markdown to HTML.js"; sourceTree = "<group>"; };
 		0B9F12072DC8BC14BB901E66 /* PasteIntegrationHarnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteIntegrationHarnessView.swift; sourceTree = "<group>"; };
@@ -162,13 +169,16 @@
 		0CDD26CD466BFA583E75E608 /* ClipMenuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMenuApp.swift; sourceTree = "<group>"; };
 		0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntime.swift; sourceTree = "<group>"; };
 		0F33CC09804F1E54781E0EBD /* ActionsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionsPrefsView.swift; sourceTree = "<group>"; };
+		0FBBF111E4F000E0BDD2AA40 /* test_clipboard_security.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_clipboard_security.swift; sourceTree = "<group>"; };
 		0FD091B978990ECF3F3D7E4E /* Encode URI component.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Encode URI component.js"; sourceTree = "<group>"; };
 		137B169B289424AA2C053F6E /* ShortcutsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsPrefsView.swift; sourceTree = "<group>"; };
+		1754A8786A8075B0A919B6E6 /* security-audit.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "security-audit.md"; sourceTree = "<group>"; };
 		175D9BC47EBD304CA4230174 /* Surround with Tags....js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Surround with Tags....js"; sourceTree = "<group>"; };
 		179AF605EB49F693BF4AD85E /* migration.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = migration.md; sourceTree = "<group>"; };
 		17E43E25B277D60F5D87A052 /* ActionOverlayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionOverlayPresenter.swift; sourceTree = "<group>"; };
 		19473B9E42EE0B4041018F4D /* SnippetsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetsPrefsView.swift; sourceTree = "<group>"; };
 		19B808EFAA8952BC9BA1CA8D /* string.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = string.js; sourceTree = "<group>"; };
+		19E9E3DA51025DE53F60ACB0 /* ClipMenu-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ClipMenu-Info.plist"; sourceTree = "<group>"; };
 		1AAA8A2C77102B5966216536 /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
 		1C7B6FEA8365FA24B2DBB906 /* Convert Character to Decimal.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Convert Character to Decimal.js"; sourceTree = "<group>"; };
 		1E56AEC45D95D95509478467 /* util.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = util.js; sourceTree = "<group>"; };
@@ -183,6 +193,7 @@
 		35203B72597FAD055800E93E /* AppStoreUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreUpdateChecker.swift; sourceTree = "<group>"; };
 		3E9CBA111ACE835F326FE6AE /* showdown.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = showdown.js; sourceTree = "<group>"; };
 		419D60462A50E9A91E55BF47 /* [ ].js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "[ ].js"; sourceTree = "<group>"; };
+		42616BA48C29D291F57406F7 /* run_script_security_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_script_security_smoke.sh; sourceTree = "<group>"; };
 		42B59EEB0DCCE6D695636F67 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
 		467431578860C24FDB6E6AED /* AboutUpdatesPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutUpdatesPrefsView.swift; sourceTree = "<group>"; };
 		46DD7EBA7FF447ECBBF2F124 /* test_action_overlay_host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_action_overlay_host.swift; sourceTree = "<group>"; };
@@ -198,6 +209,7 @@
 		630C393A150A0A2DD37B2D11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		65E27B62279E4C612E6FD0AC /* Convert Decimal to Character.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Convert Decimal to Character.js"; sourceTree = "<group>"; };
 		6669409568F7A199CA873CC3 /* Unescape HTML characters.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Unescape HTML characters.js"; sourceTree = "<group>"; };
+		68E108C0578568776F9A29D7 /* test_script_security.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_script_security.swift; sourceTree = "<group>"; };
 		6A8868E921A0CAF30A35A2EE /* ClipMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMenuUITests.swift; sourceTree = "<group>"; };
 		6CA10EBC72D8E5AE80FF0F4E /* AppExclusionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExclusionService.swift; sourceTree = "<group>"; };
 		6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuzzyTextMatch.swift; sourceTree = "<group>"; };
@@ -240,6 +252,7 @@
 		B9F2FC9E1D536A30571DAAAB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BAD0F7706C0E03012259C58E /* SnippetFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetFolder.swift; sourceTree = "<group>"; };
 		BB3D24622C12C3B43F770963 /* ｛ ｝.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "｛ ｝.js"; sourceTree = "<group>"; };
+		BD1053CEA77A806B44367BAF /* HistoryErasure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryErasure.swift; sourceTree = "<group>"; };
 		BF6C0BE229E6930FA608401B /* ClipMenu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMenu.entitlements; sourceTree = "<group>"; };
 		BFFC088DE2CD462BD34AB520 /* 《 》.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "《 》.js"; sourceTree = "<group>"; };
 		C0C2DEA9193BEC16FD145658 /* 【 】.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "【 】.js"; sourceTree = "<group>"; };
@@ -272,7 +285,10 @@
 		F0BC75442C797B6A536F1862 /* 「 」.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "「 」.js"; sourceTree = "<group>"; };
 		F20169FFCAD9D79CBE1EB179 /* 〈 〉.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "〈 〉.js"; sourceTree = "<group>"; };
 		F425B2066AB9B7524D4770CD /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		F463F26A92EF04F7985764EF /* run_clipboard_security_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_clipboard_security_smoke.sh; sourceTree = "<group>"; };
+		F49AAC8504FF10F5999451CB /* test_storage_security.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_storage_security.swift; sourceTree = "<group>"; };
 		F73F6340FDA6E31238939062 /* ClipMenuAppStore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMenuAppStore.entitlements; sourceTree = "<group>"; };
+		FE93C0B8AD59FE466773D1A7 /* run_storage_security_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_storage_security_smoke.sh; sourceTree = "<group>"; };
 		FF1FF4635FC447B0F449DB11 /* test_core_services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_core_services.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -345,6 +361,7 @@
 				4B34871F4041DDF5A7D98840 /* features.md */,
 				179AF605EB49F693BF4AD85E /* migration.md */,
 				481977E8B947720EBC9A4BB8 /* previews.md */,
+				1754A8786A8075B0A919B6E6 /* security-audit.md */,
 				7AC3DB821DBD6A4920F43A4A /* testing.md */,
 			);
 			path = doc;
@@ -519,6 +536,7 @@
 		A06183AEA97ACC53713DC2B8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				19E9E3DA51025DE53F60ACB0 /* ClipMenu-Info.plist */,
 				A665B545F09CB77A65913253 /* scripts */,
 				E03CEE8F2C7117BD9BE6E1E5 /* scripts */,
 			);
@@ -589,12 +607,18 @@
 			children = (
 				AAB47334161AE4F7A750A465 /* preview_ax_smoke.swift */,
 				B568AF6FB9258E40D337D6ED /* run_action_overlay_smoke.sh */,
+				F463F26A92EF04F7985764EF /* run_clipboard_security_smoke.sh */,
 				C4FF6003B6A03BD09B4D4CA8 /* run_core_services_smoke.sh */,
 				DC8DDD48BF33B68B77682962 /* run_preview_ax_smoke.sh */,
+				42616BA48C29D291F57406F7 /* run_script_security_smoke.sh */,
+				FE93C0B8AD59FE466773D1A7 /* run_storage_security_smoke.sh */,
 				46DD7EBA7FF447ECBBF2F124 /* test_action_overlay_host.swift */,
+				0FBBF111E4F000E0BDD2AA40 /* test_clipboard_security.swift */,
 				FF1FF4635FC447B0F449DB11 /* test_core_services.swift */,
 				520A1C33A4ED0E4BEEDD86E3 /* test_filter_slash.swift */,
 				6D517EEF41F574940FADD6EB /* test_real_preview.swift */,
+				68E108C0578568776F9A29D7 /* test_script_security.swift */,
+				F49AAC8504FF10F5999451CB /* test_storage_security.swift */,
 				407969EF539F438C8347EF38 /* action */,
 				B291E9FCF52786571D3DFF2F /* lib */,
 			);
@@ -608,7 +632,9 @@
 				6CA10EBC72D8E5AE80FF0F4E /* AppExclusionService.swift */,
 				35203B72597FAD055800E93E /* AppStoreUpdateChecker.swift */,
 				9075790B975D02A5039621CB /* ClipboardMonitor.swift */,
+				017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */,
 				6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */,
+				BD1053CEA77A806B44367BAF /* HistoryErasure.swift */,
 				EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */,
 				B48E46B042ACC84B0F6F1766 /* LoginItemService.swift */,
 				D443B0D12EBBA794375C2643 /* PasteService.swift */,
@@ -823,11 +849,13 @@
 				ED4510E017E6C2AF79884815 /* ClipMenuItem.swift in Sources */,
 				C7825E363308365CDE7EB241 /* ClipMenuSettings.swift in Sources */,
 				3F74138F27D42E3C17440D21 /* ClipMenuView.swift in Sources */,
+				72AEBC427F5792E14C2FC739 /* ClipStoreLocation.swift in Sources */,
 				DCE22714579D8AE92BEE9298 /* ClipboardMonitor.swift in Sources */,
 				95B224167556F72B3789F74E /* ClipsService.swift in Sources */,
 				5AAFFFB4377BC686C43EF82C /* EnvironmentKeys.swift in Sources */,
 				9866BBEA5F596B3A3DEF6933 /* FuzzyTextMatch.swift in Sources */,
 				7A1B438249CE74198A1CA0C7 /* GeneralPrefsView.swift in Sources */,
+				01A4EF421D8CE5A407F642E2 /* HistoryErasure.swift in Sources */,
 				0E798AEE0574AA70D1CEFF73 /* HotkeyService.swift in Sources */,
 				7DC654982E118401EBAC78DA /* LegacyMigration.swift in Sources */,
 				C955BAEE63C16EFB4ECF2B56 /* LoginItemService.swift in Sources */,
@@ -871,11 +899,13 @@
 				E89F01FB00AA3CC1117AB2E5 /* ClipMenuItem.swift in Sources */,
 				1F6D55E9464B1FFE2B07FF0A /* ClipMenuSettings.swift in Sources */,
 				F8C687CC2F61C7FC79C11751 /* ClipMenuView.swift in Sources */,
+				972B734547DFDCBEA39CA291 /* ClipStoreLocation.swift in Sources */,
 				591F97ACAB191066EE30F100 /* ClipboardMonitor.swift in Sources */,
 				6428165A43AB1303F205D0F8 /* ClipsService.swift in Sources */,
 				3B95AD6DC7079E1AB4800D94 /* EnvironmentKeys.swift in Sources */,
 				B94FE5CF7950BA4287985555 /* FuzzyTextMatch.swift in Sources */,
 				D2FFDE029463D1D6FF95988C /* GeneralPrefsView.swift in Sources */,
+				E50145944D8D1B744D658A50 /* HistoryErasure.swift in Sources */,
 				E56D1644071E5CD182DCB5B9 /* HotkeyService.swift in Sources */,
 				A3C309D9AF2C7B51B425EEB1 /* LegacyMigration.swift in Sources */,
 				AD4C96FDA3497DC380592A13 /* LoginItemService.swift in Sources */,
@@ -919,11 +949,13 @@
 				6F1C323AB9B0297F0E353CCF /* ClipMenuItem.swift in Sources */,
 				609E344BBBB03FD8514E6C91 /* ClipMenuSettings.swift in Sources */,
 				BA02CE3D4BA737DCD6AC686A /* ClipMenuView.swift in Sources */,
+				9889F98B05DDD59AFC73C538 /* ClipStoreLocation.swift in Sources */,
 				34EB7B9526F4C2AAF8291A23 /* ClipboardMonitor.swift in Sources */,
 				2F8F707D3AF29A98FCBA6CAF /* ClipsService.swift in Sources */,
 				40A1F4EED97AF8553F7672B0 /* EnvironmentKeys.swift in Sources */,
 				0A031A98FA6B510BC9E795A9 /* FuzzyTextMatch.swift in Sources */,
 				936E1E26F533AC6B39414F5D /* GeneralPrefsView.swift in Sources */,
+				124328A20DF97E0A5FC27DCD /* HistoryErasure.swift in Sources */,
 				E1DFEA8B6C7669DFC34FBC0C /* HotkeyService.swift in Sources */,
 				21AD2E3FCA0D9D76AC02FA23 /* LegacyMigration.swift in Sources */,
 				D54B008B6D9741A0002054BB /* LoginItemService.swift in Sources */,
@@ -1071,7 +1103,6 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "clip'M pastes the clip you choose into the app you are using.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1156,15 +1187,13 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Resources/ClipMenu-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1281,7 +1310,6 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "clip'M pastes the clip you choose into the app you are using.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1312,15 +1340,13 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Resources/ClipMenu-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedURL = "https://github.com/Frazer/clipM/releases/latest/download/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1392,16 +1418,16 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
+				kind = exactVersion;
+				version = 2.4.0;
 			};
 		};
 		80F07DDA6C0048F56ADDF552 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sparkle-project/Sparkle";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.4;
+				kind = exactVersion;
+				version = 2.10.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

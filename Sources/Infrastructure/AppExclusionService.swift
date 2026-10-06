@@ -19,9 +19,12 @@ final class AppExclusionService {
 
     /// Returns `true` when clipboard changes should be ignored because
     /// the frontmost app is in the exclusion list stored in user preferences.
-    func shouldExclude() -> Bool {
-        guard let bundleID = frontmostBundleIdentifier() else { return false }
-        return excludedIDs.contains(bundleID)
+    func shouldExclude(observedBundleIdentifier: String? = nil, declaredBundleIdentifiers: [String] = []) -> Bool {
+        // A declared source is only an additional reason to reject a copy. It
+        // is supplied by another process and must never override an exclusion.
+        let candidates = declaredBundleIdentifiers
+            + [observedBundleIdentifier, frontmostBundleIdentifier()].compactMap { $0 }
+        return candidates.contains { excludedIDs.contains($0) }
     }
 
     func runningUserApps() -> [(name: String, bundleID: String)] {

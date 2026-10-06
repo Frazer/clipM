@@ -37,7 +37,7 @@ actor PasteService {
         if let inputSourceObserver { NotificationCenter.default.removeObserver(inputSourceObserver) }
     }
 
-    func paste() async {
+    func paste(expectedTarget: NSRunningApplication? = nil, expectedChangeCount: Int? = nil) async {
         if Self.isPasteUITestMode {
             await MainActor.run {
                 let value = NSPasteboard.general.string(forType: .string) ?? ""
@@ -47,6 +47,15 @@ actor PasteService {
                     userInfo: ["string": value]
                 )
             }
+            return
+        }
+
+        let request = await MainActor.run {
+            (expectedTarget ?? NSWorkspace.shared.frontmostApplication,
+             expectedChangeCount ?? NSPasteboard.general.changeCount)
+        }
+        guard let target = request.0, !target.isTerminated else {
+            Self.log.error("Paste aborted: destination application is unavailable")
             return
         }
 
@@ -69,9 +78,19 @@ actor PasteService {
         keyDown?.flags = .maskCommand
         keyUp?.flags = .maskCommand
 
-        keyDown?.post(tap: .cghidEventTap)
-        keyUp?.post(tap: .cghidEventTap)
-        Self.log.info("Posted Cmd+V events using keyCode=\(keyCode, privacy: .public)")
+        await MainActor.run {
+            guard !target.isTerminated,
+                  NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier,
+                  NSPasteboard.general.changeCount == request.1 else {
+                Self.log.error("Paste aborted: destination or clipboard changed")
+                return
+            }
+            // Address the selected process directly so a focus change after
+            // this check cannot redirect a global Cmd+V to another app.
+            keyDown?.postToPid(target.processIdentifier)
+            keyUp?.postToPid(target.processIdentifier)
+            Self.log.info("Posted Cmd+V events using keyCode=\(keyCode, privacy: .public)")
+        }
     }
 
     nonisolated static func accessibilityStatus() -> AccessibilityStatus {
@@ -93,7 +112,11 @@ actor PasteService {
     }
 
     nonisolated private static var isPasteUITestMode: Bool {
+        #if DEBUG
         ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1"
+        #else
+        false
+        #endif
     }
 
     private func isAccessibilityTrusted() -> Bool {
