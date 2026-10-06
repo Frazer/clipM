@@ -46,7 +46,6 @@ final class ClipMenuSettings {
     var numberOfItemsInsideFolder: Int = 11 { didSet { defaults.set(numberOfItemsInsideFolder, forKey: "numberOfItemsPlaceInsideFolder") } }
     var numberedMenuItems: Bool = true { didSet { defaults.set(numberedMenuItems, forKey: "menuItemsAreMarkedWithNumbers") } }
     var numberingStartsAtZero: Bool = false { didSet { defaults.set(numberingStartsAtZero, forKey: "menuItemsTitleStartWithZero") } }
-    var numericKeyEquivalents: Bool = false { didSet { defaults.set(numericKeyEquivalents, forKey: "addNumericKeyEquivalents") } }
     var showClearHistoryItem: Bool = false { didSet { defaults.set(showClearHistoryItem, forKey: "addClearHistoryMenuItem") } }
     var showAlertBeforeClearHistory: Bool = true { didSet { defaults.set(showAlertBeforeClearHistory, forKey: "showAlertBeforeClearHistory") } }
     var showLabelsInMenu: Bool = true { didSet { defaults.set(showLabelsInMenu, forKey: "showLabelsInMenu") } }
@@ -147,7 +146,6 @@ final class ClipMenuSettings {
         numberOfItemsInsideFolder = intValue("numberOfItemsPlaceInsideFolder", default: 11)
         numberedMenuItems = boolValue("menuItemsAreMarkedWithNumbers", default: true)
         numberingStartsAtZero = boolValue("menuItemsTitleStartWithZero", default: false)
-        numericKeyEquivalents = boolValue("addNumericKeyEquivalents", default: false)
         showClearHistoryItem = boolValue("addClearHistoryMenuItem", default: false)
         showAlertBeforeClearHistory = boolValue("showAlertBeforeClearHistory", default: true)
         showLabelsInMenu = boolValue("showLabelsInMenu", default: true)
@@ -240,7 +238,6 @@ final class ClipMenuSettings {
             "numberOfItemsPlaceInsideFolder": 11,
             "menuItemsAreMarkedWithNumbers": true,
             "menuItemsTitleStartWithZero": false,
-            "addNumericKeyEquivalents": false,
             "addClearHistoryMenuItem": false,
             "showAlertBeforeClearHistory": true,
             "showLabelsInMenu": true,

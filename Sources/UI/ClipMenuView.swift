@@ -153,7 +153,6 @@ struct ClipMenuView: View {
     // MARK: - Helpers
 
     /// Visible list index for menu titles (matches folder range labels).
-    /// Keyboard shortcuts still use `listNumber % 10` in `ClipMenuItem`.
     private func listNumber(for index: Int) -> Int {
         if settings.numberingStartsAtZero {
             return index

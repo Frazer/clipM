@@ -2042,10 +2042,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                                   keyEquivalent: "")
             item.target = actionTarget
             item.representedObject = clip
-            if shouldShowTrailingNumericShortcut(settings: settings) {
-                item.keyEquivalent = String(itemNumber % 10)
-                item.keyEquivalentModifierMask = []
-            }
             if let thumbnail = thumbnailImage(for: clip, settings: settings) {
                 item.attributedTitle = imageClipTitle(title: item.title, thumbnail: thumbnail)
                 HotkeyService.log.debug("Attached inline popup thumbnail for clip index=\(idx, privacy: .public)")
@@ -2076,10 +2072,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                                       keyEquivalent: "")
                 item.target = actionTarget
                 item.representedObject = clip
-                if shouldShowTrailingNumericShortcut(settings: settings) {
-                    item.keyEquivalent = String(itemNumber % 10)
-                    item.keyEquivalentModifierMask = []
-                }
                 if let thumbnail = thumbnailImage(for: clip, settings: settings) {
                     item.attributedTitle = imageClipTitle(title: item.title, thumbnail: thumbnail)
                     HotkeyService.log.debug("Attached grouped popup thumbnail group=\(groupIndex, privacy: .public) idx=\(idx, privacy: .public)")
@@ -2095,17 +2087,12 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         }
     }
 
-    /// Visible 1-based (or 0-based) list index for menu titles — full integers, not mod 10.
-    /// Numeric key equivalents still use `itemNumber % 10` where enabled.
+    /// Visible 1-based (or 0-based) list index for menu titles.
     private func listNumber(for index: Int, settings: ClipMenuSettings) -> Int {
         if settings.numberingStartsAtZero {
             return index
         }
         return index + 1
-    }
-
-    private func shouldShowTrailingNumericShortcut(settings: ClipMenuSettings) -> Bool {
-        false
     }
 
     /// The actions shortcut opens this menu without the clipboard popup, so the
