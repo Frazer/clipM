@@ -1627,26 +1627,36 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     private func previewAnchorPoint(for item: NSMenuItem, in menu: NSMenu) -> NSPoint {
-        NSEvent.mouseLocation
+        if let rowCenter = highlightedRowCenter(for: item) {
+            return rowCenter
+        }
+        return NSPoint(x: currentMenuFrame.midX, y: estimatedRowCenterY(for: item, in: menu))
     }
 
     private func updatePreviewAnchor(for item: NSMenuItem, in menu: NSMenu) {
-        let mouse = NSEvent.mouseLocation
+        // Always line the preview up with the highlighted row. Mouse hover
+        // already sits on that row; keyboard jumps leave the pointer behind.
+        previewAnchorPoint = previewAnchorPoint(for: item, in: menu)
+    }
+
+    /// On-screen center of the highlighted row, when AppKit has laid it out.
+    private func highlightedRowCenter(for item: NSMenuItem) -> NSPoint? {
+        let frame = item.accessibilityFrame()
+        guard frame.width > 1, frame.height > 1 else { return nil }
+        if currentMenuFrame.width > 0 {
+            let expanded = currentMenuFrame.insetBy(dx: -8, dy: -8)
+            guard expanded.intersects(frame) else { return nil }
+        }
+        return NSPoint(x: frame.midX, y: frame.midY)
+    }
+
+    private func estimatedRowCenterY(for item: NSMenuItem, in menu: NSMenu) -> CGFloat {
         let visibleItems = menu.items.filter { !$0.isHidden }
         let itemIndex = max(visibleItems.firstIndex(of: item) ?? 0, 0)
         let rowOffset = visibleItems.prefix(itemIndex).reduce(CGFloat(0)) { total, current in
             total + menuItemHeight(current)
         } + menuItemHeight(item) / 2
-        let calculatedRowY = currentMenuFrame.maxY - rowOffset
-
-        // Follow the mouse only when it is actually over the menu that owns
-        // the highlighted item. Keyboard navigation often leaves the cursor
-        // sitting on the root popup while a submenu is open.
-        if NSPointInRect(mouse, currentMenuFrame) {
-            previewAnchorPoint = mouse
-        } else {
-            previewAnchorPoint = NSPoint(x: currentMenuFrame.midX, y: calculatedRowY)
-        }
+        return currentMenuFrame.maxY - rowOffset
     }
 
     private func preferredPreviewSide(for menuFrame: NSRect) -> PreviewSide {
