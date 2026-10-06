@@ -65,11 +65,15 @@ struct ActionsPrefsView: View {
         VStack(alignment: .leading, spacing: 12) {
             GroupBox {
                 HStack(spacing: 12) {
-                    Text("Hold this key while choosing a clip or snippet to open the action menu.")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Right-click a clip or snippet to trigger actions menu.")
+                        Text("Or use this action key:")
+                        Text("Either navigate with the arrow keys or number shortcuts,")
+                        Text("then push action+enter, or action+mouse click")
+                    }
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                     Spacer(minLength: 8)
 
