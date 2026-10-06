@@ -57,12 +57,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         startDataServicesWhenReady(retryCount: 10)
 
-        // Register in System Settings → Accessibility (after reset the app is absent
-        // until it calls AXIsProcessTrustedWithOptions with prompt).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            _ = PasteService.requestAccessibilityPermissionIfNeeded()
-        }
-
 #if canImport(Sparkle)
         SparkleUpdateService.shared.applySettings(runtime.settings)
 #endif
@@ -87,10 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             LegacyMigration.run(in: modelContext)
         }
 
-        Task {
+        Task { @MainActor in
             runtime.clipsService.start(context: modelContext)
             runtime.snippetService.start(context: modelContext)
             await runtime.actionService.start(context: modelContext)
+            runtime.presentGettingStartedIfNeeded(in: modelContext)
         }
 
         if ProcessInfo.processInfo.arguments.contains("--open-hotkey-menu")

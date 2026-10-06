@@ -99,6 +99,10 @@ final class ClipMenuSettings {
     // MARK: - Snippets
 
     var positionOfSnippets: Int = 0 { didSet { defaults.set(positionOfSnippets, forKey: "positionOfSnippets") } }
+    /// Snippets welcome has been shown, or skipped because this Mac already had history.
+    var didShowGettingStarted: Bool = false { didSet { defaults.set(didShowGettingStarted, forKey: "didShowGettingStarted") } }
+    /// User chose to paste clips themselves. The in-app permission dialog stays quiet.
+    var declinedAutomaticPaste: Bool = false { didSet { defaults.set(declinedAutomaticPaste, forKey: "declinedAutomaticPaste") } }
 
     // MARK: - Updates
 
@@ -185,6 +189,8 @@ final class ClipMenuSettings {
         commandClickBehavior = stringValue("commandClickBehavior", default: "")
 
         positionOfSnippets = intValue("positionOfSnippets", default: 0)
+        didShowGettingStarted = boolValue("didShowGettingStarted", default: false)
+        declinedAutomaticPaste = boolValue("declinedAutomaticPaste", default: false)
 
         enableAutomaticCheck = boolValue("enableAutomaticCheck", default: true)
         enableAutomaticCheckPreRelease = boolValue("enableAutomaticCheckPreReleaseKey", default: false)

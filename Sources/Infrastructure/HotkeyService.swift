@@ -551,6 +551,53 @@ private final class ClipMenuSearchFieldCell: NSSearchFieldCell {
 }
 
 /// Single menu-row filter control: search field + images toggle.
+/// Clip name in the actions-shortcut menu. Drawn as a view so the text stays
+/// at full label color instead of the dim color used for disabled menu titles.
+private final class ActionClipIdentityView: NSView {
+    init(title: String, thumbnail: NSImage?) {
+        let display = title.isEmpty ? "Image" : title
+        let font = NSFont.menuFont(ofSize: 13)
+        let textWidth = ceil((display as NSString).size(withAttributes: [.font: font]).width)
+        let thumbSize = thumbnail?.size ?? .zero
+        let height = max(24, thumbSize.height + 8)
+        let width = 20 + textWidth + (thumbnail == nil ? 0 : 8 + thumbSize.width) + 16
+        super.init(frame: NSRect(x: 0, y: 0, width: max(width, 200), height: height))
+
+        let label = NSTextField(labelWithString: display)
+        label.font = font
+        label.textColor = .labelColor
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+
+        var constraints = [
+            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ]
+        if let thumbnail {
+            let imageView = NSImageView(image: thumbnail)
+            imageView.imageScaling = .scaleProportionallyUpOrDown
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(imageView)
+            constraints += [
+                label.trailingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: -8),
+                imageView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12),
+                imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+                imageView.widthAnchor.constraint(equalToConstant: thumbSize.width),
+                imageView.heightAnchor.constraint(equalToConstant: thumbSize.height),
+            ]
+        } else {
+            constraints.append(label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12))
+        }
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class ClipMenuFilterBarView: NSView {
     let searchField: ClipMenuSearchField
     let imagesButton: NSButton
@@ -676,6 +723,9 @@ private enum ClipMenuFilterKeyHook {
            ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]?.hasPrefix("no-tap-") == true { return }
         #endif
         guard eventTap == nil else { return }
+        // Creating a session tap while untrusted raises the system Accessibility
+        // dialog. That prompt belongs to the in-app paste explanation, not launch.
+        guard AXIsProcessTrusted() else { return }
 
         let keyMask = CGEventMask(1 << CGEventType.keyDown.rawValue)
         let mouseDownMask = CGEventMask(1 << CGEventType.leftMouseDown.rawValue)
@@ -1895,6 +1945,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         let titleItem = NSMenuItem(title: "Actions for Most Recent Clip", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
+        menu.addItem(actionClipIdentityItem(targetClip, settings: runtime.settings))
         menu.addItem(.separator())
 
         let roots = (try? context.fetch(FetchDescriptor<ActionNode>(
@@ -2057,7 +2108,26 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         false
     }
 
-    private func clipTitle(for clip: ClipEntry, settings: ClipMenuSettings, listNumber: Int) -> String {
+    /// The actions shortcut opens this menu without the clipboard popup, so the
+    /// row has to say which clip the actions apply to.
+    ///
+    /// A disabled menu title is drawn in the dim header color. A custom view
+    /// keeps the clip in the normal label color so it stays readable.
+    private func actionClipIdentityItem(_ clip: ClipEntry, settings: ClipMenuSettings) -> NSMenuItem {
+        let title = clipTitle(for: clip, settings: settings, listNumber: 1, includeNumber: false)
+        var thumbnail: NSImage?
+        if let imageData = clip.imageData, let image = decodedImage(from: imageData) {
+            let targetSize = NSSize(width: CGFloat(max(settings.thumbnailWidth, 1)),
+                                    height: CGFloat(max(settings.thumbnailHeight, 1)))
+            thumbnail = scaledImage(image, to: targetSize)
+        }
+        let item = NSMenuItem(title: title.isEmpty ? "Image" : title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        item.view = ActionClipIdentityView(title: title, thumbnail: thumbnail)
+        return item
+    }
+
+    private func clipTitle(for clip: ClipEntry, settings: ClipMenuSettings, listNumber: Int, includeNumber: Bool = true) -> String {
         let source = clip.stringValue
             ?? clip.filenames?.first
             ?? clip.urlStrings?.first
@@ -2081,7 +2151,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             trimmed = firstLine.isEmpty ? "(binary)" : firstLine
         }
 
-        if settings.numberedMenuItems {
+        if includeNumber && settings.numberedMenuItems {
             return trimmed.isEmpty ? "\(listNumber)." : "\(listNumber). \(trimmed)"
         }
         return trimmed

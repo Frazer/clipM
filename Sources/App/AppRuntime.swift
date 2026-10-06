@@ -12,6 +12,7 @@ final class AppRuntime {
     let loginItemService = LoginItemService()
     let hotkeyService = HotkeyService()
     private let preferencesWindowController = PreferencesWindowController()
+    private let welcomeWindowController = WelcomeWindowController()
 
     var modelContainer: ModelContainer?
 
@@ -21,6 +22,28 @@ final class AppRuntime {
         clipsService = MainActor.assumeIsolated {
             ClipsService(settings: settings)
         }
+    }
+
+    /// A new library opens on Snippets so the first thing a person sees is a place
+    /// to put the text they paste often. Accessibility is not requested here.
+    @MainActor
+    func presentGettingStartedIfNeeded(in context: ModelContext) {
+        guard !settings.didShowGettingStarted else { return }
+        let args = ProcessInfo.processInfo.arguments
+        let automated = ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1"
+            || args.contains("--seed-clips")
+            || args.contains("--open-hotkey-menu")
+            || args.contains("--self-test-filter-slash")
+            || args.contains("--self-test-action-menu")
+        guard !automated else { return }
+        settings.didShowGettingStarted = true
+        let clipCount = (try? context.fetchCount(FetchDescriptor<ClipEntry>())) ?? 0
+        guard clipCount == 0 else { return }
+        welcomeWindowController.show(
+            onSetUpSnippets: { [weak self] in
+                self?.showPreferences(tab: .snippets)
+            }
+        )
     }
 
     @MainActor
@@ -92,5 +115,90 @@ private final class PreferencesWindowController: NSWindowController, NSWindowDel
         }
 
         return AnyView(rootView)
+    }
+}
+
+@MainActor
+private final class WelcomeWindowController: NSWindowController {
+    private var onSetUpSnippets: () -> Void = {}
+
+    func show(onSetUpSnippets: @escaping () -> Void) {
+        self.onSetUpSnippets = onSetUpSnippets
+        let window = window ?? makeWindow()
+        window.contentViewController = NSHostingController(rootView: makeView())
+        window.contentView?.layoutSubtreeIfNeeded()
+        if let size = window.contentView?.fittingSize, size.width > 200, size.height > 160 {
+            window.setContentSize(size)
+        }
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+    }
+
+    private func makeWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 460),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Welcome to \(AppDistribution.displayName)"
+        window.isReleasedWhenClosed = false
+        self.window = window
+        return window
+    }
+
+    private func makeView() -> WelcomeView {
+        WelcomeView(
+            onSetUpSnippets: { [weak self] in
+                self?.window?.close()
+                self?.onSetUpSnippets()
+            },
+            onSkip: { [weak self] in
+                self?.window?.close()
+            }
+        )
+    }
+}
+
+private struct WelcomeView: View {
+    var onSetUpSnippets: () -> Void
+    var onSkip: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            HStack(spacing: 16) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 72, height: 72)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Welcome to \(AppDistribution.displayName)")
+                        .font(.system(size: 28, weight: .semibold))
+                    Text("A place for the text you paste again and again.")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("Open \(AppDistribution.displayName) with ⌥⌘V. You can change that shortcut in Preferences.")
+                .font(.title3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Snippets are for an email address, a short bio, a reply you send all the time. The examples already in the list are placeholders. Replace them with your own.")
+                .font(.title3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 12) {
+                Spacer()
+                Button("Skip", action: onSkip)
+                    .controlSize(.large)
+                Button("Set Up Snippets", action: onSetUpSnippets)
+                    .controlSize(.large)
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(36)
+        .frame(width: 640)
     }
 }

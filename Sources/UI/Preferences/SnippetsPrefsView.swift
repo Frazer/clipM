@@ -73,7 +73,7 @@ struct SnippetsPrefsView: View {
                 }
             }
 
-            Text("Anything that you paste regularly, you can keep as a snippet. So, descriptions of regular events that you host, or your personal bio. If you ever notice yourself writing the same thing more than once, turn it into a snippet.")
+            Text("Anything that you paste regularly, you can keep as a snippet. So, descriptions of regular events that you host, or your personal bio. If you ever notice yourself writing the same thing more than once, turn it into a snippet. The examples already here are placeholders — replace them with your own email, address, and the lines you use often.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
