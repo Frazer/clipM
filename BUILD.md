@@ -25,24 +25,26 @@ Run whenever `project.yml` changes:
 xcodegen generate
 ```
 
+Keep separate derived-data folders for the two channels. Both targets produce `clipM.app`; reusing the same products folder can leave Sparkle from a direct build inside a later App Store build. Archive from a clean output folder for distribution.
+
 ## Build (Debug, direct / GitHub)
 
 ```sh
-xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug build \
+xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Debug -derivedDataPath .build/DirectDerivedData build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Build (Debug, App Store channel)
 
 ```sh
-xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenuAppStore -configuration Debug build \
+xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenuAppStore -configuration Debug -derivedDataPath .build/AppStoreDerivedData build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Build (Release)
 
 ```sh
-xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Release build \
+xcodebuild -project ClipMenu.xcodeproj -scheme ClipMenu -configuration Release -derivedDataPath .build/DirectDerivedData build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
 

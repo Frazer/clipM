@@ -46,7 +46,7 @@ Clear History should discard the previous history key and create a new one for f
 
 ## Verification
 
-Merge integration preserves the welcome flow and consent prompt while capturing the intended paste target and clipboard generation before the prompt can change focus. The direct target uses `Resources/DirectDistributionInfo.plist`, version 0.9 and bundle ID `org.unitedvisions.ClipM`, with both Sparkle verification policies retained. Nine release tag/version guard cases cover the two-component version, three-component versions and invalid inputs. UI interaction and signed-distribution checks remain outstanding.
+Merge integration preserves the welcome flow and consent prompt while capturing the intended paste target and clipboard generation before the prompt can change focus. The direct target uses `Resources/DirectDistributionInfo.plist`, version 0.9 and bundle ID `org.unitedvisions.ClipM`, with both Sparkle verification policies retained. Nine release tag/version guard cases cover the two-component version, three-component versions and invalid inputs. The App Store package was also built in a separate derived-data folder and checked for the absence of Sparkle; switching targets in a shared products folder leaves stale frameworks. `BUILD.md` now uses separate channel folders. UI interaction and signed-distribution checks remain outstanding.
 
 - Clipboard security suite: 43 checks using a private named pasteboard and in-memory history.
 - Script/import security suite: 29 checks covering context isolation, injection, path escapes, XML limits and export/import round trips.
