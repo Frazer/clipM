@@ -26,7 +26,7 @@ targets:
     # Custom Sparkle keys are not emitted by Xcode's generated Info.plist
     # build settings. Keep them in an explicit input plist, with Boolean types.
     info:
-      path: Resources/ClipMenu-Info.plist
+      path: Resources/DirectDistributionInfo.plist
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
@@ -56,7 +56,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenu
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipM
         PRODUCT_NAME: clipM
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -70,7 +70,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "0.9"
         CURRENT_PROJECT_VERSION: "1"
       configs:
         Debug:
@@ -93,6 +93,8 @@ targets:
           CODE_SIGN_STYLE: Manual
           DEVELOPMENT_TEAM: 97988GNC59
           OTHER_CODE_SIGN_FLAGS: "--timestamp"
+          # get-task-allow is for the debugger. Notarization rejects it.
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
   # Mac App Store distribution — no Sparkle; updates via App Store only.
   ClipMenuAppStore:
@@ -121,7 +123,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenu
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipM
         PRODUCT_NAME: clipM
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -135,7 +137,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "0.9"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE
       configs:
@@ -178,7 +180,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenuTest
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipMenuTest
         PRODUCT_NAME: ClipMenuTest
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
@@ -191,7 +193,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "0.9"
         CURRENT_PROJECT_VERSION: "1"
       configs:
         Debug:
@@ -221,7 +223,7 @@ targets:
     settings:
       base:
         TEST_TARGET_NAME: ClipMenuTest
-        PRODUCT_BUNDLE_IDENTIFIER: app.eetr.ClipMenuUITests
+        PRODUCT_BUNDLE_IDENTIFIER: org.unitedvisions.ClipMenuUITests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

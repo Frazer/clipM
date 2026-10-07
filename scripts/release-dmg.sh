@@ -45,7 +45,7 @@ export -n release_sparkle_key release_notary_password
 unset SPARKLE_PRIVATE_KEY APPLE_APP_SPECIFIC_PASSWORD
 
 TEAM_ID="${APPLE_TEAM_ID:-97988GNC59}"
-BUNDLE_ID="app.eetr.ClipMenu"
+BUNDLE_ID="org.unitedvisions.ClipM"
 SCHEME="ClipMenu"
 CONFIG="Release"
 REPO="${GITHUB_REPOSITORY:-Frazer/clipM}"
@@ -79,7 +79,7 @@ PY
 )"
 
 TAG="${RELEASE_TAG:-v${MARKETING_VERSION}}"
-if [[ ! "$MARKETING_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || ! "$BUILD_NUMBER" =~ ^[0-9]+$ || "$TAG" != "v${MARKETING_VERSION}" ]]; then
+if [[ ! "$MARKETING_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ || ! "$BUILD_NUMBER" =~ ^[0-9]+$ || "$TAG" != "v${MARKETING_VERSION}" ]]; then
   echo "ERROR: Release tag must match project version (v${MARKETING_VERSION}); versions must be numeric." >&2
   exit 1
 fi
@@ -122,6 +122,7 @@ xcodebuild \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="$IDENTITY" \
+  CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
   OTHER_CODE_SIGN_FLAGS="--timestamp" \
   build
 
@@ -149,6 +150,20 @@ fi
 
 rm -rf "$STAGE/clipM.app"
 ditto "$APP_SRC" "$STAGE/clipM.app"
+
+echo "==> Re-signing Sparkle helpers with Developer ID…"
+SPARKLE="$STAGE/clipM.app/Contents/Frameworks/Sparkle.framework/Versions/B"
+sign_developer_id() {
+  codesign --force --sign "$IDENTITY" --options runtime --timestamp --preserve-metadata=entitlements "$1"
+}
+sign_developer_id "$SPARKLE/XPCServices/Downloader.xpc"
+sign_developer_id "$SPARKLE/XPCServices/Installer.xpc"
+sign_developer_id "$SPARKLE/Autoupdate"
+sign_developer_id "$SPARKLE/Updater.app"
+sign_developer_id "$STAGE/clipM.app/Contents/Frameworks/Sparkle.framework"
+codesign --force --sign "$IDENTITY" --options runtime --timestamp \
+  --entitlements "$ROOT/ClipMenu.entitlements" \
+  "$STAGE/clipM.app"
 
 echo "==> codesign verify…"
 codesign --verify --deep --strict --verbose=2 "$STAGE/clipM.app"
@@ -194,7 +209,7 @@ else
   echo "==> Skipping notarization (--skip-notarize)"
 fi
 
-echo "==> Creating DMG $DMG_NAME…"
+echo "==> Creating DMG ${DMG_NAME}…"
 rm -rf "$DMG_ROOT"
 mkdir -p "$DMG_ROOT"
 ditto "$STAGE/clipM.app" "$DMG_ROOT/clipM.app"

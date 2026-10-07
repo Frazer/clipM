@@ -326,7 +326,6 @@ struct PasteIntegrationHarnessView: View {
         runtime.settings.numberOfItemsInline = 2
         runtime.settings.numberOfItemsInsideFolder = 10
         runtime.settings.numberedMenuItems = false
-        runtime.settings.numericKeyEquivalents = false
         runtime.settings.maxMenuItemTitleLength = 200
         runtime.settings.showTooltipsInMenu = true
     }

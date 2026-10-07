@@ -19,7 +19,7 @@ final class ClipMenuSettings {
     var suppressLoginItemAlert: Bool = false { didSet { defaults.set(suppressLoginItemAlert, forKey: "suppressAlertForLoginItem") } }
     var autoPasteAfterSelection: Bool = true { didSet { defaults.set(autoPasteAfterSelection, forKey: "inputPasteCommand") } }
     var reorderClipsAfterPasting: Bool = true { didSet { defaults.set(reorderClipsAfterPasting, forKey: "reorderClipsAfterPasting") } }
-    var maxHistorySize: Int = 20 { didSet { defaults.set(maxHistorySize, forKey: "maxHistorySize") } }
+    var maxHistorySize: Int = 200 { didSet { defaults.set(maxHistorySize, forKey: "maxHistorySize") } }
     var exportHistoryAsSingleFile: Bool = true { didSet { defaults.set(exportHistoryAsSingleFile, forKey: "exportHistoryAsSingleFile") } }
     var exportSeparatorTag: Int = 1 { didSet { defaults.set(exportSeparatorTag, forKey: "tagOfSeparatorForExportHistoryToFile") } }
     var showStatusItem: Bool = true { didSet { defaults.set(showStatusItem, forKey: "showStatusItem") } }
@@ -45,8 +45,7 @@ final class ClipMenuSettings {
     var numberOfItemsInsideFolder: Int = 11 { didSet { defaults.set(numberOfItemsInsideFolder, forKey: "numberOfItemsPlaceInsideFolder") } }
     var numberedMenuItems: Bool = true { didSet { defaults.set(numberedMenuItems, forKey: "menuItemsAreMarkedWithNumbers") } }
     var numberingStartsAtZero: Bool = false { didSet { defaults.set(numberingStartsAtZero, forKey: "menuItemsTitleStartWithZero") } }
-    var numericKeyEquivalents: Bool = false { didSet { defaults.set(numericKeyEquivalents, forKey: "addNumericKeyEquivalents") } }
-    var showClearHistoryItem: Bool = true { didSet { defaults.set(showClearHistoryItem, forKey: "addClearHistoryMenuItem") } }
+    var showClearHistoryItem: Bool = false { didSet { defaults.set(showClearHistoryItem, forKey: "addClearHistoryMenuItem") } }
     var showAlertBeforeClearHistory: Bool = true { didSet { defaults.set(showAlertBeforeClearHistory, forKey: "showAlertBeforeClearHistory") } }
     var showLabelsInMenu: Bool = true { didSet { defaults.set(showLabelsInMenu, forKey: "showLabelsInMenu") } }
     var showTooltipsInMenu: Bool = true { didSet { defaults.set(showTooltipsInMenu, forKey: "showToolTipOnMenuItem") } }
@@ -98,6 +97,10 @@ final class ClipMenuSettings {
     // MARK: - Snippets
 
     var positionOfSnippets: Int = 0 { didSet { defaults.set(positionOfSnippets, forKey: "positionOfSnippets") } }
+    /// Snippets welcome has been shown, or skipped because this Mac already had history.
+    var didShowGettingStarted: Bool = false { didSet { defaults.set(didShowGettingStarted, forKey: "didShowGettingStarted") } }
+    /// User chose to paste clips themselves. The in-app permission dialog stays quiet.
+    var declinedAutomaticPaste: Bool = false { didSet { defaults.set(declinedAutomaticPaste, forKey: "declinedAutomaticPaste") } }
 
     // MARK: - Updates
 
@@ -129,7 +132,7 @@ final class ClipMenuSettings {
         suppressLoginItemAlert = boolValue("suppressAlertForLoginItem", default: false)
         autoPasteAfterSelection = boolValue("inputPasteCommand", default: true)
         reorderClipsAfterPasting = boolValue("reorderClipsAfterPasting", default: true)
-        maxHistorySize = intValue("maxHistorySize", default: 20)
+        maxHistorySize = intValue("maxHistorySize", default: 200)
         exportHistoryAsSingleFile = boolValue("exportHistoryAsSingleFile", default: true)
         exportSeparatorTag = intValue("tagOfSeparatorForExportHistoryToFile", default: 1)
         showStatusItem = boolValue("showStatusItem", default: true)
@@ -141,8 +144,7 @@ final class ClipMenuSettings {
         numberOfItemsInsideFolder = intValue("numberOfItemsPlaceInsideFolder", default: 11)
         numberedMenuItems = boolValue("menuItemsAreMarkedWithNumbers", default: true)
         numberingStartsAtZero = boolValue("menuItemsTitleStartWithZero", default: false)
-        numericKeyEquivalents = boolValue("addNumericKeyEquivalents", default: false)
-        showClearHistoryItem = boolValue("addClearHistoryMenuItem", default: true)
+        showClearHistoryItem = boolValue("addClearHistoryMenuItem", default: false)
         showAlertBeforeClearHistory = boolValue("showAlertBeforeClearHistory", default: true)
         showLabelsInMenu = boolValue("showLabelsInMenu", default: true)
         showTooltipsInMenu = boolValue("showToolTipOnMenuItem", default: true)
@@ -183,6 +185,8 @@ final class ClipMenuSettings {
         commandClickBehavior = stringValue("commandClickBehavior", default: "")
 
         positionOfSnippets = intValue("positionOfSnippets", default: 0)
+        didShowGettingStarted = boolValue("didShowGettingStarted", default: false)
+        declinedAutomaticPaste = boolValue("declinedAutomaticPaste", default: false)
 
         enableAutomaticCheck = boolValue("enableAutomaticCheck", default: true)
         enableAutomaticCheckPreRelease = boolValue("enableAutomaticCheckPreReleaseKey", default: false)
@@ -220,7 +224,7 @@ final class ClipMenuSettings {
             "suppressAlertForLoginItem": false,
             "inputPasteCommand": true,
             "reorderClipsAfterPasting": true,
-            "maxHistorySize": 20,
+            "maxHistorySize": 200,
             "exportHistoryAsSingleFile": true,
             "tagOfSeparatorForExportHistoryToFile": 1,
             "showStatusItem": true,
@@ -231,8 +235,7 @@ final class ClipMenuSettings {
             "numberOfItemsPlaceInsideFolder": 11,
             "menuItemsAreMarkedWithNumbers": true,
             "menuItemsTitleStartWithZero": false,
-            "addNumericKeyEquivalents": false,
-            "addClearHistoryMenuItem": true,
+            "addClearHistoryMenuItem": false,
             "showAlertBeforeClearHistory": true,
             "showLabelsInMenu": true,
             "showToolTipOnMenuItem": true,

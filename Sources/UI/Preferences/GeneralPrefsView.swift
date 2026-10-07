@@ -26,6 +26,10 @@ struct GeneralPrefsView: View {
                 ))
             }
 
+            Section("Automatic Paste") {
+                AutomaticPasteSection()
+            }
+
             // MARK: Clipboard Behaviour
             Section("Clipboard") {
                 Toggle("Paste automatically after selection", isOn: $s.autoPasteAfterSelection)
@@ -51,6 +55,37 @@ struct GeneralPrefsView: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+}
+
+private struct AutomaticPasteSection: View {
+    @Environment(ClipMenuSettings.self) private var settings
+    @State private var isTrusted = PasteService.accessibilityStatus().isTrusted
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if isTrusted {
+                Text("Automatic paste is on. Accessibility is used only to paste the clip you choose.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Without Accessibility permission, each clip is copied and you paste it yourself. Permission is used only for that paste.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Allow Automatic Paste") {
+                    _ = AutomaticPastePrompt.allowsPaste(settings: settings, ignoreDecline: true)
+                    isTrusted = PasteService.accessibilityStatus().isTrusted
+                }
+            }
+        }
+        .onAppear { refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refresh()
+        }
+    }
+
+    private func refresh() {
+        isTrusted = PasteService.accessibilityStatus().isTrusted
     }
 }
 

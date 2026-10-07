@@ -23,6 +23,7 @@
 		12D107DF0CA979EF876EF969 /* SnippetFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD0F7706C0E03012259C58E /* SnippetFolder.swift */; };
 		173795708D239F1143E525DB /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
 		19F9D1AAD40C778CCA0486DE /* AboutUpdatesPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467431578860C24FDB6E6AED /* AboutUpdatesPrefsView.swift */; };
+		1AF701E9D883819F451F7CE6 /* AutomaticPastePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC9623EC8E6458E79605CF3 /* AutomaticPastePrompt.swift */; };
 		1E7FBC2858994BA4D6534C48 /* ActionOverlayPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E43E25B277D60F5D87A052 /* ActionOverlayPresenter.swift */; };
 		1EAA2D265103CF422098095C /* ActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD6C21C72EE5244BB1D7613 /* ActionService.swift */; };
 		1F6D55E9464B1FFE2B07FF0A /* ClipMenuSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29576F23AAFF791919F37AA2 /* ClipMenuSettings.swift */; };
@@ -101,6 +102,7 @@
 		A98E79AF87AB26E6A6918490 /* ActionOverlayPresenter+ActionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74F42E000E9495854EC79A4 /* ActionOverlayPresenter+ActionNode.swift */; };
 		ABA633B07339D8FA5C68F5C3 /* UserActionScriptsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E784E930CA9F1939F21099D7 /* UserActionScriptsStore.swift */; };
 		AD4C96FDA3497DC380592A13 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48E46B042ACC84B0F6F1766 /* LoginItemService.swift */; };
+		B1BD46000265A2B0D2F68165 /* AutomaticPastePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC9623EC8E6458E79605CF3 /* AutomaticPastePrompt.swift */; };
 		B1C180C830FA7B03FEF8CD50 /* SnippetsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19473B9E42EE0B4041018F4D /* SnippetsPrefsView.swift */; };
 		B3443B04C7ADEFC350789B9E /* ClipMenuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDD26CD466BFA583E75E608 /* ClipMenuApp.swift */; };
 		B4A17C54F43411B211B355BB /* ActionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6321E93388B5BFB5F35292 /* ActionSection.swift */; };
@@ -114,6 +116,7 @@
 		C7825E363308365CDE7EB241 /* ClipMenuSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29576F23AAFF791919F37AA2 /* ClipMenuSettings.swift */; };
 		C955BAEE63C16EFB4ECF2B56 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48E46B042ACC84B0F6F1766 /* LoginItemService.swift */; };
 		C97D17430916081D7020F90C /* MenuPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C53F23FA57EE7251E7DC8C6E /* MenuPrefsView.swift */; };
+		CAE9FFC671950E0D2D92C8FF /* AutomaticPastePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC9623EC8E6458E79605CF3 /* AutomaticPastePrompt.swift */; };
 		CBBDAFC53667B864E81C6917 /* ShortcutsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137B169B289424AA2C053F6E /* ShortcutsPrefsView.swift */; };
 		CBE9A7D84EC7FB0CD880BA51 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D443B0D12EBBA794375C2643 /* PasteService.swift */; };
 		CC8D70DCCBB4A71F5C3C2734 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A0E2A4B1C92D3E67A301A3 /* SparkleUpdateService.swift */; };
@@ -178,7 +181,6 @@
 		17E43E25B277D60F5D87A052 /* ActionOverlayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionOverlayPresenter.swift; sourceTree = "<group>"; };
 		19473B9E42EE0B4041018F4D /* SnippetsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetsPrefsView.swift; sourceTree = "<group>"; };
 		19B808EFAA8952BC9BA1CA8D /* string.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = string.js; sourceTree = "<group>"; };
-		19E9E3DA51025DE53F60ACB0 /* ClipMenu-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ClipMenu-Info.plist"; sourceTree = "<group>"; };
 		1AAA8A2C77102B5966216536 /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
 		1C7B6FEA8365FA24B2DBB906 /* Convert Character to Decimal.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Convert Character to Decimal.js"; sourceTree = "<group>"; };
 		1E56AEC45D95D95509478467 /* util.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = util.js; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 		6669409568F7A199CA873CC3 /* Unescape HTML characters.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Unescape HTML characters.js"; sourceTree = "<group>"; };
 		68E108C0578568776F9A29D7 /* test_script_security.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_script_security.swift; sourceTree = "<group>"; };
 		6A8868E921A0CAF30A35A2EE /* ClipMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMenuUITests.swift; sourceTree = "<group>"; };
+		6BC9623EC8E6458E79605CF3 /* AutomaticPastePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomaticPastePrompt.swift; sourceTree = "<group>"; };
 		6CA10EBC72D8E5AE80FF0F4E /* AppExclusionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExclusionService.swift; sourceTree = "<group>"; };
 		6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuzzyTextMatch.swift; sourceTree = "<group>"; };
 		6D517EEF41F574940FADD6EB /* test_real_preview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_real_preview.swift; sourceTree = "<group>"; };
@@ -263,6 +266,7 @@
 		C6107A96E18C02167CD2BF95 /* { }.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "{ }.js"; sourceTree = "<group>"; };
 		CC0D05E32BADC3B23BA7F652 /* ' '.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "' '.js"; sourceTree = "<group>"; };
 		CDB67016D05B5750B90F5809 /* ‘ ’.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "‘ ’.js"; sourceTree = "<group>"; };
+		D050F5167EB6B1429953D863 /* DirectDistributionInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = DirectDistributionInfo.plist; sourceTree = "<group>"; };
 		D186E13F5DC693ABF86C6D65 /* ClipMenuAppStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipMenuAppStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2071986765235444ED5C4B6 /* ActionMenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuBuilder.swift; sourceTree = "<group>"; };
 		D443B0D12EBBA794375C2643 /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
@@ -536,7 +540,7 @@
 		A06183AEA97ACC53713DC2B8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				19E9E3DA51025DE53F60ACB0 /* ClipMenu-Info.plist */,
+				D050F5167EB6B1429953D863 /* DirectDistributionInfo.plist */,
 				A665B545F09CB77A65913253 /* scripts */,
 				E03CEE8F2C7117BD9BE6E1E5 /* scripts */,
 			);
@@ -631,6 +635,7 @@
 				70F57773B55F05A1652A2AEF /* AppDistribution.swift */,
 				6CA10EBC72D8E5AE80FF0F4E /* AppExclusionService.swift */,
 				35203B72597FAD055800E93E /* AppStoreUpdateChecker.swift */,
+				6BC9623EC8E6458E79605CF3 /* AutomaticPastePrompt.swift */,
 				9075790B975D02A5039621CB /* ClipboardMonitor.swift */,
 				017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */,
 				6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */,
@@ -843,6 +848,7 @@
 				5AC9FF2B8352F756833DA43D /* AppExclusionService.swift in Sources */,
 				11B632FC9BBBFC5A6DFBA69C /* AppRuntime.swift in Sources */,
 				BC0C7E7EAF385A87E28A3443 /* AppStoreUpdateChecker.swift in Sources */,
+				1AF701E9D883819F451F7CE6 /* AutomaticPastePrompt.swift in Sources */,
 				CD2622CCEC2338F2183B4DCE /* ClipEntry.swift in Sources */,
 				DD0EC1DDD1AFCBA2C875A51C /* ClipMenuApp+Scenes.swift in Sources */,
 				B3443B04C7ADEFC350789B9E /* ClipMenuApp.swift in Sources */,
@@ -893,6 +899,7 @@
 				64D000C44098AE261B105B13 /* AppExclusionService.swift in Sources */,
 				173795708D239F1143E525DB /* AppRuntime.swift in Sources */,
 				884E1A5BD69955690D8C57C5 /* AppStoreUpdateChecker.swift in Sources */,
+				CAE9FFC671950E0D2D92C8FF /* AutomaticPastePrompt.swift in Sources */,
 				EF2816C37340738E48557D8F /* ClipEntry.swift in Sources */,
 				0EA12A2EF1AF8B19F1B348C2 /* ClipMenuApp+Scenes.swift in Sources */,
 				3172142BFAE97824596E71ED /* ClipMenuApp.swift in Sources */,
@@ -943,6 +950,7 @@
 				F9343715F430A05D2DD97E34 /* AppExclusionService.swift in Sources */,
 				76969A92D3459A30D0C7A6E2 /* AppRuntime.swift in Sources */,
 				524E59B9F1C0C32764A1D906 /* AppStoreUpdateChecker.swift in Sources */,
+				B1BD46000265A2B0D2F68165 /* AutomaticPastePrompt.swift in Sources */,
 				951A172FEC26A436F6BC3232 /* ClipEntry.swift in Sources */,
 				5F656B886B8F29CC5617F8BB /* ClipMenuApp+Scenes.swift in Sources */,
 				80C5101B8CC05DF5E188A131 /* ClipMenuApp.swift in Sources */,
@@ -1019,8 +1027,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1109,8 +1117,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE";
@@ -1143,8 +1151,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuTest;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
@@ -1166,7 +1174,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuUITests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = ClipMenuTest;
 			};
@@ -1179,6 +1187,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = ClipMenu.entitlements;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -1187,7 +1196,7 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Resources/ClipMenu-Info.plist";
+				INFOPLIST_FILE = Resources/DirectDistributionInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
@@ -1199,9 +1208,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.9;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DIRECT_DISTRIBUTION;
@@ -1222,7 +1231,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenuUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuUITests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = ClipMenuTest;
 			};
@@ -1316,8 +1325,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APP_STORE;
@@ -1340,7 +1349,7 @@
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Resources/ClipMenu-Info.plist";
+				INFOPLIST_FILE = Resources/DirectDistributionInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "clip'M";
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleName = "clip'M";
@@ -1352,8 +1361,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.eetr.ClipMenu;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

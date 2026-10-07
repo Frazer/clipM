@@ -1,6 +1,6 @@
 # Security audit — October 6, 2026
 
-Scope: source and release configuration based on commit `68e92b5`, including the changes in this worktree. This is a source review with targeted regression tests, not a guarantee that the product is invulnerable or an independent penetration-test certification. The real clipboard, saved history and private release keys were not used for testing.
+Scope: source and release configuration based on commit `68e92b5`, including the changes in this worktree. The audit branch subsequently integrated the 13 commits from master through `69319b3`; the regression suites and unsigned builds were rerun after resolving that merge. This is a source review with targeted regression tests, not a guarantee that the product is invulnerable or an independent penetration-test certification. The real clipboard, saved history and private release keys were not used for testing.
 
 ## Publication assessment
 
@@ -46,12 +46,14 @@ Clear History should discard the previous history key and create a new one for f
 
 ## Verification
 
+Merge integration preserves the welcome flow and consent prompt while capturing the intended paste target and clipboard generation before the prompt can change focus. The direct target uses `Resources/DirectDistributionInfo.plist`, version 0.9 and bundle ID `org.unitedvisions.ClipM`, with both Sparkle verification policies retained. Nine release tag/version guard cases cover the two-component version, three-component versions and invalid inputs. UI interaction and signed-distribution checks remain outstanding.
+
 - Clipboard security suite: 43 checks using a private named pasteboard and in-memory history.
 - Script/import security suite: 29 checks covering context isolation, injection, path escapes, XML limits and export/import round trips.
 - Existing core services suite: 23 checks for clipboard round trips, deduplication and script failures.
 - Storage suite: synthetic disk-backed SwiftData persistence, permissions/ACLs, migration, symlink/hard-link rejection, clear/reopen, preserved snippets/actions, stale selection/capture rejection, byte absence in live database files and error propagation.
 - Release gates: 10 synthetic-key signature/publishing checks.
-- XcodeGen generation and unsigned Release builds of direct and App Store targets. No app was launched against real user data; no release was published.
+- XcodeGen generation, an unsigned direct Debug build, and unsigned Release builds of direct and App Store targets. No app was launched against real user data; no release was published.
 - Pattern scan of 806 reachable Git-history blobs found no matches for private-key headers, common GitHub tokens, AWS access-key IDs, Slack tokens or OpenAI-style tokens. This is a limited format scan, not proof that the repository never contained a secret.
 
 Sparkle's published [installer path advisory](https://github.com/sparkle-project/Sparkle/security/advisories/GHSA-3x7w-j75x-ppq5) affects versions through 2.9.5 and identifies 2.9.6 as patched; the locked 2.10.0 is newer. The broader [Sparkle advisory list](https://github.com/sparkle-project/Sparkle/security/advisories) and [KeyboardShortcuts security page](https://github.com/sindresorhus/KeyboardShortcuts/security) were reviewed. Absence of a published advisory is not a guarantee of safety. Confidential pasteboard handling follows the [NSPasteboard conventions](https://nspasteboard.org/).

@@ -73,6 +73,10 @@ struct SnippetsPrefsView: View {
                 }
             }
 
+            Text("Anything that you paste regularly, you can keep as a snippet. So, descriptions of regular events that you host, or your personal bio. If you ever notice yourself writing the same thing more than once, turn it into a snippet. The examples already here are placeholders — replace them with your own email, address, and the lines you use often.")
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             HStack(alignment: .top, spacing: 12) {
                 foldersPane
                     .frame(minWidth: 180, idealWidth: 240, maxWidth: .infinity)
@@ -559,7 +563,7 @@ struct SnippetsPrefsView: View {
 
 #Preview {
     let folder = SnippetFolder(title: "Templates", sortIndex: 0)
-    let snippet = Snippet(title: "Greeting", content: "Hello from ClipMenu!", sortIndex: 0)
+    let snippet = Snippet(title: "Greeting", content: "Hello from clip'M!", sortIndex: 0)
     snippet.folder = folder
     folder.snippets = [snippet]
 

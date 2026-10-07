@@ -4,8 +4,7 @@ import KeyboardShortcuts
 /// Shortcuts tab in the Preferences window.
 ///
 /// Displays `KeyboardShortcuts.Recorder` controls for each global shortcut
-/// defined in `HotkeyService`. Defaults match legacy PTHotKey defaults from
-/// `legacy/Source/AppController.m +_defaultHotKeyCombos`.
+/// defined in `HotkeyService`. Defaults are ⌥⌘V, ⌃⌘V, ⌥⌘B, and ⇧⌘A.
 struct ShortcutsPrefsView: View {
     var body: some View {
         Form {
@@ -15,7 +14,7 @@ struct ShortcutsPrefsView: View {
                 KeyboardShortcuts.Recorder("Snippets menu", name: .openSnippets)
                 KeyboardShortcuts.Recorder("Actions menu", name: .openActions)
             } footer: {
-                Text("These shortcuts open the \(AppDistribution.displayName) status-bar menu. Defaults: ⌘⇧V, ⌘⌃V, ⌘⇧B, ⌘⇧A.")
+                Text("These shortcuts open the \(AppDistribution.displayName) status-bar menu. Defaults: ⌥⌘V, ⌃⌘V, ⌥⌘B, ⇧⌘A.")
                     .foregroundStyle(.secondary)
                     .font(.footnote)
             }

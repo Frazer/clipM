@@ -23,8 +23,6 @@ struct ClipMenuItem: View {
             itemLabel
         }
         .help(tooltip)
-        .modifier(NumericShortcut(number: listNumber % 10,
-                                  enabled: false))
     }
 
     // MARK: - Label
@@ -269,26 +267,6 @@ struct ClipMenuItem: View {
         }
 
         return NSImage(data: data)
-    }
-}
-
-private struct NumericShortcut: ViewModifier {
-    let number: Int
-    let enabled: Bool
-
-    func body(content: Content) -> some View {
-        if enabled, let char = Character(String(number)).asciiDigit {
-            content.keyboardShortcut(KeyEquivalent(char), modifiers: [])
-        } else {
-            content
-        }
-    }
-}
-
-private extension Character {
-    var asciiDigit: Character? {
-        guard self >= "0", self <= "9" else { return nil }
-        return self
     }
 }
 

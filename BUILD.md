@@ -73,7 +73,7 @@ Direct downloads are published via **GitHub Releases** (DMG + Sparkle `appcast.x
 
 ### Sparkle setup (direct builds)
 
-The direct target generates `Resources/ClipMenu-Info.plist` from `project.yml`. Its public EdDSA key and feed are embedded explicitly (custom `INFOPLIST_KEY_SU*` settings are not sufficient):
+The direct target generates `Resources/DirectDistributionInfo.plist` from `project.yml`. Its public EdDSA key and feed are embedded explicitly (custom `INFOPLIST_KEY_SU*` settings are not sufficient):
 
 ```yaml
 SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
@@ -119,10 +119,10 @@ Paste simulation uses CGEvent and requires Accessibility permission:
 
 - System Settings -> Privacy & Security -> Accessibility
 
-Direct (`ClipMenu`) and App Store (`ClipMenuAppStore`) builds share bundle ID `app.eetr.ClipMenu`, but different entitlements/signatures. After switching channels, reset Accessibility and re-grant it for the build you just launched:
+Direct (`ClipMenu`) and App Store (`ClipMenuAppStore`) builds share bundle ID `org.unitedvisions.ClipM`, but different entitlements/signatures. After switching channels, reset Accessibility and re-grant it for the build you just launched:
 
 ```sh
-tccutil reset Accessibility app.eetr.ClipMenu
+tccutil reset Accessibility org.unitedvisions.ClipM
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 ```
 

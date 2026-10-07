@@ -12,6 +12,9 @@ import os
 actor PasteService {
     private static let log = Logger(subsystem: "com.naotaka.ClipMenu", category: "PasteService")
     static let simulatedPasteNotification = Notification.Name("PasteService.simulatedPasteNotification")
+    /// Configured by the app runtime; isolated service hosts only check permission.
+    @MainActor static var authorizePaste: () -> Bool = { accessibilityStatus().isTrusted }
+
     private var cachedVKeyCode: CGKeyCode?
     private var loggedMissingAXThisSession = false
     private var inputSourceObserver: NSObjectProtocol?
@@ -59,6 +62,13 @@ actor PasteService {
             return
         }
 
+        let allowed = await MainActor.run {
+            Self.authorizePaste()
+        }
+        guard allowed else {
+            Self.log.info("Clip left on the clipboard for the user to paste")
+            return
+        }
         guard isAccessibilityTrusted() else {
             Self.log.error("Paste aborted: Accessibility permission not granted")
             return
@@ -101,8 +111,7 @@ actor PasteService {
         )
     }
 
-    /// Prompts the user (and registers the app in System Settings → Accessibility)
-    /// when trust is missing. Call from the main app process at launch.
+    /// Shows the system Accessibility prompt. Call only after the in-app explanation.
     @discardableResult
     nonisolated static func requestAccessibilityPermissionIfNeeded() -> Bool {
         if isPasteUITestMode { return true }
@@ -129,9 +138,7 @@ actor PasteService {
             let status = Self.accessibilityStatus()
             Self.log.error("Accessibility permission missing. bundleID=\(status.bundleIdentifier, privacy: .public) execPath=\(status.executablePath, privacy: .public)")
         }
-
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        return AXIsProcessTrustedWithOptions(options)
+        return false
     }
 
     private func invalidateCachedKeyCode() {

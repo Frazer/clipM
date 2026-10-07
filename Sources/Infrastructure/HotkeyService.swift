@@ -17,16 +17,16 @@ extension Notification.Name {
 // MARK: - Shortcut Names
 
 extension KeyboardShortcuts.Name {
-    /// Opens the main clipboard history + snippets menu (legacy: "ClipMenu", Cmd+Shift+V).
+    /// Opens the main clipboard history + snippets menu (⌥⌘V).
     static let openClipMenu = Self("openClipMenu",
-                                   default: .init(.v, modifiers: [.command, .shift]))
-    /// Opens the history-only view (legacy: "HistoryMenu", Cmd+Ctrl+V).
+                                   default: .init(.v, modifiers: [.command, .option]))
+    /// Opens the history-only view (⌃⌘V).
     static let openHistory  = Self("openHistory",
                                    default: .init(.v, modifiers: [.command, .control]))
-    /// Opens the snippets view (legacy: "SnippetsMenu", Cmd+Shift+B).
+    /// Opens the snippets view (⌥⌘B).
     static let openSnippets = Self("openSnippets",
-                                   default: .init(.b, modifiers: [.command, .shift]))
-    /// Opens the actions menu for the most recent clip (Cmd+Shift+A).
+                                   default: .init(.b, modifiers: [.command, .option]))
+    /// Opens the actions menu for the most recent clip (⇧⌘A).
     static let openActions = Self("openActions",
                                   default: .init(.a, modifiers: [.command, .shift]))
 }
@@ -36,9 +36,7 @@ extension KeyboardShortcuts.Name {
 /// Registers and unregisters global keyboard shortcuts using the
 /// `KeyboardShortcuts` package.
 ///
-/// Default key combos mirror `legacy/Source/AppController.m
-/// +_defaultHotKeyCombos` (keyCode 9 = V, 11 = B; modifiers 768 = ⌘⇧,
-/// 4352 = ⌘⌃).
+/// Default key combos: ⌥⌘V, ⌃⌘V, ⌥⌘B, ⇧⌘A.
 final class HotkeyService {
     fileprivate static let log = Logger(subsystem: "com.naotaka.ClipMenu", category: "Hotkeys")
     @MainActor private lazy var popupMenu = HotkeyPopupMenuPresenter()
@@ -553,6 +551,53 @@ private final class ClipMenuSearchFieldCell: NSSearchFieldCell {
 }
 
 /// Single menu-row filter control: search field + images toggle.
+/// Clip name in the actions-shortcut menu. Drawn as a view so the text stays
+/// at full label color instead of the dim color used for disabled menu titles.
+private final class ActionClipIdentityView: NSView {
+    init(title: String, thumbnail: NSImage?) {
+        let display = title.isEmpty ? "Image" : title
+        let font = NSFont.menuFont(ofSize: 13)
+        let textWidth = ceil((display as NSString).size(withAttributes: [.font: font]).width)
+        let thumbSize = thumbnail?.size ?? .zero
+        let height = max(24, thumbSize.height + 8)
+        let width = 20 + textWidth + (thumbnail == nil ? 0 : 8 + thumbSize.width) + 16
+        super.init(frame: NSRect(x: 0, y: 0, width: max(width, 200), height: height))
+
+        let label = NSTextField(labelWithString: display)
+        label.font = font
+        label.textColor = .labelColor
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+
+        var constraints = [
+            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ]
+        if let thumbnail {
+            let imageView = NSImageView(image: thumbnail)
+            imageView.imageScaling = .scaleProportionallyUpOrDown
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(imageView)
+            constraints += [
+                label.trailingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: -8),
+                imageView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12),
+                imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+                imageView.widthAnchor.constraint(equalToConstant: thumbSize.width),
+                imageView.heightAnchor.constraint(equalToConstant: thumbSize.height),
+            ]
+        } else {
+            constraints.append(label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12))
+        }
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class ClipMenuFilterBarView: NSView {
     let searchField: ClipMenuSearchField
     let imagesButton: NSButton
@@ -678,10 +723,15 @@ private enum ClipMenuFilterKeyHook {
            ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]?.hasPrefix("no-tap-") == true { return }
         #endif
         guard eventTap == nil else { return }
+        // Creating a session tap while untrusted raises the system Accessibility
+        // dialog. That prompt belongs to the in-app paste explanation, not launch.
+        guard AXIsProcessTrusted() else { return }
 
         let keyMask = CGEventMask(1 << CGEventType.keyDown.rawValue)
         let mouseDownMask = CGEventMask(1 << CGEventType.leftMouseDown.rawValue)
+            | CGEventMask(1 << CGEventType.rightMouseDown.rawValue)
         let mouseUpMask = CGEventMask(1 << CGEventType.leftMouseUp.rawValue)
+            | CGEventMask(1 << CGEventType.rightMouseUp.rawValue)
         let mask = keyMask | mouseDownMask | mouseUpMask | CGEventMask(1 << CGEventType.flagsChanged.rawValue)
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -700,7 +750,8 @@ private enum ClipMenuFilterKeyHook {
                     return Unmanaged.passUnretained(event)
                 }
                 if ClipMenuFilterKeyHook.passOpeningMouseUp,
-                   type == .leftMouseDown || type == .leftMouseUp || type == .rightMouseDown {
+                   type == .leftMouseDown || type == .leftMouseUp
+                    || type == .rightMouseDown || type == .rightMouseUp {
                     if type == .leftMouseUp { ClipMenuFilterKeyHook.passOpeningMouseUp = false }
                     return Unmanaged.passUnretained(event)
                 }
@@ -720,8 +771,12 @@ private enum ClipMenuFilterKeyHook {
                             }
                         } else if type == .leftMouseDown {
                             consume = target.handleGlobalActionMouseDown(cgEvent: event)
+                        } else if type == .rightMouseDown {
+                            consume = target.handleGlobalActionMouseDown(cgEvent: event, rightClick: true)
                         } else if type == .leftMouseUp {
                             consume = target.handleGlobalActionMouseUp()
+                        } else if type == .rightMouseUp {
+                            consume = target.handleGlobalActionMouseUp(rightButton: true)
                         }
                     }
                 }
@@ -745,8 +800,10 @@ private enum ClipMenuFilterKeyHook {
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         let tracking = CFRunLoopMode(RunLoop.Mode.eventTracking.rawValue as CFString)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, tracking)
-        // Leave the tap disabled until a menu is open. Enabling it at launch
-        // puts the status-item click through the tap, and that menu then closes.
+        // Taps are enabled when created. Leave this one off until a menu is open.
+        // An enabled tap at launch puts the status-item click through the tap,
+        // and that menu then closes. It can also swallow global hotkeys.
+        CGEvent.tapEnable(tap: tap, enable: false)
         HotkeyService.log.debug("Filter key/mouse event tap installed")
     }
 
@@ -1570,26 +1627,36 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     private func previewAnchorPoint(for item: NSMenuItem, in menu: NSMenu) -> NSPoint {
-        NSEvent.mouseLocation
+        if let rowCenter = highlightedRowCenter(for: item) {
+            return rowCenter
+        }
+        return NSPoint(x: currentMenuFrame.midX, y: estimatedRowCenterY(for: item, in: menu))
     }
 
     private func updatePreviewAnchor(for item: NSMenuItem, in menu: NSMenu) {
-        let mouse = NSEvent.mouseLocation
+        // Always line the preview up with the highlighted row. Mouse hover
+        // already sits on that row; keyboard jumps leave the pointer behind.
+        previewAnchorPoint = previewAnchorPoint(for: item, in: menu)
+    }
+
+    /// On-screen center of the highlighted row, when AppKit has laid it out.
+    private func highlightedRowCenter(for item: NSMenuItem) -> NSPoint? {
+        let frame = item.accessibilityFrame()
+        guard frame.width > 1, frame.height > 1 else { return nil }
+        if currentMenuFrame.width > 0 {
+            let expanded = currentMenuFrame.insetBy(dx: -8, dy: -8)
+            guard expanded.intersects(frame) else { return nil }
+        }
+        return NSPoint(x: frame.midX, y: frame.midY)
+    }
+
+    private func estimatedRowCenterY(for item: NSMenuItem, in menu: NSMenu) -> CGFloat {
         let visibleItems = menu.items.filter { !$0.isHidden }
         let itemIndex = max(visibleItems.firstIndex(of: item) ?? 0, 0)
         let rowOffset = visibleItems.prefix(itemIndex).reduce(CGFloat(0)) { total, current in
             total + menuItemHeight(current)
         } + menuItemHeight(item) / 2
-        let calculatedRowY = currentMenuFrame.maxY - rowOffset
-
-        // Follow the mouse only when it is actually over the menu that owns
-        // the highlighted item. Keyboard navigation often leaves the cursor
-        // sitting on the root popup while a submenu is open.
-        if NSPointInRect(mouse, currentMenuFrame) {
-            previewAnchorPoint = mouse
-        } else {
-            previewAnchorPoint = NSPoint(x: currentMenuFrame.midX, y: calculatedRowY)
-        }
+        return currentMenuFrame.maxY - rowOffset
     }
 
     private func preferredPreviewSide(for menuFrame: NSRect) -> PreviewSide {
@@ -1888,6 +1955,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         let titleItem = NSMenuItem(title: "Actions for Most Recent Clip", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
+        menu.addItem(actionClipIdentityItem(targetClip, settings: runtime.settings))
         menu.addItem(.separator())
 
         let roots = (try? context.fetch(FetchDescriptor<ActionNode>(
@@ -1984,10 +2052,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                                   keyEquivalent: "")
             item.target = actionTarget
             item.representedObject = clip
-            if shouldShowTrailingNumericShortcut(settings: settings) {
-                item.keyEquivalent = String(itemNumber % 10)
-                item.keyEquivalentModifierMask = []
-            }
             if let thumbnail = thumbnailImage(for: clip, settings: settings) {
                 item.attributedTitle = imageClipTitle(title: item.title, thumbnail: thumbnail)
                 HotkeyService.log.debug("Attached inline popup thumbnail for clip index=\(idx, privacy: .public)")
@@ -2018,10 +2082,6 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                                       keyEquivalent: "")
                 item.target = actionTarget
                 item.representedObject = clip
-                if shouldShowTrailingNumericShortcut(settings: settings) {
-                    item.keyEquivalent = String(itemNumber % 10)
-                    item.keyEquivalentModifierMask = []
-                }
                 if let thumbnail = thumbnailImage(for: clip, settings: settings) {
                     item.attributedTitle = imageClipTitle(title: item.title, thumbnail: thumbnail)
                     HotkeyService.log.debug("Attached grouped popup thumbnail group=\(groupIndex, privacy: .public) idx=\(idx, privacy: .public)")
@@ -2037,8 +2097,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         }
     }
 
-    /// Visible 1-based (or 0-based) list index for menu titles — full integers, not mod 10.
-    /// Numeric key equivalents still use `itemNumber % 10` where enabled.
+    /// Visible 1-based (or 0-based) list index for menu titles.
     private func listNumber(for index: Int, settings: ClipMenuSettings) -> Int {
         if settings.numberingStartsAtZero {
             return index
@@ -2046,11 +2105,26 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         return index + 1
     }
 
-    private func shouldShowTrailingNumericShortcut(settings: ClipMenuSettings) -> Bool {
-        false
+    /// The actions shortcut opens this menu without the clipboard popup, so the
+    /// row has to say which clip the actions apply to.
+    ///
+    /// A disabled menu title is drawn in the dim header color. A custom view
+    /// keeps the clip in the normal label color so it stays readable.
+    private func actionClipIdentityItem(_ clip: ClipEntry, settings: ClipMenuSettings) -> NSMenuItem {
+        let title = clipTitle(for: clip, settings: settings, listNumber: 1, includeNumber: false)
+        var thumbnail: NSImage?
+        if let imageData = clip.imageData, let image = decodedImage(from: imageData) {
+            let targetSize = NSSize(width: CGFloat(max(settings.thumbnailWidth, 1)),
+                                    height: CGFloat(max(settings.thumbnailHeight, 1)))
+            thumbnail = scaledImage(image, to: targetSize)
+        }
+        let item = NSMenuItem(title: title.isEmpty ? "Image" : title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        item.view = ActionClipIdentityView(title: title, thumbnail: thumbnail)
+        return item
     }
 
-    private func clipTitle(for clip: ClipEntry, settings: ClipMenuSettings, listNumber: Int) -> String {
+    private func clipTitle(for clip: ClipEntry, settings: ClipMenuSettings, listNumber: Int, includeNumber: Bool = true) -> String {
         let source = clip.stringValue
             ?? clip.filenames?.first
             ?? clip.urlStrings?.first
@@ -2074,7 +2148,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             trimmed = firstLine.isEmpty ? "(binary)" : firstLine
         }
 
-        if settings.numberedMenuItems {
+        if includeNumber && settings.numberedMenuItems {
             return trimmed.isEmpty ? "\(listNumber)." : "\(listNumber). \(trimmed)"
         }
         return trimmed
@@ -2688,8 +2762,9 @@ private final class HotkeyPopupActionTarget: NSObject {
     private var modifierMonitor: Any?
     /// Last row from `menu:willHighlight:` — used for modifier+click action overlay.
     private weak var lastHighlightedMenuItem: NSMenuItem?
-    /// Swallow the matching mouseUp after we intercept a modifier+click.
+    /// Swallow the matching mouseUp after we intercept a modifier-click or right-click.
     private var suppressNextMouseUpForActionOverlay = false
+    private var suppressNextRightMouseUpForActionOverlay = false
     /// Skip paste when the activating click was already handled as an action overlay.
     private var ignoreNextClipSelectionForActionOverlay = false
 
@@ -2704,10 +2779,23 @@ private final class HotkeyPopupActionTarget: NSObject {
         guard modifierMonitor == nil else { return }
         trackedModifierFlags = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
         modifierMonitor = NSEvent.addLocalMonitorForEvents(
-            matching: [.flagsChanged, .leftMouseDown, .leftMouseUp, .rightMouseDown, .keyDown]
+            matching: [.flagsChanged, .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .keyDown]
         ) { [weak self] event in
             let consume = MainActor.assumeIsolated { () -> Bool in
                 guard let self else { return false }
+                // The overlay is already visible by the time the matching mouse-up
+                // arrives. Swallow that release before the visibility check, or the
+                // clip menu closes out from under the action panel.
+                if event.type == .rightMouseUp, self.suppressNextRightMouseUpForActionOverlay {
+                    self.suppressNextRightMouseUpForActionOverlay = false
+                    return true
+                }
+                if event.type == .leftMouseUp, self.suppressNextMouseUpForActionOverlay {
+                    let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+                    if !flags.isEmpty { self.lastClickModifierFlags = flags }
+                    self.suppressNextMouseUpForActionOverlay = false
+                    return true
+                }
                 if ActionOverlayPresenter.shared.isVisible { return false }
                 if event.type == .flagsChanged, let cgEvent = event.cgEvent {
                     return self.handleGlobalActionModifierChange(cgEvent: cgEvent)
@@ -2720,10 +2808,12 @@ private final class HotkeyPopupActionTarget: NSObject {
                     self.lastClickLocation = NSEvent.mouseLocation
                 } else if event.type == .leftMouseUp {
                     if !flags.isEmpty { self.lastClickModifierFlags = flags }
-                    if self.suppressNextMouseUpForActionOverlay {
-                        self.suppressNextMouseUpForActionOverlay = false
-                        return true
-                    }
+                }
+
+                if event.type == .rightMouseDown,
+                   self.tryPresentActionOverlay(from: event, requireModifier: false) {
+                    self.suppressNextRightMouseUpForActionOverlay = true
+                    return true
                 }
 
                 if event.type == .leftMouseDown || event.type == .keyDown,
@@ -2748,6 +2838,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         trackedModifierFlags = []
         lastHighlightedMenuItem = nil
         suppressNextMouseUpForActionOverlay = false
+        suppressNextRightMouseUpForActionOverlay = false
         ignoreNextClipSelectionForActionOverlay = false
         // Defer clearing click modifiers so any menu item selection action dispatched
         // in the current run-loop cycle still sees them.
@@ -3056,19 +3147,21 @@ private final class HotkeyPopupActionTarget: NSObject {
         return selectionModifierFlags().contains(actionModifierMask(for: runtime.settings.actionModifierKey))
     }
 
-    /// Hold action modifier + click/Return → an action panel at the pointer.
+    /// Right-click, or hold the action modifier and click/Return, opens an action panel at the pointer.
     @MainActor
     @discardableResult
-    private func tryPresentActionOverlay(from event: NSEvent) -> Bool {
+    private func tryPresentActionOverlay(from event: NSEvent, requireModifier: Bool = true) -> Bool {
         guard let runtime, runtime.settings.enableAction else { return false }
 
-        let flags = event.modifierFlags
-            .intersection(.deviceIndependentFlagsMask)
-            .union(trackedModifierFlags)
-            .union(NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask))
-        guard flags.contains(actionModifierMask(for: runtime.settings.actionModifierKey)) else {
-            actionDebugLog("mouseDown uses normal paste: flags=\(flags.rawValue) configuredModifier=\(runtime.settings.actionModifierKey)")
-            return false
+        if requireModifier {
+            let flags = event.modifierFlags
+                .intersection(.deviceIndependentFlagsMask)
+                .union(trackedModifierFlags)
+                .union(NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask))
+            guard flags.contains(actionModifierMask(for: runtime.settings.actionModifierKey)) else {
+                actionDebugLog("mouseDown uses normal paste: flags=\(flags.rawValue) configuredModifier=\(runtime.settings.actionModifierKey)")
+                return false
+            }
         }
 
         if event.type == .keyDown {
@@ -3083,7 +3176,8 @@ private final class HotkeyPopupActionTarget: NSObject {
                 ?? findHighlightedMenuItem(in: filterRootMenu))
         guard let item, let clip = actionTargetClip(from: item) else { return false }
 
-        return presentActionMenu(for: clip, at: NSEvent.mouseLocation, runtime: runtime, from: item)
+        let anchor = event.type == .keyDown ? actionMenuAnchor(over: item) : NSEvent.mouseLocation
+        return presentActionMenu(for: clip, at: anchor, runtime: runtime, from: item)
     }
 
     /// Track the action modifier; do not open the overlay here. Opening on the
@@ -3115,12 +3209,12 @@ private final class HotkeyPopupActionTarget: NSObject {
             ?? findHighlightedMenuItem(in: filterRootMenu)
         guard let item, let clip = actionTargetClip(from: item) else { return false }
 
-        return presentActionMenu(for: clip, at: NSEvent.mouseLocation, runtime: runtime, from: item)
+        return presentActionMenu(for: clip, at: actionMenuAnchor(over: item), runtime: runtime, from: item)
     }
 
-    /// CGEvent-tap path: consume modifier+click before the clip is pasted.
+    /// CGEvent-tap path: consume a right-click or modifier-click before the clip is pasted.
     @MainActor
-    fileprivate func handleGlobalActionMouseDown(cgEvent: CGEvent) -> Bool {
+    fileprivate func handleGlobalActionMouseDown(cgEvent: CGEvent, rightClick: Bool = false) -> Bool {
         guard !ActionOverlayPresenter.shared.isVisible else { return false }
         guard filterRootMenu != nil else {
             actionDebugLog("mouseDown ignored: no open clip menu")
@@ -3132,8 +3226,10 @@ private final class HotkeyPopupActionTarget: NSObject {
         lastClickLocation = NSEvent.mouseLocation
 
         guard let runtime, runtime.settings.enableAction else { return false }
-        guard flags.contains(actionModifierMask(for: runtime.settings.actionModifierKey)) else {
-            return false
+        if !rightClick {
+            guard flags.contains(actionModifierMask(for: runtime.settings.actionModifierKey)) else {
+                return false
+            }
         }
 
         let eventPoint = NSPoint(
@@ -3147,12 +3243,26 @@ private final class HotkeyPopupActionTarget: NSObject {
         }
 
         let presented = presentActionMenu(for: clip, at: NSEvent.mouseLocation, runtime: runtime, from: item)
-        actionDebugLog("mouseDown swallowed=\(presented)")
+        actionDebugLog("mouseDown swallowed=\(presented) rightClick=\(rightClick)")
         if presented {
-            suppressNextMouseUpForActionOverlay = true
-            ignoreNextClipSelectionForActionOverlay = true
+            if rightClick {
+                // A right-click does not activate the row, so leave the next
+                // left-click free to paste. Only the matching right-up is swallowed.
+                suppressNextRightMouseUpForActionOverlay = true
+            } else {
+                suppressNextMouseUpForActionOverlay = true
+                ignoreNextClipSelectionForActionOverlay = true
+            }
         }
         return presented
+    }
+
+    /// Return opens the action menu just inside the highlighted row, matching a click
+    /// in the body of that row. The clip title stays visible above and beside it.
+    private func actionMenuAnchor(over item: NSMenuItem) -> NSPoint {
+        let frame = item.accessibilityFrame()
+        guard frame.width > 0, frame.height > 0 else { return NSEvent.mouseLocation }
+        return NSPoint(x: frame.minX + 48, y: frame.maxY - 12)
     }
 
     @MainActor
@@ -3175,7 +3285,12 @@ private final class HotkeyPopupActionTarget: NSObject {
     }
 
     @MainActor
-    fileprivate func handleGlobalActionMouseUp() -> Bool {
+    fileprivate func handleGlobalActionMouseUp(rightButton: Bool = false) -> Bool {
+        if rightButton {
+            guard suppressNextRightMouseUpForActionOverlay else { return false }
+            suppressNextRightMouseUpForActionOverlay = false
+            return true
+        }
         guard suppressNextMouseUpForActionOverlay else { return false }
         suppressNextMouseUpForActionOverlay = false
         return true
@@ -3583,8 +3698,13 @@ private final class NativeActionMenuSmoke {
             backgroundSelection = root.highlightedItem
             if let first = presenter.menu?.items.first {
                 let actionFrame = presenter.frame(for: first)
-                let pointer = NSEvent.mouseLocation
-                require(abs(actionFrame.minX - pointer.x - 5) < 2 && abs(actionFrame.maxY - pointer.y + 5) < 2, "action menu did not open under the mouse")
+                if phase.hasSuffix("keyboard") {
+                    let row = clip.accessibilityFrame()
+                    require(abs(actionFrame.minX - row.minX - 53) < 2 && abs(actionFrame.maxY - row.maxY + 17) < 2, "action menu did not open inset from the highlighted clip")
+                } else {
+                    let pointer = NSEvent.mouseLocation
+                    require(abs(actionFrame.minX - pointer.x - 5) < 2 && abs(actionFrame.maxY - pointer.y + 5) < 2, "action menu did not open under the mouse")
+                }
             }
             if phase == "shortcuts" {
                 for code: CGKeyCode in [20, 21, 23] {

@@ -3,11 +3,12 @@
 > **Every agent that completes a migration step MUST update this file before committing.**
 > See `.github/copilot-instructions.md` for the full rule.
 
-**Overall progress:** Security/privacy audit and Clear History hardening complete (see `doc/security-audit.md`; application-level encryption remains outstanding) — Phase 1 complete — Phase 2 complete — Phase 3 complete — Phase 4 complete (actions execution path implemented end-to-end: default action seeding, bundled scripts resources, contextual modifier-click popup dispatch inside clip-menu context, JS require path compatibility, numeric key equivalents in native popup, dedicated actions shortcut/menu while preserving snippets shortcut UX, Actions preferences CRUD editor with balanced native macOS UX, drag/drop tree organization, and folder-grouped JavaScript catalog browsing in Actions preferences; build passes) — post-migration repository cleanup complete (legacy tree and historical release tooling removed)
+**Overall progress:** Master integration complete — Security/privacy audit and Clear History hardening complete (see `doc/security-audit.md`; application-level encryption remains outstanding) — Phase 1 complete — Phase 2 complete — Phase 3 complete — Phase 4 complete (actions execution path implemented end-to-end: default action seeding, bundled scripts resources, contextual modifier-click popup dispatch inside clip-menu context, JS require path compatibility, numeric key equivalents in native popup, dedicated actions shortcut/menu while preserving snippets shortcut UX, Actions preferences CRUD editor with balanced native macOS UX, drag/drop tree organization, and folder-grouped JavaScript catalog browsing in Actions preferences; build passes) — post-migration repository cleanup complete (legacy tree and historical release tooling removed)
 
 ---
 
 ## Completed
+- [x] Integrated master through `69319b3`: welcome and paste-permission explanation, menu/preview updates, version 0.9 and United Visions signing identity, while retaining clipboard and release hardening. Paste authorization keeps the original target and clipboard generation across the prompt.
 - [x] Security/privacy hardening: confidential pasteboard filtering, bounded inputs, process-targeted paste, private storage permissions, isolated JavaScript actions, confined script paths, bounded XML import/atomic export, signed-update release gates, explicit Sparkle Info.plist, and verified Clear History database/WAL cleanup with preserved snippets. See `doc/security-audit.md` for tests and limitations.
  - [x] Removed obsolete General settings: `autosaveDelay` and clipboard `pollingInterval` controls were removed from preferences, corresponding `ClipMenuSettings` fields/defaults were deleted, and `ClipsService` now starts clipboard monitoring without a user-configurable interval dependency
  - [x] Phase 4 action runtime wiring: added first-launch default action seeding (built-ins + discovered JavaScript actions from bundle/user script folders) and root-action queries in `ActionService` so fresh installs have runnable actions without legacy `actions.plist`
@@ -46,7 +47,7 @@
 - [x] Hotkey paste reliability pass: hotkey popup now records the pre-popup frontmost app and re-activates it before selection-triggered paste; popup anchor window no longer tries to become key (removes borderless key-window warning source)
 - [x] Hotkey paste timing hardening: for popup selections, copy now occurs without immediate paste, then Cmd+V is dispatched after focus handoff delays; added `PasteService` guard-result logging (AX trust/keycode/event source/post)
 - [x] Accessibility trust hardening: when AX trust is false, `PasteService` now requests system prompt via `AXIsProcessTrustedWithOptions` (once/session) and logs bundle/executable identity for TCC mismatch diagnosis
-- [x] Bundle identity updated for downstream signing/distribution: `PRODUCT_BUNDLE_IDENTIFIER` changed from `com.naotaka.ClipMenu` to `app.eetr.ClipMenu`
+- [x] Bundle identity updated for downstream signing/distribution: `PRODUCT_BUNDLE_IDENTIFIER` changed from `com.naotaka.ClipMenu` to `org.unitedvisions.ClipM`
 - [x] App icon pipeline completed: generated all required macOS `AppIcon.appiconset` sizes (16/32/128/256/512 @1x/@2x) from the provided 1024x1024 source image and wired filenames in asset catalog `Contents.json`
  - [x] Repository cleanup: removed `legacy/` Objective-C tree and historical release/documentation artifacts (`script/deploy.sh`, appcast/version-history generators, old HTML/YAML release notes, and archived legacy docs), then updated root docs to the modern Swift/XcodeGen workflow
 - [x] Legacy Objective-C reference tree was retained during migration and removed after migration completion as part of repository cleanup
@@ -71,6 +72,7 @@ No tasks currently in progress.
 ---
 
 ## Completed
+- [x] Integrated master through `69319b3`: welcome and paste-permission explanation, menu/preview updates, version 0.9 and United Visions signing identity, while retaining clipboard and release hardening. Paste authorization keeps the original target and clipboard generation across the prompt.
 
 ### Phase 2 — UI
 
@@ -133,7 +135,7 @@ No tasks currently in progress.
 
 | Decision | Value | Rationale |
 |---|---|---|
-| Bundle ID | `app.eetr.ClipMenu` | Updated app identity for downstream signing/distribution; existing defaults migration remains key-based |
+| Bundle ID | `org.unitedvisions.ClipM` | Updated app identity for downstream signing/distribution; existing defaults migration remains key-based |
 | Deployment target | macOS 14.0 | Minimum required for SwiftData |
 | Swift version | 5.9+ | SwiftData, @Observable, structured concurrency |
 | Sandboxing | **No sandbox** | CGEvent paste requires Accessibility; incompatible with sandbox |

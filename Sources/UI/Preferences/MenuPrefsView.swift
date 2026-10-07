@@ -21,7 +21,6 @@ struct MenuPrefsView: View {
                 Toggle("Prefix items with numbers", isOn: $s.numberedMenuItems)
                 Toggle("Start numbering at zero", isOn: $s.numberingStartsAtZero)
                     .disabled(!settings.numberedMenuItems)
-                Toggle("Add numeric key equivalents (1–0)", isOn: $s.numericKeyEquivalents)
                 Toggle("Show type label in title", isOn: $s.showLabelsInMenu)
             }
 

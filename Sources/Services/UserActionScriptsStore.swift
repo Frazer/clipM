@@ -132,7 +132,7 @@ enum UserActionScriptsStore {
         var errorDescription: String? {
             switch self {
             case .notUserScript:
-                return "Only JavaScript files in the ClipMenu user actions folder can be modified."
+                return "Only JavaScript files in the ClipM user actions folder can be modified."
             case .scriptTooLarge:
                 return "Action scripts must be no larger than 1 MB."
             }
