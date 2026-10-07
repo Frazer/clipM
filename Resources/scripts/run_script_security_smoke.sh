@@ -6,6 +6,7 @@ mkdir -p "$OUT"
 swiftc -parse-as-library -O -o "$OUT/ScriptSecuritySmoke" \
   "$ROOT"/Sources/Models/*.swift \
   "$ROOT/Sources/Infrastructure/PasteService.swift" \
+  "$ROOT/Sources/Infrastructure/StoreEncryption.swift" \
   "$ROOT/Sources/Infrastructure/HistoryErasure.swift" \
   "$ROOT/Sources/Services/ActionService.swift" \
   "$ROOT/Sources/Services/UserActionScriptsStore.swift" \

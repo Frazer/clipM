@@ -57,7 +57,7 @@ enum AppDistribution {
 
         Thanks to ClipMenu for the original design this work builds on.
 
-        \(displayName) does not track any of your information. Your settings and data stay entirely on your machine.
+        \(displayName) does not track any of your information. Your settings and data stay entirely on your machine. Saved history and snippets are encrypted on this Mac.
         """
     }
 }

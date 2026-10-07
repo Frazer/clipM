@@ -164,4 +164,4 @@ Code signing errors in local/CI builds
 
 Read [the audit and remaining limits](doc/security-audit.md) and run the [security regression checks](doc/testing.md#security-regression-checks). The release script requires notarization and successful Gatekeeper assessment for public artifacts. `--skip-notarize` creates a local test DMG under `release/local-test/`, with no update feed, and cannot be combined with `--publish`. The dependency versions are pinned; update the pins and packaging verification together after reviewing advisories.
 
-Do not describe stored clipboard history as encrypted. Clear History cleans the live database and clipboard; it cannot remove backups or copies held by other applications.
+Saved history and snippets are encrypted with CryptoKit AES-GCM. The Mac App Store build keeps the keys in the data-protection Keychain on this Mac only. The direct build keeps them in the login Keychain and does not sync them. Clear History retires the history key and cleans the live database and clipboard; it cannot remove backups or copies held by other applications.

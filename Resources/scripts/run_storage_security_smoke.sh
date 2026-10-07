@@ -6,6 +6,7 @@ mkdir -p "$OUT"
 swiftc -parse-as-library -O -o "$OUT/StorageSecuritySmoke" \
   "$ROOT"/Sources/Models/*.swift \
   "$ROOT/Sources/Infrastructure/ClipStoreLocation.swift" \
+  "$ROOT/Sources/Infrastructure/StoreEncryption.swift" \
   "$ROOT/Sources/Infrastructure/HistoryErasure.swift" \
   "$ROOT/Sources/Settings/ClipMenuSettings.swift" \
   "$ROOT/Sources/Infrastructure/ClipboardMonitor.swift" \

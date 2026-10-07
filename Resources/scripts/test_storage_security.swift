@@ -27,7 +27,24 @@ struct StorageSecuritySmoke {
 
         let support = root.appendingPathComponent("fresh")
         let store = try ClipStoreLocation.prepareURL(in: support)
+        // Direct builds use the login Keychain. If that Keychain refuses this
+        // unsigned process, exercise AES-GCM with an in-memory key instead.
+        var removeKeys = false
+        do {
+            try StoreEncryption.bindPersistent(storeURL: store)
+            removeKeys = true
+        } catch let error as StoreEncryption.Failure {
+            guard case .keyUnavailable = error else { throw error }
+            StoreEncryption.bindEphemeral()
+        }
+        defer { if removeKeys { StoreEncryption.removeBoundKeys() } }
         require(try mode(store.deletingLastPathComponent()) == 0o700, "Store directory must be private")
+        var tampered = try StoreEncryption.seal(ClipPayload(stringValue: "tamper-fixture"), domain: .history)
+        tampered[tampered.index(before: tampered.endIndex)] ^= 0xff
+        do {
+            _ = try StoreEncryption.open(tampered, as: ClipPayload.self, domain: .history)
+            fatalError("Tampered ciphertext was accepted")
+        } catch {}
         let schema = Schema([ClipEntry.self, Snippet.self, SnippetFolder.self, ActionNode.self])
         let container = try ModelContainer(for: schema, configurations: [
             ModelConfiguration(schema: schema, url: store, cloudKitDatabase: .none)
@@ -70,6 +87,13 @@ struct StorageSecuritySmoke {
         let keptAction = ActionNode(title: "Kept action", isLeaf: true)
         container.mainContext.insert(keptAction)
         try container.mainContext.save()
+        for file in try fm.contentsOfDirectory(at: store.deletingLastPathComponent(), includingPropertiesForKeys: nil) {
+            if (try file.resourceValues(forKeys: [.isRegularFileKey])).isRegularFile == true {
+                let bytes = try Data(contentsOf: file)
+                require(bytes.range(of: Data(uniqueSecret.utf8)) == nil, "History secret was written in plaintext")
+                require(bytes.range(of: uniqueSecret.data(using: .utf16LittleEndian)!) == nil, "History secret was written as UTF-16")
+            }
+        }
         board.setString(uniqueSecret, forType: .string)
         let priorChangeCount = board.changeCount
         let priorGeneration = HistoryErasure.generation

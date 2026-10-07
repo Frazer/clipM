@@ -20,10 +20,15 @@ struct ClipMenuApp: App {
 
         let configuration: ModelConfiguration
         if isPasteUITestMode {
+            StoreEncryption.bindEphemeral()
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         } else {
             do {
-                let storeURL = try ClipStoreLocation.prepareURL()
+                // Set only when migrating a copy of the store. Normal launches ignore it.
+                let supportOverride = ProcessInfo.processInfo.environment["CLIPMENU_SUPPORT_DIRECTORY"]
+                    .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
+                let storeURL = try ClipStoreLocation.prepareURL(in: supportOverride)
+                try StoreEncryption.bindPersistent(storeURL: storeURL)
                 configuration = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .none)
             } catch {
                 _ = NSApplication.shared
@@ -40,6 +45,7 @@ struct ClipMenuApp: App {
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
             if !isPasteUITestMode {
                 try ClipStoreLocation.protectStoreFiles(in: configuration.url.deletingLastPathComponent())
+                try StoreEncryption.migratePlaintext(in: modelContainer.mainContext)
             }
         } catch {
             // Never discard a user's history or snippets to recover from a

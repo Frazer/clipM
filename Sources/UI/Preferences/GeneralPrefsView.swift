@@ -38,7 +38,7 @@ struct GeneralPrefsView: View {
                     TextField("", value: $s.maxHistorySize, format: .number)
                         .frame(width: 60)
                 }
-                Text("History is saved automatically on this Mac. Saved history and snippets are not encrypted by clip'M. Clear History removes saved entries from the live database and empties the clipboard. Copies in backups or other apps cannot be removed.")
+                Text("History is saved automatically on this Mac. Saved history and snippets are encrypted on this Mac, and the keys stay in the Keychain. Clear History removes saved clips, empties the clipboard, and retires the history key. Snippets are kept. Copies in backups or other apps cannot be removed.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

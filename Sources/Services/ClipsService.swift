@@ -387,6 +387,9 @@ final class ClipsService {
         }
         try context.save()
         context.undoManager?.removeAllActions()
+        // Retire the history key before vacuum so leftover ciphertext cannot be
+        // opened if compaction fails. Snippets keep their own key.
+        try StoreEncryption.rotateHistoryKey()
         try HistoryErasure.compactStore(in: context)
     }
 

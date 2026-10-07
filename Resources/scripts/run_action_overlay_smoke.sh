@@ -14,6 +14,7 @@ swiftc \
   "$ROOT/Sources/UI/ActionOverlayPresenter.swift" \
   "$ROOT/Sources/Models/ActionNode.swift" \
   "$ROOT/Sources/Models/ClipEntry.swift" \
+  "$ROOT/Sources/Infrastructure/StoreEncryption.swift" \
   "$ROOT/Sources/Services/ActionService.swift" \
   "$ROOT/Sources/Infrastructure/PasteService.swift" \
   "$ROOT/Sources/Infrastructure/HistoryErasure.swift" \

@@ -9,6 +9,7 @@ swiftc -parse-as-library -O -o "$OUT/CoreServicesSmoke" \
   "$ROOT/Sources/Infrastructure/ClipboardMonitor.swift" \
   "$ROOT/Sources/Infrastructure/AppExclusionService.swift" \
   "$ROOT/Sources/Infrastructure/PasteService.swift" \
+  "$ROOT/Sources/Infrastructure/StoreEncryption.swift" \
   "$ROOT/Sources/Infrastructure/HistoryErasure.swift" \
   "$ROOT/Sources/Services/ClipsService.swift" \
   "$ROOT/Sources/Scripting/ScriptEngine.swift" \

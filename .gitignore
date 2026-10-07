@@ -23,6 +23,7 @@ Pods
 
 # Build artifacts
 .build/
+/build/
 
 # Sparkle / release secrets & outputs (never commit private keys or binaries)
 secrets/*

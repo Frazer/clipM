@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00CE4E605010BDF7D2B57FCB /* ActionNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A663BD7362E0C5445528C4F1 /* ActionNode.swift */; };
 		01A4EF421D8CE5A407F642E2 /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
+		8C2F15A0D6B479E31A58C0D2 /* StoreEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A91C7B2D8056F13C0E9A47 /* StoreEncryption.swift */; };
 		03BE0E0A2BE4CD13C915121A /* ScriptableClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620B8F52759F74FEBF46E0F1 /* ScriptableClip.swift */; };
 		087BF8DABB46D5A3DE940CA9 /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60996BF476330FFB6501381 /* Snippet.swift */; };
 		08D9C76F74364FAC08180DC0 /* ScriptableClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620B8F52759F74FEBF46E0F1 /* ScriptableClip.swift */; };
@@ -20,6 +21,7 @@
 		0EED262A561A43265F24BBF2 /* ActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD6C21C72EE5244BB1D7613 /* ActionService.swift */; };
 		11B632FC9BBBFC5A6DFBA69C /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
 		124328A20DF97E0A5FC27DCD /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
+		AE4B37C2F8D691053C7AE2F4 /* StoreEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A91C7B2D8056F13C0E9A47 /* StoreEncryption.swift */; };
 		12D107DF0CA979EF876EF969 /* SnippetFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAD0F7706C0E03012259C58E /* SnippetFolder.swift */; };
 		173795708D239F1143E525DB /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E215E86DBA662D409E0C3E8 /* AppRuntime.swift */; };
 		19F9D1AAD40C778CCA0486DE /* AboutUpdatesPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467431578860C24FDB6E6AED /* AboutUpdatesPrefsView.swift */; };
@@ -135,6 +137,7 @@
 		E1DFEA8B6C7669DFC34FBC0C /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */; };
 		E3A5BEAC6D55B0DBE1B56388 /* ActionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6321E93388B5BFB5F35292 /* ActionSection.swift */; };
 		E50145944D8D1B744D658A50 /* HistoryErasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1053CEA77A806B44367BAF /* HistoryErasure.swift */; };
+		9D3A26B1E7C580F42B69D1E3 /* StoreEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A91C7B2D8056F13C0E9A47 /* StoreEncryption.swift */; };
 		E56D1644071E5CD182DCB5B9 /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */; };
 		E89F01FB00AA3CC1117AB2E5 /* ClipMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0016B43E0CACE631C4CC81B1 /* ClipMenuItem.swift */; };
 		EAA8E570AEAA9695CC422081 /* ActionMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2071986765235444ED5C4B6 /* ActionMenuBuilder.swift */; };
@@ -256,6 +259,7 @@
 		BAD0F7706C0E03012259C58E /* SnippetFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetFolder.swift; sourceTree = "<group>"; };
 		BB3D24622C12C3B43F770963 /* ｛ ｝.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "｛ ｝.js"; sourceTree = "<group>"; };
 		BD1053CEA77A806B44367BAF /* HistoryErasure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryErasure.swift; sourceTree = "<group>"; };
+		E4A91C7B2D8056F13C0E9A47 /* StoreEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreEncryption.swift; sourceTree = "<group>"; };
 		BF6C0BE229E6930FA608401B /* ClipMenu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipMenu.entitlements; sourceTree = "<group>"; };
 		BFFC088DE2CD462BD34AB520 /* 《 》.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "《 》.js"; sourceTree = "<group>"; };
 		C0C2DEA9193BEC16FD145658 /* 【 】.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "【 】.js"; sourceTree = "<group>"; };
@@ -640,6 +644,7 @@
 				017FFD0CC5EDDFD6280CEC92 /* ClipStoreLocation.swift */,
 				6CAC0B85DB674D913136376B /* FuzzyTextMatch.swift */,
 				BD1053CEA77A806B44367BAF /* HistoryErasure.swift */,
+				E4A91C7B2D8056F13C0E9A47 /* StoreEncryption.swift */,
 				EBDD749FF754FE72E7DB47E6 /* HotkeyService.swift */,
 				B48E46B042ACC84B0F6F1766 /* LoginItemService.swift */,
 				D443B0D12EBBA794375C2643 /* PasteService.swift */,
@@ -862,6 +867,7 @@
 				9866BBEA5F596B3A3DEF6933 /* FuzzyTextMatch.swift in Sources */,
 				7A1B438249CE74198A1CA0C7 /* GeneralPrefsView.swift in Sources */,
 				01A4EF421D8CE5A407F642E2 /* HistoryErasure.swift in Sources */,
+				8C2F15A0D6B479E31A58C0D2 /* StoreEncryption.swift in Sources */,
 				0E798AEE0574AA70D1CEFF73 /* HotkeyService.swift in Sources */,
 				7DC654982E118401EBAC78DA /* LegacyMigration.swift in Sources */,
 				C955BAEE63C16EFB4ECF2B56 /* LoginItemService.swift in Sources */,
@@ -913,6 +919,7 @@
 				B94FE5CF7950BA4287985555 /* FuzzyTextMatch.swift in Sources */,
 				D2FFDE029463D1D6FF95988C /* GeneralPrefsView.swift in Sources */,
 				E50145944D8D1B744D658A50 /* HistoryErasure.swift in Sources */,
+				9D3A26B1E7C580F42B69D1E3 /* StoreEncryption.swift in Sources */,
 				E56D1644071E5CD182DCB5B9 /* HotkeyService.swift in Sources */,
 				A3C309D9AF2C7B51B425EEB1 /* LegacyMigration.swift in Sources */,
 				AD4C96FDA3497DC380592A13 /* LoginItemService.swift in Sources */,
@@ -964,6 +971,7 @@
 				0A031A98FA6B510BC9E795A9 /* FuzzyTextMatch.swift in Sources */,
 				936E1E26F533AC6B39414F5D /* GeneralPrefsView.swift in Sources */,
 				124328A20DF97E0A5FC27DCD /* HistoryErasure.swift in Sources */,
+				AE4B37C2F8D691053C7AE2F4 /* StoreEncryption.swift in Sources */,
 				E1DFEA8B6C7669DFC34FBC0C /* HotkeyService.swift in Sources */,
 				21AD2E3FCA0D9D76AC02FA23 /* LegacyMigration.swift in Sources */,
 				D54B008B6D9741A0002054BB /* LoginItemService.swift in Sources */,

@@ -342,26 +342,15 @@ struct PasteIntegrationHarnessView: View {
         stepStatus = "Seeding popup clip"
 
         do {
-            let descriptor = FetchDescriptor<ClipEntry>(
-                predicate: #Predicate<ClipEntry> { entry in
-                    entry.stringValue == sampleText
-                }
-            )
-
-            if try modelContext.fetchCount(descriptor) == 0 {
+            let existing = try modelContext.fetch(FetchDescriptor<ClipEntry>())
+            if !existing.contains(where: { $0.stringValue == sampleText }) {
                 let entry = ClipEntry()
                 entry.stringValue = sampleText
                 entry.types = [NSPasteboard.PasteboardType.string.rawValue]
                 modelContext.insert(entry)
             }
 
-            let alternateDescriptor = FetchDescriptor<ClipEntry>(
-                predicate: #Predicate<ClipEntry> { entry in
-                    entry.stringValue == alternateSampleText
-                }
-            )
-
-            if try modelContext.fetchCount(alternateDescriptor) == 0 {
+            if !existing.contains(where: { $0.stringValue == alternateSampleText }) {
                 let alternate = ClipEntry()
                 alternate.stringValue = alternateSampleText
                 alternate.types = [NSPasteboard.PasteboardType.string.rawValue]
@@ -369,13 +358,7 @@ struct PasteIntegrationHarnessView: View {
                 modelContext.insert(alternate)
             }
 
-            let submenuDescriptor = FetchDescriptor<ClipEntry>(
-                predicate: #Predicate<ClipEntry> { entry in
-                    entry.stringValue == submenuSampleText
-                }
-            )
-
-            if try modelContext.fetchCount(submenuDescriptor) == 0 {
+            if !existing.contains(where: { $0.stringValue == submenuSampleText }) {
                 let submenu = ClipEntry()
                 submenu.stringValue = submenuSampleText
                 submenu.types = [NSPasteboard.PasteboardType.string.rawValue]
