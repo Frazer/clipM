@@ -108,8 +108,8 @@ Local packaging without notarization (will not pass Gatekeeper for other Macs):
 
 Workflow: `.github/workflows/release-dmg.yml`
 
-- Fires on tags `v*` (e.g. `git tag v1.0.0 && git push origin v1.0.0`) or manual dispatch.
-- Requires secrets listed in `secrets/README.md`.
+- Does not run on a tag push. Start it by hand from the Actions tab if the signing secrets in `secrets/README.md` are set.
+- Normal releases use `scripts/release-dmg.sh --publish` on a developer Mac.
 
 ### App Store product ID
 
@@ -143,7 +143,7 @@ Before the first signed App Store build:
 
 ## Release Direction
 
-- **Direct (GitHub):** `scripts/release-dmg.sh` or the `Release DMG` Actions workflow → notarized Developer ID `.dmg` + Sparkle `appcast.xml` on GitHub Releases.
+- **Direct (GitHub):** `scripts/release-dmg.sh --publish` on a developer Mac → notarized Developer ID `.dmg` + Sparkle `appcast.xml` on GitHub Releases.
 - **App Store:** archive the `ClipMenuAppStore` scheme and upload via Organizer / Transporter.
 
 ## Troubleshooting

@@ -1,12 +1,11 @@
 name: Release DMG (Sparkle)
 
-# Push a version tag matching project.yml, or dispatch this workflow on that tag.
-# Required secrets: SPARKLE_PRIVATE_KEY, BUILD_CERTIFICATE_BASE64, P12_PASSWORD,
-# KEYCHAIN_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID.
+# Releases are built on a developer Mac with scripts/release-dmg.sh.
+# This workflow stays manual so a version tag does not start a signing job
+# that has no certificate in GitHub.
+# Required secrets, if you run it: SPARKLE_PRIVATE_KEY, BUILD_CERTIFICATE_BASE64,
+# P12_PASSWORD, KEYCHAIN_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID.
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
 
 permissions:
