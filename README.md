@@ -8,16 +8,26 @@ https://github.com/user-attachments/assets/33826f94-5ee7-4239-be0a-63d1bb5e237f
 
 ## Installation
 
+- **Direct download**: [clipM-1.0.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 - **[Mac App Store](https://apps.apple.com/app/id6818600547)**
-- **Direct download**: [clipM-1.0.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.dmg) from [GitHub Releases](https://github.com/Frazer/clipM/releases/latest)
 
 Requires **macOS 14 (Sonoma) or later**.
 
 Open the DMG and drag **clip'M** into Applications.
 
-App Store installs update through the App Store. Direct downloads update in-app via Sparkle (**Preferences → About**).
-
 ## Features
+
+### Paste
+
+Press **⌥⌘V** and paste anything you've copied. Copy 10 things from one document, jump over to the destination, and paste all 10. Find something you know you copied days ago.
+
+### Snippets
+
+Organize reusable text into folders (email, phone, addresses, boilerplate) and open them from the same menu as clipboard history.
+
+<p align="center">
+  <img src="docs/images/snippets.png" alt="Snippet folders with nested reusable items" width="560" />
+</p>
 
 ### Search
 
@@ -34,14 +44,6 @@ Need screenshots only? Press `/` then `Tab`, or click the image button, for **im
 ### Previews
 
 Hover a clip or open a history group and a live preview appears beside the menu — so you see text, screenshots, and documents before you paste.
-
-### Snippets
-
-Organize reusable text into folders (email, phone, addresses, boilerplate) and open them from the same menu as clipboard history.
-
-<p align="center">
-  <img src="docs/images/snippets.png" alt="Snippet folders with nested reusable items" width="560" />
-</p>
 
 ### Actions
 
