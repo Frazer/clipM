@@ -31,6 +31,9 @@ secrets/*
 release/
 # Local build staging — never commit .app trees; publish via GitHub Releases
 dist/
+
+# Personal notes, kept on disk only
+thingsToDo.md
 *.p12
 sparkle_eddsa_private.key
 
