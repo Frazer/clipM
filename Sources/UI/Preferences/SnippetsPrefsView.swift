@@ -424,7 +424,15 @@ struct SnippetsPrefsView: View {
         let accessing = url.startAccessingSecurityScopedResource()
         defer { if accessing { url.stopAccessingSecurityScopedResource() } }
 
-        guard let result = LegacyMigration.importSnippets(from: url, into: modelContext) else {
+        let result: SnippetXMLImportResult
+        do {
+            result = try LegacyMigration.importSnippets(from: url, into: modelContext)
+        } catch LegacyMigration.ImportFailure.unreadable {
+            importAlertTitle = "Couldn’t Import Snippets"
+            importAlertMessage = "macOS blocked reading that file. Allow clip'M to access Desktop and Downloads in System Settings → Privacy & Security → Files and Folders, then try again."
+            showingImportAlert = true
+            return
+        } catch {
             importAlertTitle = "Couldn’t Import Snippets"
             importAlertMessage = "That file isn’t a ClipMenu Snippets.xml file."
             showingImportAlert = true

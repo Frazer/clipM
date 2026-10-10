@@ -1029,6 +1029,8 @@
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1119,6 +1121,8 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1153,6 +1157,8 @@
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1210,6 +1216,8 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1327,6 +1335,8 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1363,6 +1373,8 @@
 				INFOPLIST_KEY_CFBundleName = "clip'M";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from the Desktop.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "clip'M needs this to import a Snippets.xml file you choose from Downloads.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

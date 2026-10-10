@@ -79,9 +79,33 @@ enum ScriptSecuritySmoke {
         try context.save()
         let exported = directory.appendingPathComponent("snippets.xml")
         try LegacyMigration.exportSnippets(to: exported, from: context)
-        check(LegacyMigration.importSnippets(from: exported, into: context)?.snippetsSkipped == 1, "XML snippet round trip and deduplication")
+        check((try? LegacyMigration.importSnippets(from: exported, into: context))?.snippetsSkipped == 1, "XML snippet round trip and deduplication")
         try LegacyMigration.exportSnippets(to: exported, from: context)
-        check(LegacyMigration.importSnippets(from: exported, into: context)?.snippetsSkipped == 1, "atomic replacement export")
+        check((try? LegacyMigration.importSnippets(from: exported, into: context))?.snippetsSkipped == 1, "atomic replacement export")
+        let legacy = directory.appendingPathComponent("legacy-snippets.xml")
+        try """
+        <?xml version="1.0" standalone="yes"?>
+        <!DOCTYPE database SYSTEM "file:///System/Library/DTDs/CoreData.dtd">
+        <database>
+        <object type="FOLDER" id="z1">
+        <attribute name="title" type="string">Legacy folder</attribute>
+        <attribute name="index" type="int16">0</attribute>
+        <attribute name="enabled" type="bool">1</attribute>
+        <relationship name="snippets" type="0/0" destination="SNIPPET" idrefs="z2"></relationship>
+        </object>
+        <object type="SNIPPET" id="z2">
+        <attribute name="title" type="string">Legacy snippet</attribute>
+        <attribute name="index" type="int16">3</attribute>
+        <attribute name="enabled" type="bool">0</attribute>
+        <attribute name="content" type="string">legacy body</attribute>
+        <relationship name="folder" type="1/1" destination="FOLDER" idrefs="z1"></relationship>
+        </object>
+        </database>
+        """.write(to: legacy, atomically: true, encoding: .utf8)
+        let legacyImport = try LegacyMigration.importSnippets(from: legacy, into: context)
+        check(legacyImport.foldersAdded == 1 && legacyImport.snippetsAdded == 1, "original ClipMenu int16 snippet file")
+        let legacySnippet = try context.fetch(FetchDescriptor<Snippet>()).first { $0.title == "Legacy snippet" }
+        check(legacySnippet?.content == "legacy body" && legacySnippet?.isEnabled == false && legacySnippet?.sortIndex == 0, "original snippet text and disabled flag")
         let exportPermissions = try FileManager.default.attributesOfItem(atPath: exported.path)[.posixPermissions] as? NSNumber
         check(exportPermissions?.intValue == 0o600, "snippet export owner-only permissions")
         let original = try String(contentsOf: exported, encoding: .utf8)
@@ -90,16 +114,16 @@ enum ScriptSecuritySmoke {
         let withDTD = original.replacingOccurrences(of: "<database", with: dtd + "<database")
         check(withDTD != original, "DTD fixture inserted at database root")
         try withDTD.write(to: malicious, atomically: true, encoding: .utf8)
-        check(LegacyMigration.importSnippets(from: malicious, into: context) == nil, "external entity import rejected")
+        check((try? LegacyMigration.importSnippets(from: malicious, into: context)) == nil, "external entity import rejected")
         let internalDTD = original.replacingOccurrences(of: "<database", with: "<!DOCTYPE database [<!ENTITY bomb 'expansion'>]><database")
         try internalDTD.write(to: malicious, atomically: true, encoding: .utf8)
-        check(LegacyMigration.importSnippets(from: malicious, into: context) == nil, "internal entity import rejected")
+        check((try? LegacyMigration.importSnippets(from: malicious, into: context)) == nil, "internal entity import rejected")
         let nested = String(repeating: "<nested>", count: 40) + String(repeating: "</nested>", count: 40)
         try nested.write(to: malicious, atomically: true, encoding: .utf8)
-        check(LegacyMigration.importSnippets(from: malicious, into: context) == nil, "deeply nested XML rejected")
+        check((try? LegacyMigration.importSnippets(from: malicious, into: context)) == nil, "deeply nested XML rejected")
         try Data(repeating: 32, count: LegacyMigration.maximumXMLBytes + 1).write(to: malicious)
-        check(LegacyMigration.importSnippets(from: malicious, into: context) == nil, "oversized XML rejected")
-        check(try context.fetchCount(FetchDescriptor<Snippet>()) == 1, "invalid imports leave library intact")
+        check((try? LegacyMigration.importSnippets(from: malicious, into: context)) == nil, "oversized XML rejected")
+        check(try context.fetchCount(FetchDescriptor<Snippet>()) == 2, "invalid imports leave library intact")
         print("[SCRIPT SECURITY] PASS: \(checks) checks")
     }
 }

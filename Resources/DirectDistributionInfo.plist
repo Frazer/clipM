@@ -24,6 +24,10 @@
 	<string>https://github.com/Frazer/clipM/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>clip'M needs this to import a Snippets.xml file you choose from the Desktop.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>clip'M needs this to import a Snippets.xml file you choose from Downloads.</string>
 	<key>SURequireSignedFeed</key>
 	<true/>
 	<key>SUVerifyUpdateBeforeExtraction</key>

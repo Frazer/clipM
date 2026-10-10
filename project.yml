@@ -35,6 +35,8 @@ targets:
         SURequireSignedFeed: true
         SUVerifyUpdateBeforeExtraction: true
         SUPublicEDKey: k+dUStN0vPsQtPhR3HzzGG2AvWgN3cofmk23IkSFE8g=
+        NSDesktopFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from the Desktop."
+        NSDownloadsFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from Downloads."
 
     sources:
       - path: Sources
@@ -70,6 +72,8 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_NSDesktopFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from the Desktop."
+        INFOPLIST_KEY_NSDownloadsFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from Downloads."
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
       configs:
@@ -115,6 +119,7 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
+        com.apple.security.files.user-selected.read-only: true
 
     dependencies:
       - package: KeyboardShortcuts
@@ -137,6 +142,8 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_NSDesktopFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from the Desktop."
+        INFOPLIST_KEY_NSDownloadsFolderUsageDescription: "clip'M needs this to import a Snippets.xml file you choose from Downloads."
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: APP_STORE
