@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 
 ## Installation
 
-- **Direct download**: [clipM-1.0.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
+- **Direct download**: [clipM-1.0.1.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.1.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 - **[Mac App Store](https://apps.apple.com/app/id6818600547)**
 
 Requires **macOS 14 (Sonoma) or later**.
