@@ -63,6 +63,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @MainActor
+    func applicationDidResignActive(_ notification: Notification) {
+        guard !isPasteUITestMode else { return }
+        runtime.closePreferences()
+    }
+
+    @MainActor
     private func startDataServicesWhenReady(retryCount: Int) {
         guard let modelContext = runtime.modelContainer?.mainContext else {
             guard retryCount > 0 else { return }
@@ -235,6 +241,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     func menuWillOpen(_ menu: NSMenu) {
+        runtime?.closePreferences()
         runtime?.hotkeyService.statusMenuWillOpen(menu)
     }
 

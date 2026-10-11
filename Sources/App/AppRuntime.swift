@@ -51,6 +51,11 @@ final class AppRuntime {
     }
 
     @MainActor
+    func closePreferences() {
+        preferencesWindowController.closeIfVisible()
+    }
+
+    @MainActor
     func showPreferences(tab: PreferencesTab = .general) {
         preferencesWindowController.show(
             settings: settings,
@@ -82,6 +87,12 @@ private final class PreferencesWindowController: NSWindowController, NSWindowDel
         window.center()
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
+    }
+
+    /// Hides Preferences once the user has left it. File panels keep it open.
+    func closeIfVisible() {
+        guard let window, window.isVisible, NSApp.modalWindow == nil else { return }
+        window.close()
     }
 
     func windowWillClose(_ notification: Notification) {

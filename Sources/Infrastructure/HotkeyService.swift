@@ -987,6 +987,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             NativeActionMenuSmoke.start(menu: menu)
         }
         #endif
+        runtime.closePreferences()
         NSApp.activate(ignoringOtherApps: true)
         if let contentView = anchorWindow.contentView {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: 0), in: contentView)
