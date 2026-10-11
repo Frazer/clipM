@@ -29,17 +29,20 @@ final class AppRuntime {
     /// to put the text they paste often. Accessibility is not requested here.
     @MainActor
     func presentGettingStartedIfNeeded(in context: ModelContext) {
-        guard !settings.didShowGettingStarted else { return }
         let args = ProcessInfo.processInfo.arguments
+        let showWelcome = args.contains("--show-welcome")
+        guard showWelcome || !settings.didShowGettingStarted else { return }
         let automated = ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1"
             || args.contains("--seed-clips")
             || args.contains("--open-hotkey-menu")
             || args.contains("--self-test-filter-slash")
             || args.contains("--self-test-action-menu")
-        guard !automated else { return }
-        settings.didShowGettingStarted = true
-        let clipCount = (try? context.fetchCount(FetchDescriptor<ClipEntry>())) ?? 0
-        guard clipCount == 0 else { return }
+        guard showWelcome || !automated else { return }
+        if !showWelcome {
+            settings.didShowGettingStarted = true
+            let clipCount = (try? context.fetchCount(FetchDescriptor<ClipEntry>())) ?? 0
+            guard clipCount == 0 else { return }
+        }
         welcomeWindowController.show(
             onSetUpSnippets: { [weak self] in
                 self?.showPreferences(tab: .snippets)
@@ -182,8 +185,13 @@ private struct WelcomeView: View {
                 }
             }
 
-            Text("Open \(AppDistribution.displayName) with ⌥⌘V. You can change that shortcut in Preferences.")
+            Text("Open \(AppDistribution.displayName) with ⌥⌘V. You can paste anything from your history, or from your favorite saved snippets. You can change the shortcut and how big your history is in the preferences.")
                 .font(.title3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("\(AppDistribution.displayName) does not save passwords.\nEverything it keeps is encrypted on your device and never leaves it.")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(securityEmphasis)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("Snippets are for an email address, a short bio, a reply you send all the time. The examples already in the list are placeholders. Replace them with your own.")
@@ -201,5 +209,16 @@ private struct WelcomeView: View {
         }
         .padding(36)
         .frame(width: 640)
+    }
+
+    /// Brighter than the surrounding copy in both light and dark windows.
+    private var securityEmphasis: Color {
+        Color(nsColor: NSColor(name: nil, dynamicProvider: { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            if isDark {
+                return NSColor(srgbRed: 0.45, green: 0.86, blue: 1.0, alpha: 1)
+            }
+            return NSColor(srgbRed: 0.0, green: 0.32, blue: 0.98, alpha: 1)
+        }))
     }
 }
