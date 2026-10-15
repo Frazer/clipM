@@ -27,6 +27,22 @@ struct SnippetsPrefsView: View {
     @State private var importAlertTitle = ""
     @State private var importAlertMessage = ""
     @State private var showingImportAlert = false
+    /// Grip under the pointer, used only to highlight that handle.
+    @State private var draggableFolderID: PersistentIdentifier?
+    @State private var draggableSnippetID: PersistentIdentifier?
+    /// While true, every row in that list can be dragged and is a drop target.
+    /// Arming only the grabbed row makes the other rows refuse the drop, so the
+    /// item can only be released in the gap it already occupies.
+    @State private var folderReorderArmed = false
+    @State private var snippetReorderArmed = false
+    @State private var reorderDragLock = ReorderDragLock()
+    /// Bumped when + appends a row, so a long list scrolls until that row is visible.
+    @State private var folderScrollTrigger = 0
+    @State private var snippetScrollTrigger = 0
+    @State private var handledFolderScrollTrigger = 0
+    @State private var handledSnippetScrollTrigger = 0
+    @State private var pendingFolderScrollID: PersistentIdentifier?
+    @State private var pendingSnippetScrollID: PersistentIdentifier?
 
     @FocusState private var isFolderNameFocused: Bool
     @FocusState private var isSnippetNameFocused: Bool
@@ -121,15 +137,52 @@ struct SnippetsPrefsView: View {
                 .font(.headline)
 
             VStack(spacing: 8) {
-                List {
-                    ForEach(folders) { folder in
-                        folderRow(folder)
+                ScrollViewReader { proxy in
+                    List {
+                        ForEach(folders) { folder in
+                            reorderableRow(
+                                gripActive: draggableFolderID == folder.persistentModelID,
+                                onGripHover: { hovering in
+                                    setReorderHover(
+                                        $draggableFolderID,
+                                        armed: $folderReorderArmed,
+                                        id: folder.persistentModelID,
+                                        hovering: hovering
+                                    )
+                                }
+                            ) {
+                                folderRow(folder)
+                            }
+                            .moveDisabled(!folderReorderArmed)
+                            .id(folder.persistentModelID)
                             .listRowBackground(rowBackground(isSelected: folder.persistentModelID == selectedFolderID))
+                            .accessibilityAction(named: Text("Move Up")) {
+                                shift(Array(folders), moving: folder.persistentModelID, by: -1, sort: \.sortIndex)
+                            }
+                            .accessibilityAction(named: Text("Move Down")) {
+                                shift(Array(folders), moving: folder.persistentModelID, by: 1, sort: \.sortIndex)
+                            }
+                            .background {
+                                ListEndScroller(trigger: folderScrollTrigger, handledTrigger: $handledFolderScrollTrigger)
+                                    .frame(width: 1, height: 1)
+                                    .allowsHitTesting(false)
+                            }
+                            .onAppear {
+                                focusNewRowIfNeeded(pendingFolderScrollID, rowID: folder.persistentModelID) {
+                                    pendingFolderScrollID = nil
+                                    isFolderNameFocused = true
+                                }
+                            }
+                        }
+                        .onMove(perform: moveFolders)
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onChange(of: folderScrollTrigger) { _, trigger in
+                        revealAppendedRow(trigger: trigger, id: pendingFolderScrollID, proxy: proxy)
                     }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 ControlGroup {
                     Button(action: addFolder) {
@@ -158,15 +211,52 @@ struct SnippetsPrefsView: View {
 
             if selectedFolder != nil {
                 VStack(spacing: 8) {
-                    List {
-                        ForEach(selectedSnippets) { snippet in
-                            snippetRow(snippet)
+                    ScrollViewReader { proxy in
+                        List {
+                            ForEach(selectedSnippets) { snippet in
+                                reorderableRow(
+                                    gripActive: draggableSnippetID == snippet.persistentModelID,
+                                    onGripHover: { hovering in
+                                        setReorderHover(
+                                            $draggableSnippetID,
+                                            armed: $snippetReorderArmed,
+                                            id: snippet.persistentModelID,
+                                            hovering: hovering
+                                        )
+                                    }
+                                ) {
+                                    snippetRow(snippet)
+                                }
+                                .moveDisabled(!snippetReorderArmed)
+                                .id(snippet.persistentModelID)
                                 .listRowBackground(rowBackground(isSelected: snippet.persistentModelID == selectedSnippetID))
+                                .accessibilityAction(named: Text("Move Up")) {
+                                    shift(selectedSnippets, moving: snippet.persistentModelID, by: -1, sort: \.sortIndex)
+                                }
+                                .accessibilityAction(named: Text("Move Down")) {
+                                    shift(selectedSnippets, moving: snippet.persistentModelID, by: 1, sort: \.sortIndex)
+                                }
+                                .background {
+                                    ListEndScroller(trigger: snippetScrollTrigger, handledTrigger: $handledSnippetScrollTrigger)
+                                        .frame(width: 1, height: 1)
+                                        .allowsHitTesting(false)
+                                }
+                                .onAppear {
+                                    focusNewRowIfNeeded(pendingSnippetScrollID, rowID: snippet.persistentModelID) {
+                                        pendingSnippetScrollID = nil
+                                        isSnippetNameFocused = true
+                                    }
+                                }
+                            }
+                            .onMove(perform: moveSnippets)
+                        }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .onChange(of: snippetScrollTrigger) { _, trigger in
+                            revealAppendedRow(trigger: trigger, id: pendingSnippetScrollID, proxy: proxy)
                         }
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     ControlGroup {
                         Button(action: {
@@ -228,6 +318,123 @@ struct SnippetsPrefsView: View {
 
     private func rowBackground(isSelected: Bool) -> Color {
         isSelected ? Color.accentColor.opacity(0.18) : Color.clear
+    }
+
+    /// Grip sits outside the row's click and rename gestures, which would otherwise swallow the drag.
+    private func reorderableRow<Content: View>(
+        gripActive: Bool,
+        onGripHover: @escaping (Bool) -> Void,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(gripActive ? Color.primary : Color.secondary)
+                .frame(width: 16, height: 20)
+                .contentShape(Rectangle())
+                .onHover(perform: onGripHover)
+                .help("Drag to reorder")
+                .accessibilityLabel("Reorder")
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func setReorderHover(
+        _ hoveredID: Binding<PersistentIdentifier?>,
+        armed: Binding<Bool>,
+        id: PersistentIdentifier,
+        hovering: Bool
+    ) {
+        if hovering {
+            hoveredID.wrappedValue = id
+            armed.wrappedValue = true
+            NSCursor.openHand.set()
+        } else if hoveredID.wrappedValue == id {
+            let finish = {
+                hoveredID.wrappedValue = nil
+                armed.wrappedValue = false
+                NSCursor.arrow.set()
+            }
+            if NSEvent.pressedMouseButtons & 1 == 0 {
+                finish()
+            } else {
+                // Hover ends when the drag starts. Keep every row droppable until the mouse is released.
+                reorderDragLock.endWhenMouseUp(finish)
+            }
+        }
+    }
+
+    private func revealAppendedRow(trigger: Int, id: PersistentIdentifier?, proxy: ScrollViewProxy) {
+        guard trigger > 0, let id else { return }
+        DispatchQueue.main.async {
+            proxy.scrollTo(id, anchor: .bottom)
+        }
+    }
+
+    private func focusNewRowIfNeeded(
+        _ pendingID: PersistentIdentifier?,
+        rowID: PersistentIdentifier,
+        focus: @escaping () -> Void
+    ) {
+        guard pendingID == rowID else { return }
+        // Defer so the scroll request still sees the pending id, and so the title field exists.
+        DispatchQueue.main.async(execute: focus)
+    }
+
+    private func moveFolders(from source: IndexSet, to destination: Int) {
+        commitFolderRenameIfNeeded()
+        reorder(Array(folders), from: source, to: destination, sort: \.sortIndex)
+    }
+
+    private func moveSnippets(from source: IndexSet, to destination: Int) {
+        commitSnippetRenameIfNeeded()
+        reorder(selectedSnippets, from: source, to: destination, sort: \.sortIndex)
+    }
+
+    private func shift<T: PersistentModel>(
+        _ items: [T],
+        moving id: PersistentIdentifier,
+        by delta: Int,
+        sort sortKey: ReferenceWritableKeyPath<T, Int>
+    ) {
+        commitFolderRenameIfNeeded()
+        commitSnippetRenameIfNeeded()
+        guard let index = items.firstIndex(where: { $0.persistentModelID == id }) else { return }
+        let destination = index + delta
+        guard items.indices.contains(destination) else { return }
+        var ordered = items
+        ordered.swapAt(index, destination)
+        applySortOrder(ordered, sort: sortKey)
+    }
+
+    private func reorder<T: AnyObject>(
+        _ items: [T],
+        from source: IndexSet,
+        to destination: Int,
+        sort sortKey: ReferenceWritableKeyPath<T, Int>
+    ) {
+        guard !source.isEmpty,
+              source.allSatisfy({ items.indices.contains($0) }),
+              (0...items.count).contains(destination)
+        else { return }
+        var ordered = items
+        ordered.move(fromOffsets: source, toOffset: destination)
+        applySortOrder(ordered, sort: sortKey)
+    }
+
+    private func applySortOrder<T: AnyObject>(
+        _ ordered: [T],
+        sort sortKey: ReferenceWritableKeyPath<T, Int>
+    ) {
+        var changed = false
+        for (index, item) in ordered.enumerated() where item[keyPath: sortKey] != index {
+            item[keyPath: sortKey] = index
+            changed = true
+        }
+        if changed {
+            persist()
+        }
     }
 
     @ViewBuilder
@@ -351,6 +558,8 @@ struct SnippetsPrefsView: View {
         selectedFolderID = folder.persistentModelID
         selectedSnippetID = nil
         beginFolderRename(folder)
+        pendingFolderScrollID = folder.persistentModelID
+        folderScrollTrigger += 1
     }
 
     private func removeSelectedFolder() {
@@ -374,6 +583,8 @@ struct SnippetsPrefsView: View {
         persist()
         selectedSnippetID = snippet.persistentModelID
         beginSnippetRename(snippet, mirrorContent: true)
+        pendingSnippetScrollID = snippet.persistentModelID
+        snippetScrollTrigger += 1
     }
 
     private func removeSelectedSnippet() {
@@ -577,6 +788,103 @@ struct SnippetsPrefsView: View {
 
     return SnippetsPrefsView()
         .modelContainer(for: [SnippetFolder.self, Snippet.self], inMemory: true)
+}
+
+/// Scrolls the enclosing list to its last row when `trigger` changes.
+/// SwiftUI `List` on macOS is often an `NSTableView`, which ignores `ScrollViewReader`.
+private struct ListEndScroller: NSViewRepresentable {
+    var trigger: Int
+    @Binding var handledTrigger: Int
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.trigger = trigger
+        context.coordinator.handled = $handledTrigger
+        context.coordinator.schedule(from: nsView)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    final class Coordinator {
+        var trigger = 0
+        var handled: Binding<Int> = .constant(0)
+        var pending = false
+
+        func schedule(from view: NSView) {
+            guard trigger > 0, trigger != handled.wrappedValue, !pending else { return }
+            pending = true
+            attempt(view: view, remaining: 8)
+        }
+
+        private func attempt(view: NSView, remaining: Int) {
+            DispatchQueue.main.async { [weak view] in
+                guard self.trigger != self.handled.wrappedValue else {
+                    self.pending = false
+                    return
+                }
+                guard let view, Self.scrollToEnd(from: view) else {
+                    guard remaining > 0, let view else {
+                        self.pending = false
+                        return
+                    }
+                    self.attempt(view: view, remaining: remaining - 1)
+                    return
+                }
+                self.handled.wrappedValue = self.trigger
+                self.pending = false
+                // The new row can land a beat after the first successful scroll.
+                for delay in [0.0, 0.05, 0.15] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak view] in
+                        guard let view else { return }
+                        _ = Self.scrollToEnd(from: view)
+                    }
+                }
+            }
+        }
+
+        private static func scrollToEnd(from view: NSView) -> Bool {
+            guard let table = tableView(from: view) else { return false }
+            let row = table.numberOfRows - 1
+            guard row >= 0 else { return false }
+            table.scrollRowToVisible(row)
+            return true
+        }
+
+        private static func tableView(from view: NSView) -> NSTableView? {
+            var current: NSView? = view
+            while let candidate = current {
+                if let table = candidate as? NSTableView { return table }
+                current = candidate.superview
+            }
+            return nil
+        }
+    }
+}
+
+/// Clears a reorder session on mouse-up. A drag leaves the grip, so hover-exit
+/// cannot turn dropping off until the button is released.
+private final class ReorderDragLock {
+    var monitor: Any?
+
+    func endWhenMouseUp(_ body: @escaping () -> Void) {
+        guard monitor == nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
+            DispatchQueue.main.async {
+                body()
+                if let monitor = self.monitor {
+                    NSEvent.removeMonitor(monitor)
+                    self.monitor = nil
+                }
+            }
+            return event
+        }
+    }
 }
 
 private extension View {

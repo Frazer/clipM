@@ -199,6 +199,12 @@ private enum ClipMenuFilter {
                 applyRecursive(to: sub, query: query, imagesOnly: imagesOnly)
                 let anyVisible = sub.items.contains { !$0.isHidden && !$0.isSeparatorItem }
                 item.isHidden = !anyVisible
+                // Hidden siblings make AppKit disable the parent while the menu is
+                // tracking, so the folder title turns gray and the submenu never opens.
+                if anyVisible {
+                    sub.autoenablesItems = false
+                    item.isEnabled = true
+                }
             } else if item.clipMenuFilterHaystack != nil {
                 item.isHidden = !itemMatches(item, query: query, imagesOnly: imagesOnly)
             }
@@ -1149,12 +1155,51 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                             || (highlighted2?.title.hasPrefix("1.") == true)
 
                         if stillMode && query.lowercased().contains("a") && !jumped2 {
-                            fputs(
-                                "[FILTER SELFTEST] PASS: '/' filter mode; 'a' in query=\(query); no content jump (runloop=\(ClipMenuFilterKeyHook.runLoopMonitorInstalled) tap=\(ClipMenuFilterKeyHook.eventTapInstalled))\n",
-                                stderr
-                            )
-                            menu.cancelTracking()
-                            Darwin.exit(0)
+                            if firstContent?.isEnabled == false {
+                                fputs("[FILTER SELFTEST] FAIL hovered row stayed disabled\n", stderr)
+                                menu.cancelTracking()
+                                Darwin.exit(1)
+                            }
+                            if let folder = menu.items.first(where: { $0.submenu != nil && !$0.isHidden }),
+                               folder.isEnabled == false {
+                                fputs("[FILTER SELFTEST] FAIL folder stayed disabled title=\(folder.title)\n", stderr)
+                                menu.cancelTracking()
+                                Darwin.exit(1)
+                            }
+                            self.actionTarget.toggleImagesOnlyFilter()
+                            let imageRow = menu.items.first { item in
+                                guard !item.isHidden, let clip = item.representedObject as? ClipEntry else { return false }
+                                return clip.imageData != nil
+                            }
+                            if let imageRow {
+                                self.actionTarget.clipMenuWillHighlight(menu: menu, item: imageRow)
+                            }
+                            if let folder = menu.items.first(where: { $0.submenu != nil && !$0.isHidden }) {
+                                self.actionTarget.clipMenuWillHighlight(menu: menu, item: folder)
+                                if !folder.isEnabled {
+                                    fputs("[FILTER SELFTEST] FAIL image filter disabled folder title=\(folder.title)\n", stderr)
+                                    menu.cancelTracking()
+                                    Darwin.exit(1)
+                                }
+                            }
+                            let settle = Timer(timeInterval: 0.05, repeats: false) { _ in
+                                MainActor.assumeIsolated {
+                                    if let imageRow, !imageRow.isEnabled {
+                                        fputs("[FILTER SELFTEST] FAIL image row stayed disabled title=\(imageRow.title)\n", stderr)
+                                        menu.cancelTracking()
+                                        Darwin.exit(1)
+                                    }
+                                    fputs(
+                                        "[FILTER SELFTEST] PASS: '/' filter mode; 'a' in query=\(query); no content jump; rows stayed enabled (runloop=\(ClipMenuFilterKeyHook.runLoopMonitorInstalled) tap=\(ClipMenuFilterKeyHook.eventTapInstalled))\n",
+                                        stderr
+                                    )
+                                    menu.cancelTracking()
+                                    Darwin.exit(0)
+                                }
+                            }
+                            RunLoop.main.add(settle, forMode: .eventTracking)
+                            RunLoop.main.add(settle, forMode: .common)
+                            return
                         }
                         fputs(
                             "[FILTER SELFTEST] FAIL after 'a': mode=\(stillMode) query=\(query) highlighted=\(highlighted2?.title ?? "nil") jumped=\(jumped2)\n",
@@ -2752,9 +2797,10 @@ private final class HotkeyPopupActionTarget: NSObject {
     private(set) var isImagesOnlyFilter = false
     private var isSuppressingContentHighlight = false
     /// Rows briefly disabled so AppKit drops the tracking highlight. Restored
-    /// before the menu can draw them gray, or on the next turn when a highlight
-    /// is still being committed.
+    /// on the menu-tracking run loop. A main-queue async does not run while
+    /// the menu is open, which left the row drawn gray.
     private var highlightMutedItems: [NSMenuItem] = []
+    private var highlightRestoreTimer: Timer?
     private let pasteService = PasteService()
     /// Modifiers observed while the popup menu is open (flags can clear before the item action runs).
     private var trackedModifierFlags: NSEvent.ModifierFlags = []
@@ -2945,6 +2991,11 @@ private final class HotkeyPopupActionTarget: NSObject {
         filterImagesButtonHost?.setImagesFilterActive(enabled)
     }
 
+    /// Folders, and clips inside an open folder, have to stay highlighted or the submenu will not open.
+    private func keepsHighlightWhileFiltering(_ item: NSMenuItem, in menu: NSMenu) -> Bool {
+        item.submenu != nil || menu.supermenu != nil
+    }
+
     /// Drops the blue menu highlight without a private `highlightItem:` call.
     /// Disabling the tracked row clears it. Enabling the row again does not
     /// bring the highlight back. A row AppKit is about to highlight has to stay
@@ -2957,20 +3008,32 @@ private final class HotkeyPopupActionTarget: NSObject {
         if restoreImmediately {
             restoreHighlightMutedItems()
         } else {
-            DispatchQueue.main.async { [weak self] in
-                self?.restoreHighlightMutedItems()
-            }
+            scheduleHighlightRestore()
         }
     }
 
     private func muteHighlight(on item: NSMenuItem?) {
         guard let item, item.isEnabled, item.view == nil, !item.isSeparatorItem else { return }
+        // Disabling a folder cancels its submenu and draws the title gray.
+        guard item.submenu == nil else { return }
         guard !highlightMutedItems.contains(where: { $0 === item }) else { return }
         item.isEnabled = false
         highlightMutedItems.append(item)
     }
 
+    private func scheduleHighlightRestore() {
+        highlightRestoreTimer?.invalidate()
+        let timer = Timer(timeInterval: 0, repeats: false) { [weak self] _ in
+            self?.restoreHighlightMutedItems()
+        }
+        highlightRestoreTimer = timer
+        RunLoop.main.add(timer, forMode: .eventTracking)
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
     private func restoreHighlightMutedItems() {
+        highlightRestoreTimer?.invalidate()
+        highlightRestoreTimer = nil
         for item in highlightMutedItems {
             item.isEnabled = true
         }
@@ -3050,7 +3113,9 @@ private final class HotkeyPopupActionTarget: NSObject {
         if isFilterModeActive {
             // Suppress content highlight while filtering — otherwise AppKit immediately
             // re-highlights the row under the cursor and `/` looks like it "selected" it.
-            if item != nil, !isSuppressingContentHighlight {
+            // Folders and the rows inside them must stay enabled, or the submenu
+            // never opens and the folder title is drawn gray.
+            if let item, !keepsHighlightWhileFiltering(item, in: menu), !isSuppressingContentHighlight {
                 isSuppressingContentHighlight = true
                 defer { isSuppressingContentHighlight = false }
                 clearMenuHighlight(cancelling: item, restoreImmediately: false)
