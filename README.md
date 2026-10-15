@@ -8,14 +8,14 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 
 ## Installation
 
-- **Direct download**: [clipM-1.0.2.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.2.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
+- **Direct download**: [clipM-1.0.3.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.3.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 - **[Mac App Store](https://apps.apple.com/app/id6818600547)**
 
 Requires **macOS 14 (Sonoma) or later**.
 
 Open the DMG and drag **clip'M** into Applications.
 
-**1.0.2** tightens the menu so a long list of snippet folders still leaves room for clipboard history. Snippets and folders can be dragged into order, and search keeps folders and image clips usable.
+**1.0.3** tightens the menu so a long list of snippet folders still leaves room for clipboard history. Choosing a clip — click, or its number then Return — pastes it. Snippets and folders can be dragged into order, and search keeps folders and image clips usable.
 
 ## Features
 
