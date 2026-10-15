@@ -604,6 +604,163 @@ private final class ActionClipIdentityView: NSView {
     }
 }
 
+/// A shorter menu row than AppKit draws on its own.
+///
+/// System rows leave about as much empty padding as the title itself, which
+/// pushes clipboard history off a menu full of snippet folders. This view
+/// keeps the menu font and icons, and cuts that padding down. Thumbnails are
+/// drawn here too, so inline clip numbers share one left edge with text rows.
+private final class CompactMenuRowView: NSView {
+    /// Menu font line box is ~16pt. 18pt keeps descenders and a 16pt folder icon.
+    private static let contentHeight: CGFloat = 18
+    /// Extra space between rows, on top of that content height.
+    private static let rowGap: CGFloat = 2
+    static var rowHeight: CGFloat { contentHeight + rowGap }
+
+    private let fixedHeight: CGFloat
+
+    static func install(on item: NSMenuItem) {
+        guard item.view == nil, !item.isSeparatorItem else { return }
+
+        let thumb = attachmentHeight(of: item) ?? 0
+        let iconHeight = item.image?.size.height ?? 0
+        let content = max(contentHeight, thumb, iconHeight)
+        item.view = CompactMenuRowView(height: content + rowGap)
+    }
+
+    static func attachmentHeight(of item: NSMenuItem) -> CGFloat? {
+        attachmentImage(of: item)?.size.height
+    }
+
+    static func attachmentImage(of item: NSMenuItem) -> NSImage? {
+        guard let attributed = item.attributedTitle, attributed.length > 0 else { return nil }
+        var image: NSImage?
+        attributed.enumerateAttribute(.attachment, in: NSRange(location: 0, length: attributed.length)) { value, _, stop in
+            guard let attachment = value as? NSTextAttachment, let attached = attachment.image else { return }
+            image = attached
+            stop.pointee = true
+        }
+        return image
+    }
+
+    init(height: CGFloat) {
+        fixedHeight = height
+        super.init(frame: NSRect(x: 0, y: 0, width: 40, height: height))
+        autoresizingMask = [.width]
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: fixedHeight)
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(NSSize(width: newSize.width, height: fixedHeight))
+    }
+
+    override var isOpaque: Bool { false }
+
+    /// Let the menu track the row. Swallowing hits here blocks submenus.
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard let item = enclosingMenuItem else { return }
+        let enabled = item.isEnabled
+        let highlighted = item.isHighlighted && enabled
+
+        if highlighted {
+            NSColor.selectedContentBackgroundColor.setFill()
+            let pill = bounds.insetBy(dx: 5, dy: 1)
+            NSBezierPath(roundedRect: pill, xRadius: 4, yRadius: 4).fill()
+        }
+
+        let textColor: NSColor = highlighted
+            ? .selectedMenuItemTextColor
+            : (enabled ? .labelColor : .disabledControlTextColor)
+
+        var cursorX = bounds.minX + 8
+        let chevronSlot: CGFloat = item.submenu == nil ? 0 : 16
+        let trailing = bounds.maxX - 8 - chevronSlot
+        let thumbnail = Self.attachmentImage(of: item)
+        let thumbnailSize = fittedThumbnailSize(thumbnail, maxHeight: bounds.height - 2)
+
+        if let image = item.image, image.size.width > 0, image.size.height > 0 {
+            let side = min(image.size.height, bounds.height - 2)
+            let width = image.size.width * (side / image.size.height)
+            let iconRect = NSRect(x: cursorX, y: bounds.midY - side / 2, width: width, height: side)
+            drawImage(image, in: iconRect, tint: image.isTemplate ? textColor : nil)
+            cursorX = iconRect.maxX + 5
+        }
+
+        let font = item.menu?.font ?? NSFont.menuFont(ofSize: 0)
+        let style = NSMutableParagraphStyle()
+        style.lineBreakMode = .byTruncatingTail
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: textColor,
+            .paragraphStyle: style,
+        ]
+        let title = item.title as NSString
+        let textSize = title.size(withAttributes: attributes)
+        let thumbnailSlot = thumbnailSize.width > 0 ? thumbnailSize.width + 6 : 0
+        let textWidth = max(0, trailing - cursorX - thumbnailSlot)
+        let textRect = NSRect(
+            x: cursorX,
+            y: bounds.midY - textSize.height / 2,
+            width: textWidth,
+            height: textSize.height
+        )
+        if title.length > 0 {
+            title.draw(in: textRect, withAttributes: attributes)
+        }
+
+        if let thumbnail, thumbnailSize.width > 0 {
+            let usedText = min(textSize.width, textWidth)
+            let thumbX = title.length > 0 ? cursorX + usedText + 6 : cursorX
+            let thumbRect = NSRect(
+                x: thumbX,
+                y: bounds.midY - thumbnailSize.height / 2,
+                width: thumbnailSize.width,
+                height: thumbnailSize.height
+            )
+            thumbnail.draw(in: thumbRect)
+        }
+
+        if item.submenu != nil,
+           let symbol = NSImage(systemSymbolName: "chevron.right", accessibilityDescription: nil) {
+            let configured = symbol.withSymbolConfiguration(.init(pointSize: 9, weight: .semibold)) ?? symbol
+            let side: CGFloat = 10
+            let rect = NSRect(x: bounds.maxX - 10 - side, y: bounds.midY - side / 2, width: side, height: side)
+            drawImage(configured, in: rect, tint: textColor)
+        }
+    }
+
+    private func fittedThumbnailSize(_ image: NSImage?, maxHeight: CGFloat) -> NSSize {
+        guard let image, image.size.width > 0, image.size.height > 0, maxHeight > 0 else { return .zero }
+        let side = min(image.size.height, maxHeight)
+        let width = image.size.width * (side / image.size.height)
+        return NSSize(width: width, height: side)
+    }
+
+    private func drawImage(_ image: NSImage, in rect: NSRect, tint: NSColor?) {
+        guard let tint else {
+            image.draw(in: rect)
+            return
+        }
+        let tinted = NSImage(size: image.size)
+        tinted.lockFocus()
+        image.draw(in: NSRect(origin: .zero, size: image.size))
+        tint.set()
+        NSRect(origin: .zero, size: image.size).fill(using: .sourceAtop)
+        tinted.unlockFocus()
+        tinted.draw(in: rect)
+    }
+}
+
 private final class ClipMenuFilterBarView: NSView {
     let searchField: ClipMenuSearchField
     let imagesButton: NSButton
@@ -1063,7 +1220,8 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
 
         // Reproduce the user-visible bug: first content row is highlighted, then `/`.
         let firstContent = menu.items.first { item in
-            item.view == nil
+            let isCompactRow = item.view is CompactMenuRowView
+            return (item.view == nil || isCompactRow)
                 && item.isEnabled
                 && !item.isSeparatorItem
                 && !item.isHidden
@@ -1275,12 +1433,8 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     private func estimatedMenuHeight(for menu: NSMenu) -> CGFloat {
         let visibleItems = menu.items.filter { !$0.isHidden }
         guard !visibleItems.isEmpty else { return 0 }
-
-        let rowHeight: CGFloat = 22
-        let separatorHeight: CGFloat = 10
-
         return visibleItems.reduce(CGFloat(0)) { total, item in
-            total + (item.isSeparatorItem ? separatorHeight : rowHeight)
+            total + menuItemHeight(item)
         }
     }
 
@@ -1398,6 +1552,8 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        menu.highlightedItem?.view?.needsDisplay = true
+        item?.view?.needsDisplay = true
         actionTarget.clipMenuWillHighlight(menu: menu, item: item)
         handleHighlightedItem(item, in: menu)
         // AppKit owns hover, keyboard selection, and menu scrolling. Posting
@@ -1551,9 +1707,9 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                 clip: item.representedObject as? ClipEntry,
                 snippet: item.representedObject as? Snippet,
                 children: children,
-                // Custom controls (the filter field) are not selectable clip
-                // rows in the simplified preview harness.
-                isEnabled: item.isEnabled && item.view == nil,
+                // The filter field is a custom control, not a selectable row.
+                // Compact title rows are still real menu entries.
+                isEnabled: item.isEnabled && !(item.view is ClipMenuFilterBarView),
                 isSeparator: item.isSeparatorItem,
                 level: level
             )
@@ -1839,7 +1995,12 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     }
 
     private func menuItemHeight(_ item: NSMenuItem) -> CGFloat {
-        item.isSeparatorItem ? 10 : 22
+        if item.isSeparatorItem { return 10 }
+        if let height = item.view?.bounds.height, height > 1 { return height }
+        if let attachment = CompactMenuRowView.attachmentHeight(of: item) {
+            return max(22, attachment + 4)
+        }
+        return 22
     }
 
     private func currentTargetApplication() -> NSRunningApplication? {
@@ -1948,6 +2109,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         quit.target = actionTarget
         quit.image = NSImage(systemSymbolName: "power", accessibilityDescription: nil)
         menu.addItem(quit)
+        applyCompactMenuRows(in: menu)
 
         if kind != .actions {
             actionTarget.filterRootMenu = menu
@@ -1964,6 +2126,15 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         }
 
         return menu
+    }
+
+    private func applyCompactMenuRows(in menu: NSMenu) {
+        for item in menu.items {
+            CompactMenuRowView.install(on: item)
+            if let submenu = item.submenu {
+                applyCompactMenuRows(in: submenu)
+            }
+        }
     }
 
     private func insertFilterMenuItems(into menu: NSMenu) {
@@ -3013,11 +3184,14 @@ private final class HotkeyPopupActionTarget: NSObject {
     }
 
     private func muteHighlight(on item: NSMenuItem?) {
-        guard let item, item.isEnabled, item.view == nil, !item.isSeparatorItem else { return }
+        guard let item, item.isEnabled, !item.isSeparatorItem else { return }
+        let isCompactRow = item.view is CompactMenuRowView
+        guard item.view == nil || isCompactRow else { return }
         // Disabling a folder cancels its submenu and draws the title gray.
         guard item.submenu == nil else { return }
         guard !highlightMutedItems.contains(where: { $0 === item }) else { return }
         item.isEnabled = false
+        item.view?.needsDisplay = true
         highlightMutedItems.append(item)
     }
 
@@ -3036,6 +3210,7 @@ private final class HotkeyPopupActionTarget: NSObject {
         highlightRestoreTimer = nil
         for item in highlightMutedItems {
             item.isEnabled = true
+            item.view?.needsDisplay = true
         }
         highlightMutedItems.removeAll()
     }
