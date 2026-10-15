@@ -664,8 +664,23 @@ private final class CompactMenuRowView: NSView {
 
     override var isOpaque: Bool { false }
 
-    /// Let the menu track the row. Swallowing hits here blocks submenus.
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    /// AppKit does not invoke the action of a menu item that draws itself.
+    /// A click has to perform it. Submenu rows stay with the menu so the folder can open.
+    override func mouseUp(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        guard bounds.contains(point), let item = enclosingMenuItem else { return }
+        _ = Self.activate(item)
+    }
+
+    @discardableResult
+    static func activate(_ item: NSMenuItem) -> Bool {
+        guard item.isEnabled, item.submenu == nil, item.action != nil, let menu = item.menu else { return false }
+        let index = menu.index(of: item)
+        guard index >= 0 else { return false }
+        menu.cancelTracking()
+        menu.performActionForItem(at: index)
+        return true
+    }
 
     override func draw(_ dirtyRect: NSRect) {
         guard let item = enclosingMenuItem else { return }
@@ -3087,6 +3102,11 @@ private final class HotkeyPopupActionTarget: NSObject {
         let shift = flags.contains(.maskShift)
 
         if !isFilterModeActive {
+            // Return does not activate a self-drawn row. Perform it here.
+            // Numbers and letters still go to menu type-ahead ("5" then Return).
+            if keyCode == 36 || keyCode == 76, let item = deepestHighlightedCompactItem() {
+                return CompactMenuRowView.activate(item)
+            }
             // Only `/` enters filter mode. Leave numbers/letters for menu type-ahead.
             guard isUnmodifiedSlash(keyCode: keyCode, shift: shift, cgEvent: cgEvent) else {
                 return false
@@ -3255,6 +3275,16 @@ private final class HotkeyPopupActionTarget: NSObject {
             menu.minimumWidth = locked
             filterImagesButtonHost?.frame.size.width = locked
         }
+    }
+
+    /// The row the user would confirm: the highlighted item inside an open submenu, otherwise the highlighted root row.
+    private func deepestHighlightedCompactItem() -> NSMenuItem? {
+        func walk(_ menu: NSMenu?) -> NSMenuItem? {
+            guard let menu, let item = menu.highlightedItem else { return nil }
+            if let deeper = walk(item.submenu) { return deeper }
+            return item.view is CompactMenuRowView ? item : nil
+        }
+        return walk(filterRootMenu)
     }
 
     private func isUnmodifiedSlash(keyCode: Int64, shift: Bool, cgEvent: CGEvent) -> Bool {
