@@ -15,6 +15,8 @@ Requires **macOS 14 (Sonoma) or later**.
 
 Open the DMG and drag **clip'M** into Applications.
 
+**1.0.2** tightens the menu so a long list of snippet folders still leaves room for clipboard history. Snippets and folders can be dragged into order, and search keeps folders and image clips usable.
+
 ## Features
 
 ### Paste
