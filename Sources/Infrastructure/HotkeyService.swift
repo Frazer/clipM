@@ -877,6 +877,9 @@ private enum HotkeyTypeAheadCapture {
     private static var replayTimer: Timer?
     private static var acceptsReplay = false
     private static var replayWindowNumber = 0
+    private static weak var pendingMenu: NSMenu?
+    private static weak var pendingConfirmItem: NSMenuItem?
+    private static var pendingReplayKeys: [PendingKey] = []
     private static let bufferLimit = 32
     private static let modifierKeyCodes: Set<Int64> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
 
@@ -908,14 +911,16 @@ private enum HotkeyTypeAheadCapture {
     }
 
     /// Call just before `popUp`. The tap stays armed until menu tracking starts.
-    static func scheduleReplay(windowNumber: Int) {
+    static func scheduleReplay(windowNumber: Int, menu: NSMenu) {
         cancelTimeout()
         replayWindowNumber = windowNumber
         acceptsReplay = true
+        pendingMenu = menu
         startTimer?.invalidate()
         let timer = Timer(timeInterval: 0, repeats: false) { _ in
             MainActor.assumeIsolated {
-                HotkeyTypeAheadCapture.replayIntoOpenMenu()
+                guard let menu = HotkeyTypeAheadCapture.pendingMenu else { return }
+                HotkeyTypeAheadCapture.replayIntoOpenMenu(menu)
             }
         }
         startTimer = timer
@@ -924,6 +929,9 @@ private enum HotkeyTypeAheadCapture {
 
     static func noteMenuClosed() {
         acceptsReplay = false
+        pendingMenu = nil
+        pendingConfirmItem = nil
+        pendingReplayKeys = []
         startTimer?.invalidate()
         startTimer = nil
         replayTimer?.invalidate()
@@ -936,7 +944,7 @@ private enum HotkeyTypeAheadCapture {
         postToSystem(keys)
     }
 
-    private static func replayIntoOpenMenu() {
+    private static func replayIntoOpenMenu(_ menu: NSMenu) {
         let keys = disarmTakingBuffer()
         guard acceptsReplay else {
             postToSystem(keys)
@@ -944,7 +952,101 @@ private enum HotkeyTypeAheadCapture {
         }
         guard !keys.isEmpty else { return }
         HotkeyService.log.debug("Replaying \(keys.count, privacy: .public) type-ahead keys into the menu")
-        pump(keys)
+
+        let plan = replayPlan(for: keys)
+        // Return must not be posted into NSMenu. A self-drawn row does not run
+        // its action for that key, so the menu closes and nothing is pasted.
+        // Choose the row from the keys typed before Return, then paste it on
+        // the next tracking turn, once the menu is actually up.
+        if plan.confirm, let item = matchingItem(prefix: plan.prefix, in: menu) {
+            pendingConfirmItem = item
+            pendingReplayKeys = plan.keysWithoutReturn
+            let timer = Timer(timeInterval: 0, repeats: false) { _ in
+                MainActor.assumeIsolated {
+                    guard HotkeyTypeAheadCapture.acceptsReplay,
+                          let item = HotkeyTypeAheadCapture.pendingConfirmItem else { return }
+                    HotkeyTypeAheadCapture.pendingConfirmItem = nil
+                    let fallback = HotkeyTypeAheadCapture.pendingReplayKeys
+                    HotkeyTypeAheadCapture.pendingReplayKeys = []
+                    if !CompactMenuRowView.activate(item) {
+                        HotkeyTypeAheadCapture.pump(fallback)
+                    }
+                }
+            }
+            replayTimer = timer
+            RunLoop.main.add(timer, forMode: .eventTracking)
+            return
+        }
+        guard !plan.keysWithoutReturn.isEmpty else { return }
+        pump(plan.keysWithoutReturn)
+    }
+
+    private struct ReplayPlan {
+        var prefix: String
+        var confirm: Bool
+        var keysWithoutReturn: [PendingKey]
+    }
+
+    private static func replayPlan(for keys: [PendingKey]) -> ReplayPlan {
+        var prefix = ""
+        var confirm = false
+        var replay: [PendingKey] = []
+        for key in keys {
+            if key.keyCode == 36 || key.keyCode == 76 {
+                confirm = true
+                break
+            }
+            replay.append(key)
+            prefix += typeAheadText(for: key)
+        }
+        return ReplayPlan(prefix: prefix, confirm: confirm, keysWithoutReturn: replay)
+    }
+
+    /// A digit jumps to that numbered row (`2` → `2. …`), not to `20` or `2FA`.
+    /// Any other prefix uses the same leading-title match as menu type-ahead.
+    private static func matchingItem(prefix: String, in menu: NSMenu) -> NSMenuItem? {
+        let needle = prefix.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !needle.isEmpty else { return nil }
+        let foldedNeedle = needle.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        let selectable: (NSMenuItem) -> Bool = { item in
+            item.isEnabled && !item.isHidden && !item.isSeparatorItem && !(item.view is ClipMenuFilterBarView)
+        }
+        let foldedTitle: (NSMenuItem) -> String = { item in
+            item.title.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        }
+        if foldedNeedle.allSatisfy(\.isNumber) {
+            if let numbered = menu.items.first(where: { item in
+                guard selectable(item) else { return false }
+                let title = foldedTitle(item)
+                return title == foldedNeedle || title.hasPrefix(foldedNeedle + ".")
+            }) {
+                return numbered
+            }
+        }
+        return menu.items.first { item in
+            guard selectable(item) else { return false }
+            return foldedTitle(item).hasPrefix(foldedNeedle)
+        }
+    }
+
+    private static func typeAheadText(for key: PendingKey) -> String {
+        if !key.characters.isEmpty,
+           key.characters.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) && !CharacterSet.newlines.contains($0) }) {
+            return key.characters
+        }
+        switch key.keyCode {
+        case 18, 83: return "1"
+        case 19, 84: return "2"
+        case 20, 85: return "3"
+        case 21, 86: return "4"
+        case 23, 87: return "5"
+        case 22, 88: return "6"
+        case 26, 89: return "7"
+        case 28, 91: return "8"
+        case 25, 92: return "9"
+        case 29, 82: return "0"
+        default: return ""
+        }
     }
 
     private static func pump(_ keys: [PendingKey]) {
@@ -1490,7 +1592,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         knownMenuFrames = [currentMenuFrame]
         anchorWindow.orderFront(nil)
         beginSlashKeyMonitorForOpenMenu()
-        HotkeyTypeAheadCapture.scheduleReplay(windowNumber: anchorWindow.windowNumber)
+        HotkeyTypeAheadCapture.scheduleReplay(windowNumber: anchorWindow.windowNumber, menu: menu)
 
         #if DEBUG
         let selfTestFilterSlash = ProcessInfo.processInfo.arguments.contains("--self-test-filter-slash")
