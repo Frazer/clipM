@@ -19,15 +19,19 @@ final class SnippetService {
     }
 
     /// Example folders for a brand-new library, so the menu isn’t empty.
-    /// Runs once. A library that already has folders is left alone.
+    /// A library that already has folders is left alone. The marker sits beside
+    /// that library, because preferences can arrive from another copy whose
+    /// database is not this one.
     private func seedStarterSnippetsIfNeeded() {
         guard let context else { return }
-        let defaults = UserDefaults.standard
-        let key = "didSeedStarterSnippets"
-        if defaults.bool(forKey: key) { return }
         let count = (try? context.fetchCount(FetchDescriptor<SnippetFolder>())) ?? 0
-        defer { defaults.set(true, forKey: key) }
-        guard count == 0 else { return }
+        let marker = starterSeedMarkerURL(in: context)
+        if count > 0 {
+            writeStarterSeedMarker(marker)
+            return
+        }
+        if let marker, FileManager.default.fileExists(atPath: marker.path) { return }
+        if marker == nil, UserDefaults.standard.bool(forKey: Self.starterSeedDefaultsKey) { return }
 
         let groups: [(String, [(String, String)])] = [
             ("me", [
@@ -51,14 +55,8 @@ final class SnippetService {
             ("affirmations", [
                 ("I practice feeling great.", "I practice feeling great."),
                 ("Kindness makes me strong.", "Kindness makes me strong."),
-                ("My ideas arrive wearing capes.", "My ideas arrive wearing capes."),
-                ("I am the plot twist the day was hoping for.", "I am the plot twist the day was hoping for."),
-                ("Confidence sees me coming and holds the door.", "Confidence sees me coming and holds the door."),
                 ("I radiate so much goodwill that houseplants stand up straighter.", "I radiate so much goodwill that houseplants stand up straighter."),
                 ("I write the thank-you I have been meaning to send.", "I write the thank-you I have been meaning to send."),
-                ("My kindness has a marching band.", "My kindness has a marching band."),
-                ("I am wildly, inconveniently, magnificently on time for my own life.", "I am wildly, inconveniently, magnificently on time for my own life."),
-                ("I take the next small step before I talk myself out of it.", "I take the next small step before I talk myself out of it."),
             ]),
         ]
 
@@ -72,7 +70,28 @@ final class SnippetService {
                 context.insert(snippet)
             }
         }
-        try? context.save()
+        do {
+            try context.save()
+            writeStarterSeedMarker(marker)
+            UserDefaults.standard.set(true, forKey: Self.starterSeedDefaultsKey)
+        } catch {
+            // Leave the library unmarked so the next launch can try again.
+        }
+    }
+
+    private static let starterSeedDefaultsKey = "didSeedStarterSnippets"
+    private static let starterSeedMarkerName = ".starter-snippets-seeded"
+
+    private func starterSeedMarkerURL(in context: ModelContext) -> URL? {
+        guard let url = context.container.configurations.first(where: { !$0.isStoredInMemoryOnly })?.url else {
+            return nil
+        }
+        return url.deletingLastPathComponent().appendingPathComponent(Self.starterSeedMarkerName)
+    }
+
+    private func writeStarterSeedMarker(_ url: URL?) {
+        guard let url else { return }
+        try? Data().write(to: url, options: .atomic)
     }
 
     func folders() throws -> [SnippetFolder] {
