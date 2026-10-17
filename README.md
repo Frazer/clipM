@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 
 ## Installation
 
-- **Direct download**: [clipM-1.0.4.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.4.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
+- **Direct download**: [clipM-1.0.5.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.5.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 
 Requires **macOS 14 (Sonoma) or later**.
 
@@ -16,7 +16,7 @@ The [Mac App Store](https://apps.apple.com/app/id6818600547) version requires a 
 
 Open the DMG and drag **clip'M** into Applications.
 
-**1.0.4** keeps a number you type right after the shortcut, even while the menu is still opening. Number then Return pastes that clip.
+**1.0.5** copies the clip you choose in the Mac App Store version, so you can paste it with Command-V. The direct download still pastes it for you.
 
 ## Features
 
