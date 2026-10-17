@@ -44,8 +44,10 @@ final class HotkeyService {
     func register() {
         Self.log.info("Registering global shortcuts")
         ensureDefaultShortcutsIfMissing()
-        ClipMenuFilterKeyHook.prepareAtLaunch()
-        HotkeyTypeAheadCapture.prepare()
+        if AppDistribution.usesAccessibility {
+            ClipMenuFilterKeyHook.prepareAtLaunch()
+            HotkeyTypeAheadCapture.prepare()
+        }
 
         // Capture type-ahead on key-down, before the menu exists. Show the menu
         // on key-up so it does not open while the shortcut modifiers are held.
@@ -153,13 +155,17 @@ final class HotkeyService {
     }
 
     private func armTypeAheadCapture() {
+        guard AppDistribution.usesAccessibility else { return }
         HotkeyTypeAheadCapture.arm()
     }
 
     private func presentFromHotkey(name: String, kind: HotkeyMenuKind) {
         // Key-up is a second chance to arm, in case key-down did not run.
         // Re-arming keeps keys already captured while the menu is built.
-        HotkeyTypeAheadCapture.arm()
+        // The App Store build does not use the Accessibility event tap.
+        if AppDistribution.usesAccessibility {
+            HotkeyTypeAheadCapture.arm()
+        }
         Self.log.info("Hotkey triggered: \(name, privacy: .public)")
         #if DEBUG
         fputs("[ClipMenu] hotkey: \(name)\n", stderr)
@@ -1212,6 +1218,7 @@ private enum HotkeyTypeAheadCapture {
         lock.lock()
         let existing = tap
         lock.unlock()
+        guard AppDistribution.usesAccessibility else { return }
         guard existing == nil else { return }
         guard AXIsProcessTrusted() else { return }
 
@@ -1336,6 +1343,7 @@ private enum ClipMenuFilterKeyHook {
         if ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1",
            ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]?.hasPrefix("no-tap-") == true { return }
         #endif
+        guard AppDistribution.usesAccessibility else { return }
         guard eventTap == nil else { return }
         // Creating a session tap while untrusted raises the system Accessibility
         // dialog. That prompt belongs to the in-app paste explanation, not launch.

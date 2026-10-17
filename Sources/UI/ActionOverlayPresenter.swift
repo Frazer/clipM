@@ -225,7 +225,7 @@ final class ActionOverlayPresenter: NSObject {
     private func installInputRouting() {
         let noTap = ProcessInfo.processInfo.environment["CLIPMENU_UI_TEST_MODE"] == "1"
             && ProcessInfo.processInfo.environment["CLIPMENU_ACTION_SMOKE_PHASE"]?.hasPrefix("no-tap-") == true
-        if eventTap == nil, !noTap {
+        if eventTap == nil, !noTap, AppDistribution.usesAccessibility {
             let types: [CGEventType] = [.mouseMoved, .leftMouseDragged, .leftMouseDown, .leftMouseUp, .rightMouseDown, .keyDown]
             let mask = types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
             eventTap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap, eventsOfInterest: mask, callback: { _, type, event, _ in

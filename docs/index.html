@@ -157,6 +157,18 @@
       background: #fff;
     }
 
+    .store-note {
+      margin-top: 0.85rem;
+      max-width: 36rem;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #5c6b80;
+    }
+
+    .store-note a {
+      color: inherit;
+    }
+
     /* —— Hero —— */
     .hero {
       padding-bottom: 3rem;
@@ -458,6 +470,11 @@
       color: #fff;
     }
 
+    .download .store-note {
+      color: rgba(255, 255, 255, 0.72);
+      position: relative;
+    }
+
     .download .btn-ghost:hover {
       background: rgba(255, 255, 255, 0.16);
       border-color: #fff;
@@ -624,7 +641,6 @@
         </p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.4.dmg">Download</a>
-          <a class="btn btn-primary" href="https://apps.apple.com/app/id6818600547">App Store</a>
           <a class="btn btn-ghost" href="https://github.com/Frazer/clipM">GitHub</a>
         </div>
       </div>
@@ -754,8 +770,11 @@
             <a class="btn btn-primary" href="https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.4.dmg">Download DMG</a>
             <a class="btn btn-ghost" href="https://github.com/Frazer/clipM">Source on GitHub</a>
           </div>
-          <div>Or through the Mac App Store if you prefer</div>
-          <a class="btn btn-primary" href="https://apps.apple.com/app/id6818600547">Download from the Mac App Store</a>
+          <p class="store-note">
+            The <a href="https://apps.apple.com/app/id6818600547">Mac App Store</a> version requires a manual ⌘V after you select an item.
+            The direct download uses Accessibility to press ⌘V for you.
+            The App Store does not allow Accessibility features except when they are strictly required for accessibility needs (Guideline 2.4.5).
+          </p>
         </div>
       </div>
       </div>

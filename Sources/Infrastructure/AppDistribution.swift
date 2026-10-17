@@ -17,6 +17,10 @@ enum AppDistribution {
         #endif
     }
 
+    /// The direct download may use Accessibility to send Command-V. The Mac App
+    /// Store build must not request or use that permission (Guideline 2.4.5).
+    static var usesAccessibility: Bool { !isAppStoreBuild }
+
     static var channelDisplayName: String {
         isAppStoreBuild ? "Mac App Store" : "Direct download"
     }

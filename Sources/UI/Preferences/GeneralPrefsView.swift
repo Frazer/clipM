@@ -26,13 +26,21 @@ struct GeneralPrefsView: View {
                 ))
             }
 
-            Section("Automatic Paste") {
-                AutomaticPasteSection()
+            if AppDistribution.usesAccessibility {
+                Section("Automatic Paste") {
+                    AutomaticPasteSection()
+                }
             }
 
             // MARK: Clipboard Behaviour
             Section("Clipboard") {
-                Toggle("Paste automatically after selection", isOn: $s.autoPasteAfterSelection)
+                if AppDistribution.usesAccessibility {
+                    Toggle("Paste automatically after selection", isOn: $s.autoPasteAfterSelection)
+                } else {
+                    Text("Choose a clip by clicking it with your mouse, or with the arrow keys and enter. This copies it to your clipboard, so you can then paste it with command V.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Toggle("Move used clip to top of history", isOn: $s.reorderClipsAfterPasting)
                 LabeledContent("Maximum history size") {
                     TextField("", value: $s.maxHistorySize, format: .number)

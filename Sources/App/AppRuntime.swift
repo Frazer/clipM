@@ -20,7 +20,10 @@ final class AppRuntime {
         let settings = ClipMenuSettings()
         self.settings = settings
         clipsService = MainActor.assumeIsolated {
-            PasteService.authorizePaste = { AutomaticPastePrompt.allowsPaste(settings: settings) }
+            PasteService.authorizePaste = {
+                guard AppDistribution.usesAccessibility else { return false }
+                return AutomaticPastePrompt.allowsPaste(settings: settings)
+            }
             return ClipsService(settings: settings)
         }
     }

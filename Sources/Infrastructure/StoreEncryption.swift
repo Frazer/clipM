@@ -9,12 +9,13 @@ import SwiftData
 /// the history key without making snippets unreadable. There is no plaintext
 /// fallback when a key cannot be used.
 ///
-/// The Mac App Store build is sandboxed, so its keys go in the data-protection
-/// Keychain and stay on this Mac (`WhenUnlockedThisDeviceOnly`). The direct
-/// build is unsandboxed and has no provisioning profile that authorizes that
-/// keychain; a restricted keychain entitlement without that profile makes
-/// macOS kill the process. Direct builds therefore keep keys in the login
-/// Keychain and mark them as not synced.
+/// Both builds keep keys in the login Keychain, marked not synced, and
+/// readable only while this Mac is unlocked. The data-protection Keychain
+/// refuses a sandboxed development build that has no keychain entitlement
+/// (`-34018`). Adding that entitlement without a provisioning profile makes
+/// macOS kill the process, so the App Store build uses the login Keychain too.
+/// Each build’s key is tied to its own store path, so the two copies do not
+/// share history.
 enum StoreEncryption {
     enum Domain: String {
         case history
@@ -48,15 +49,10 @@ enum StoreEncryption {
     private static let service = "org.unitedvisions.ClipM.store"
     private static let needsVacuumName = ".needs-vacuum"
 
-    /// Sandboxed App Store builds can use the data-protection Keychain.
-    /// Unsandboxed direct builds cannot without a provisioning profile.
-    private static var usesDataProtectionKeychain: Bool {
-        #if APP_STORE
-        true
-        #else
-        false
-        #endif
-    }
+    /// The login Keychain works for the sandboxed App Store build and the
+    /// unsandboxed direct build. See the type comment for why the
+    /// data-protection Keychain is not used.
+    private static var usesDataProtectionKeychain: Bool { false }
 
     /// Persistent store. The keychain account is tied to this file’s path.
     static func bindPersistent(storeURL: URL) throws {

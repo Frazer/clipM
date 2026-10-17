@@ -41,6 +41,7 @@ actor PasteService {
     }
 
     func paste(expectedTarget: NSRunningApplication? = nil, expectedChangeCount: Int? = nil) async {
+        if !AppDistribution.usesAccessibility { return }
         if Self.isPasteUITestMode {
             await MainActor.run {
                 let value = NSPasteboard.general.string(forType: .string) ?? ""
@@ -105,7 +106,7 @@ actor PasteService {
 
     nonisolated static func accessibilityStatus() -> AccessibilityStatus {
         AccessibilityStatus(
-            isTrusted: isPasteUITestMode ? true : AXIsProcessTrusted(),
+            isTrusted: isPasteUITestMode ? true : (AppDistribution.usesAccessibility && AXIsProcessTrusted()),
             bundleIdentifier: Bundle.main.bundleIdentifier ?? "<nil>",
             executablePath: Bundle.main.executableURL?.path ?? "<unknown>"
         )
@@ -114,6 +115,7 @@ actor PasteService {
     /// Shows the system Accessibility prompt. Call only after the in-app explanation.
     @discardableResult
     nonisolated static func requestAccessibilityPermissionIfNeeded() -> Bool {
+        if !AppDistribution.usesAccessibility { return false }
         if isPasteUITestMode { return true }
         if AXIsProcessTrusted() { return true }
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary

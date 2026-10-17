@@ -9,9 +9,10 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 ## Installation
 
 - **Direct download**: [clipM-1.0.4.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.4.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
-- **[Mac App Store](https://apps.apple.com/app/id6818600547)**
 
 Requires **macOS 14 (Sonoma) or later**.
+
+The [Mac App Store](https://apps.apple.com/app/id6818600547) version requires a manual ⌘V after you select an item. The direct download uses Accessibility to press ⌘V for you. The App Store does not allow Accessibility features except when they are strictly required for accessibility needs (Guideline 2.4.5).
 
 Open the DMG and drag **clip'M** into Applications.
 
