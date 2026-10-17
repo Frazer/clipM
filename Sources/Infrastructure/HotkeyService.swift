@@ -45,9 +45,14 @@ final class HotkeyService {
         Self.log.info("Registering global shortcuts")
         ensureDefaultShortcutsIfMissing()
         ClipMenuFilterKeyHook.prepareAtLaunch()
+        HotkeyTypeAheadCapture.prepare()
 
-        // Trigger on key-up to avoid interacting with the menu while modifier
-        // keys are still held down.
+        // Capture type-ahead on key-down, before the menu exists. Show the menu
+        // on key-up so it does not open while the shortcut modifiers are held.
+        KeyboardShortcuts.onKeyDown(for: .openClipMenu) { [weak self] in self?.armTypeAheadCapture() }
+        KeyboardShortcuts.onKeyDown(for: .openHistory)  { [weak self] in self?.armTypeAheadCapture() }
+        KeyboardShortcuts.onKeyDown(for: .openSnippets) { [weak self] in self?.armTypeAheadCapture() }
+        KeyboardShortcuts.onKeyDown(for: .openActions)  { [weak self] in self?.armTypeAheadCapture() }
         KeyboardShortcuts.onKeyUp(for: .openClipMenu) { [weak self] in self?.presentFromHotkey(name: "openClipMenu", kind: .main) }
         KeyboardShortcuts.onKeyUp(for: .openHistory)  { [weak self] in self?.presentFromHotkey(name: "openHistory", kind: .history) }
         KeyboardShortcuts.onKeyUp(for: .openSnippets) { [weak self] in self?.presentFromHotkey(name: "openSnippets", kind: .snippets) }
@@ -147,7 +152,14 @@ final class HotkeyService {
         }
     }
 
+    private func armTypeAheadCapture() {
+        HotkeyTypeAheadCapture.arm()
+    }
+
     private func presentFromHotkey(name: String, kind: HotkeyMenuKind) {
+        // Key-up is a second chance to arm, in case key-down did not run.
+        // Re-arming keeps keys already captured while the menu is built.
+        HotkeyTypeAheadCapture.arm()
         Self.log.info("Hotkey triggered: \(name, privacy: .public)")
         #if DEBUG
         fputs("[ClipMenu] hotkey: \(name)\n", stderr)
@@ -840,6 +852,327 @@ private final class ClipMenuFilterBarView: NSView {
     }
 }
 
+/// Holds type-ahead keys from the moment a menu shortcut goes down until the
+/// popup is tracking, then replays them into the menu one at a time.
+///
+/// The menu is built on the main thread after the shortcut, so a fast "2"
+/// otherwise lands in the front app. This tap runs on its own thread and can
+/// swallow those keys while the main thread is still building the menu.
+private enum HotkeyTypeAheadCapture {
+    private struct PendingKey {
+        var keyCode: UInt16
+        var characters: String
+        var flags: CGEventFlags
+    }
+
+    private static let lock = NSLock()
+    private static var armed = false
+    private static var buffered: [PendingKey] = []
+    private static var tap: CFMachPort?
+    private static var runLoopSource: CFRunLoopSource?
+    private static var thread: Thread?
+    private static var tapRunLoop: CFRunLoop?
+    private static var timeoutItem: DispatchWorkItem?
+    private static var startTimer: Timer?
+    private static var replayTimer: Timer?
+    private static var acceptsReplay = false
+    private static var replayWindowNumber = 0
+    private static let bufferLimit = 32
+    private static let modifierKeyCodes: Set<Int64> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+
+    static var isArmed: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return armed
+    }
+
+    static func prepare() {
+        startThreadIfNeeded()
+        installTapIfNeeded()
+    }
+
+    static func arm() {
+        // An open menu already owns the keyboard. Arming again would swallow
+        // the digits the user is typing into that menu.
+        guard !ClipMenuFilterKeyHook.isMenuSessionActive else { return }
+        prepare()
+        lock.lock()
+        let alreadyArmed = armed
+        armed = tap != nil
+        lock.unlock()
+        guard tap != nil else { return }
+        if !alreadyArmed {
+            enableTap(true)
+        }
+        scheduleTimeout()
+    }
+
+    /// Call just before `popUp`. The tap stays armed until menu tracking starts.
+    static func scheduleReplay(windowNumber: Int) {
+        cancelTimeout()
+        replayWindowNumber = windowNumber
+        acceptsReplay = true
+        startTimer?.invalidate()
+        let timer = Timer(timeInterval: 0, repeats: false) { _ in
+            MainActor.assumeIsolated {
+                HotkeyTypeAheadCapture.replayIntoOpenMenu()
+            }
+        }
+        startTimer = timer
+        RunLoop.main.add(timer, forMode: .eventTracking)
+    }
+
+    static func noteMenuClosed() {
+        acceptsReplay = false
+        startTimer?.invalidate()
+        startTimer = nil
+        replayTimer?.invalidate()
+        replayTimer = nil
+        releaseToSystemIfArmed()
+    }
+
+    static func releaseToSystemIfArmed() {
+        let keys = disarmTakingBuffer()
+        postToSystem(keys)
+    }
+
+    private static func replayIntoOpenMenu() {
+        let keys = disarmTakingBuffer()
+        guard acceptsReplay else {
+            postToSystem(keys)
+            return
+        }
+        guard !keys.isEmpty else { return }
+        HotkeyService.log.debug("Replaying \(keys.count, privacy: .public) type-ahead keys into the menu")
+        pump(keys)
+    }
+
+    private static func pump(_ keys: [PendingKey]) {
+        guard acceptsReplay, let first = keys.first else { return }
+        postToMenu(first)
+        let rest = Array(keys.dropFirst())
+        guard acceptsReplay, !rest.isEmpty else { return }
+        let timer = Timer(timeInterval: 0, repeats: false) { _ in
+            MainActor.assumeIsolated {
+                HotkeyTypeAheadCapture.pump(rest)
+            }
+        }
+        replayTimer = timer
+        RunLoop.main.add(timer, forMode: .eventTracking)
+    }
+
+    private static func postToMenu(_ key: PendingKey) {
+        guard let event = NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: modifierFlags(from: key.flags),
+            timestamp: ProcessInfo.processInfo.systemUptime,
+            windowNumber: replayWindowNumber,
+            context: nil,
+            characters: key.characters,
+            charactersIgnoringModifiers: key.characters,
+            isARepeat: false,
+            keyCode: key.keyCode
+        ) else { return }
+        NSApp.postEvent(event, atStart: true)
+    }
+
+    private static func disarmTakingBuffer() -> [PendingKey] {
+        cancelTimeout()
+        lock.lock()
+        let wasArmed = armed
+        armed = false
+        let keys = buffered
+        buffered.removeAll()
+        lock.unlock()
+        if wasArmed {
+            enableTap(false)
+        }
+        return keys
+    }
+
+    private static func scheduleTimeout() {
+        timeoutItem?.cancel()
+        let item = DispatchWorkItem {
+            HotkeyTypeAheadCapture.releaseToSystemIfArmed()
+        }
+        timeoutItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: item)
+    }
+
+    private static func cancelTimeout() {
+        timeoutItem?.cancel()
+        timeoutItem = nil
+    }
+
+    private static func capture(_ event: CGEvent) -> Bool {
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let flags = event.flags
+        let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+        let characters = characters(of: event)
+        lock.lock()
+        defer { lock.unlock() }
+        guard armed else { return false }
+        guard isTypeAheadKey(keyCode: keyCode, flags: flags) else { return false }
+        if !isRepeat, buffered.count < bufferLimit {
+            buffered.append(PendingKey(keyCode: UInt16(keyCode), characters: characters, flags: flags))
+        }
+        return true
+    }
+
+    private static func isTypeAheadKey(keyCode: Int64, flags: CGEventFlags) -> Bool {
+        if flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate) {
+            return false
+        }
+        if modifierKeyCodes.contains(keyCode) { return false }
+        if keyCode <= 93 { return true }
+        switch keyCode {
+        case 115, 116, 117, 119, 121, 123, 124, 125, 126:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func characters(of event: CGEvent) -> String {
+        let maxLength = 8
+        var length = 0
+        var buffer = [UniChar](repeating: 0, count: maxLength)
+        event.keyboardGetUnicodeString(
+            maxStringLength: maxLength,
+            actualStringLength: &length,
+            unicodeString: &buffer
+        )
+        guard length > 0 else { return "" }
+        return String(utf16CodeUnits: buffer, count: min(length, maxLength))
+    }
+
+    private static func modifierFlags(from flags: CGEventFlags) -> NSEvent.ModifierFlags {
+        var result: NSEvent.ModifierFlags = []
+        if flags.contains(.maskShift) { result.insert(.shift) }
+        if flags.contains(.maskControl) { result.insert(.control) }
+        if flags.contains(.maskAlternate) { result.insert(.option) }
+        if flags.contains(.maskCommand) { result.insert(.command) }
+        return result
+    }
+
+    private static func postToSystem(_ keys: [PendingKey]) {
+        guard !keys.isEmpty else { return }
+        let source = CGEventSource(stateID: .hidSystemState)
+        for key in keys {
+            let down = CGEvent(keyboardEventSource: source, virtualKey: key.keyCode, keyDown: true)
+            down?.flags = key.flags
+            if !key.characters.isEmpty {
+                var units = Array(key.characters.utf16)
+                down?.keyboardSetUnicodeString(stringLength: units.count, unicodeString: &units)
+            }
+            down?.post(tap: .cghidEventTap)
+            let up = CGEvent(keyboardEventSource: source, virtualKey: key.keyCode, keyDown: false)
+            up?.flags = key.flags
+            up?.post(tap: .cghidEventTap)
+        }
+    }
+
+    private static func enableTap(_ enabled: Bool) {
+        lock.lock()
+        let port = tap
+        lock.unlock()
+        guard let port else { return }
+        CGEvent.tapEnable(tap: port, enable: enabled)
+    }
+
+    private static func startThreadIfNeeded() {
+        lock.lock()
+        if thread != nil {
+            lock.unlock()
+            return
+        }
+        let started = DispatchSemaphore(value: 0)
+        let newThread = Thread {
+            let loop = CFRunLoopGetCurrent()
+            HotkeyTypeAheadCapture.lock.lock()
+            HotkeyTypeAheadCapture.tapRunLoop = loop
+            HotkeyTypeAheadCapture.lock.unlock()
+            started.signal()
+            while !Thread.current.isCancelled {
+                CFRunLoopRunInMode(.defaultMode, 1.0e10, false)
+            }
+        }
+        newThread.name = "clipM.typeAhead"
+        newThread.qualityOfService = .userInteractive
+        thread = newThread
+        lock.unlock()
+        newThread.start()
+        started.wait()
+    }
+
+    private static func installTapIfNeeded() {
+        lock.lock()
+        let existing = tap
+        lock.unlock()
+        guard existing == nil else { return }
+        guard AXIsProcessTrusted() else { return }
+
+        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        guard let created = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: mask,
+            callback: { _, type, event, _ in
+                if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                    if HotkeyTypeAheadCapture.isArmed, let port = HotkeyTypeAheadCapture.machPort {
+                        CGEvent.tapEnable(tap: port, enable: true)
+                    }
+                    return Unmanaged.passUnretained(event)
+                }
+                guard type == .keyDown, HotkeyTypeAheadCapture.capture(event) else {
+                    return Unmanaged.passUnretained(event)
+                }
+                return nil
+            },
+            userInfo: nil
+        ) else {
+            HotkeyService.log.debug("Type-ahead capture tap unavailable")
+            return
+        }
+
+        CGEvent.tapEnable(tap: created, enable: false)
+        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, created, 0)
+        let ready = DispatchSemaphore(value: 0)
+        performOnTapThread {
+            lock.lock()
+            let loop = tapRunLoop
+            lock.unlock()
+            if let loop {
+                CFRunLoopAddSource(loop, source, .commonModes)
+            }
+            ready.signal()
+        }
+        _ = ready.wait(timeout: .now() + 1)
+
+        lock.lock()
+        tap = created
+        runLoopSource = source
+        lock.unlock()
+    }
+
+    private static var machPort: CFMachPort? {
+        lock.lock()
+        defer { lock.unlock() }
+        return tap
+    }
+
+    private static func performOnTapThread(_ block: @escaping () -> Void) {
+        lock.lock()
+        let loop = tapRunLoop
+        lock.unlock()
+        guard let loop else { return }
+        CFRunLoopPerformBlock(loop, CFRunLoopMode.defaultMode.rawValue, block)
+        CFRunLoopWakeUp(loop)
+    }
+}
+
 /// Intercepts `/` (and filter typing) before NSMenu type-ahead steals keys.
 ///
 /// Primary path: CFRunLoop `beforeSources` observer in `.eventTracking` that
@@ -857,6 +1190,7 @@ private enum ClipMenuFilterKeyHook {
     private static weak var activeTarget: HotkeyPopupActionTarget?
     private(set) static var eventTapInstalled = false
     private(set) static var runLoopMonitorInstalled = false
+    static var isMenuSessionActive: Bool { activeTarget != nil }
 
     static func prepareAtLaunch() {
         installEventTapIfNeeded()
@@ -1119,6 +1453,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
     func show(using runtime: AppRuntime, kind: HotkeyMenuKind) {
         guard let context = runtime.modelContainer?.mainContext else {
             HotkeyService.log.error("Fallback popup requested but modelContext is nil")
+            HotkeyTypeAheadCapture.releaseToSystemIfArmed()
             return
         }
 
@@ -1138,6 +1473,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
                 source: .hotkey
             )
             HotkeyService.log.notice("Presented UI-test popup window")
+            HotkeyTypeAheadCapture.releaseToSystemIfArmed()
             return
         }
 
@@ -1154,6 +1490,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
         knownMenuFrames = [currentMenuFrame]
         anchorWindow.orderFront(nil)
         beginSlashKeyMonitorForOpenMenu()
+        HotkeyTypeAheadCapture.scheduleReplay(windowNumber: anchorWindow.windowNumber)
 
         #if DEBUG
         let selfTestFilterSlash = ProcessInfo.processInfo.arguments.contains("--self-test-filter-slash")
@@ -1175,6 +1512,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
 
         stopHighlightPolling()
         anchorWindow.orderOut(nil)
+        HotkeyTypeAheadCapture.noteMenuClosed()
         HotkeyService.log.notice("Presented fallback NSMenu popup")
     }
 
@@ -1534,6 +1872,7 @@ private final class HotkeyPopupMenuPresenter: NSObject, NSMenuDelegate {
             return
         }
 
+        HotkeyTypeAheadCapture.noteMenuClosed()
         stopHighlightPolling()
         previewRequestID += 1
         previewedItemID = nil
