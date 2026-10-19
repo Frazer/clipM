@@ -316,3 +316,36 @@ Direct-download build with Sparkle updates. Open the DMG and drag clip'M to Appl
   fi
   echo "Published: https://github.com/${REPO}/releases/tag/${TAG}"
 fi
+
+update_homebrew_cask() {
+  local owner tap_dir sha
+  owner="${REPO%%/*}"
+  sha="$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')"
+  tap_dir="$(mktemp -d)"
+  echo "==> Updating Homebrew cask ${owner}/clipm ${MARKETING_VERSION}…"
+  gh repo clone "${owner}/homebrew-clipm" "$tap_dir" -- --depth 1
+  python3 - "$tap_dir/Casks/clipm.rb" "$MARKETING_VERSION" "$sha" <<'PY'
+import re, sys
+from pathlib import Path
+path, version, sha = sys.argv[1:]
+file = Path(path)
+file.write_text(re.sub(
+    r'version "[^"]+"',
+    f'version "{version}"',
+    re.sub(r'sha256 "[^"]+"', f'sha256 "{sha}"', file.read_text(), count=1),
+    count=1,
+))
+PY
+  if git -C "$tap_dir" diff --quiet; then
+    echo "Homebrew cask already matches ${MARKETING_VERSION}."
+    return
+  fi
+  git -C "$tap_dir" add Casks/clipm.rb
+  git -C "$tap_dir" commit -m "clipm ${MARKETING_VERSION}"
+  git -C "$tap_dir" push origin HEAD
+  echo "Homebrew cask updated: https://github.com/${owner}/homebrew-clipm"
+}
+
+if [[ "$PUBLISH" -eq 1 ]]; then
+  update_homebrew_cask
+fi

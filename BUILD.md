@@ -96,7 +96,7 @@ chmod +x scripts/release-dmg.sh
 ./scripts/release-dmg.sh --publish
 ```
 
-This builds the `ClipMenu` scheme (Release), notarizes, creates `release/clipM-<version>.dmg`, generates Sparkle `appcast.xml`, and uploads both to a GitHub Release. The app displays as **clip'M**.
+This builds the `ClipMenu` scheme (Release), notarizes, creates `release/clipM-<version>.dmg`, generates Sparkle `appcast.xml`, and uploads both to a GitHub Release. The app displays as **clip'M**. Publishing also updates the [Homebrew cask](https://github.com/Frazer/homebrew-clipm) so `brew install --cask frazer/clipm/clipm` stays on that version.
 
 Local packaging without notarization (will not pass Gatekeeper for other Macs):
 

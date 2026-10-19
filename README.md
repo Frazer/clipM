@@ -8,6 +8,7 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 
 ## Installation
 
+- **Homebrew** (Apple silicon): `brew install --cask frazer/clipm/clipm`
 - **Direct download**: [clipM-1.0.5.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.5.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 
 Requires **macOS 14 (Sonoma) or later**.
