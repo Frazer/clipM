@@ -896,7 +896,9 @@ private enum HotkeyTypeAheadCapture {
     }
 
     static func prepare() {
-        startThreadIfNeeded()
+        // The tap thread must not start until its run-loop source exists.
+        // CFRunLoopRunInMode returns immediately for an empty mode, and the
+        // thread's loop would then peg a core for the life of the process.
         installTapIfNeeded()
     }
 
@@ -1189,37 +1191,13 @@ private enum HotkeyTypeAheadCapture {
         CGEvent.tapEnable(tap: port, enable: enabled)
     }
 
-    private static func startThreadIfNeeded() {
-        lock.lock()
-        if thread != nil {
-            lock.unlock()
-            return
-        }
-        let started = DispatchSemaphore(value: 0)
-        let newThread = Thread {
-            let loop = CFRunLoopGetCurrent()
-            HotkeyTypeAheadCapture.lock.lock()
-            HotkeyTypeAheadCapture.tapRunLoop = loop
-            HotkeyTypeAheadCapture.lock.unlock()
-            started.signal()
-            while !Thread.current.isCancelled {
-                CFRunLoopRunInMode(.defaultMode, 1.0e10, false)
-            }
-        }
-        newThread.name = "clipM.typeAhead"
-        newThread.qualityOfService = .userInteractive
-        thread = newThread
-        lock.unlock()
-        newThread.start()
-        started.wait()
-    }
-
     private static func installTapIfNeeded() {
         lock.lock()
         let existing = tap
+        let threadExists = thread != nil
         lock.unlock()
         guard AppDistribution.usesAccessibility else { return }
-        guard existing == nil else { return }
+        guard existing == nil, !threadExists else { return }
         guard AXIsProcessTrusted() else { return }
 
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
@@ -1247,18 +1225,14 @@ private enum HotkeyTypeAheadCapture {
         }
 
         CGEvent.tapEnable(tap: created, enable: false)
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, created, 0)
-        let ready = DispatchSemaphore(value: 0)
-        performOnTapThread {
-            lock.lock()
-            let loop = tapRunLoop
-            lock.unlock()
-            if let loop {
-                CFRunLoopAddSource(loop, source, .commonModes)
-            }
-            ready.signal()
+        guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, created, 0) else {
+            HotkeyService.log.debug("Type-ahead capture run loop source unavailable")
+            return
         }
-        _ = ready.wait(timeout: .now() + 1)
+        guard startThreadIfNeeded(source: source) else {
+            HotkeyService.log.debug("Type-ahead capture thread did not attach its run loop")
+            return
+        }
 
         lock.lock()
         tap = created
@@ -1266,19 +1240,45 @@ private enum HotkeyTypeAheadCapture {
         lock.unlock()
     }
 
+    /// Starts the tap thread and returns once `source` is attached to its run loop.
+    /// A second call does nothing: the thread is process-lifetime.
+    private static func startThreadIfNeeded(source: CFRunLoopSource) -> Bool {
+        lock.lock()
+        if thread != nil {
+            lock.unlock()
+            return false
+        }
+        let started = DispatchSemaphore(value: 0)
+        let newThread = Thread {
+            let loop = CFRunLoopGetCurrent()
+            // This thread only runs `.defaultMode`. The source has to be in
+            // that mode before CFRunLoopRunInMode, or the mode is empty.
+            CFRunLoopAddSource(loop, source, .defaultMode)
+            HotkeyTypeAheadCapture.lock.lock()
+            HotkeyTypeAheadCapture.tapRunLoop = loop
+            HotkeyTypeAheadCapture.lock.unlock()
+            started.signal()
+            while !Thread.current.isCancelled {
+                let result = CFRunLoopRunInMode(.defaultMode, 1.0e10, false)
+                // `.finished` means this mode has no sources or timers. Calling
+                // it again returns at once, so sleep instead of spinning.
+                if result == .finished {
+                    Thread.sleep(forTimeInterval: 1)
+                }
+            }
+        }
+        newThread.name = "clipM.typeAhead"
+        newThread.qualityOfService = .userInteractive
+        thread = newThread
+        lock.unlock()
+        newThread.start()
+        return started.wait(timeout: .now() + 2) == .success
+    }
+
     private static var machPort: CFMachPort? {
         lock.lock()
         defer { lock.unlock() }
         return tap
-    }
-
-    private static func performOnTapThread(_ block: @escaping () -> Void) {
-        lock.lock()
-        let loop = tapRunLoop
-        lock.unlock()
-        guard let loop else { return }
-        CFRunLoopPerformBlock(loop, CFRunLoopMode.defaultMode.rawValue, block)
-        CFRunLoopWakeUp(loop)
     }
 }
 
