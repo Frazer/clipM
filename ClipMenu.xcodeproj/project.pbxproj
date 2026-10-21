@@ -196,6 +196,7 @@
 		30E03F362BFE6F8406DB1DEB /* ScriptEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEngine.swift; sourceTree = "<group>"; };
 		30F9D13D4936E1E652C416E4 /* enhancements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = enhancements.md; sourceTree = "<group>"; };
 		35203B72597FAD055800E93E /* AppStoreUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreUpdateChecker.swift; sourceTree = "<group>"; };
+		37336145C7FD3080EED42BD8 /* test_idle_cpu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_idle_cpu.swift; sourceTree = "<group>"; };
 		3E9CBA111ACE835F326FE6AE /* showdown.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = showdown.js; sourceTree = "<group>"; };
 		419D60462A50E9A91E55BF47 /* [ ].js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "[ ].js"; sourceTree = "<group>"; };
 		42616BA48C29D291F57406F7 /* run_script_security_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_script_security_smoke.sh; sourceTree = "<group>"; };
@@ -209,6 +210,7 @@
 		520A1C33A4ED0E4BEEDD86E3 /* test_filter_slash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_filter_slash.swift; sourceTree = "<group>"; };
 		5669B9BE900EF523AAFE399F /* html.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = html.js; sourceTree = "<group>"; };
 		56CED544AE6F1EF258ED10D4 /* Collapse Spaces.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Collapse Spaces.js"; sourceTree = "<group>"; };
+		5EF31D5848CB222054303F25 /* run_idle_cpu_smoke.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_idle_cpu_smoke.sh; sourceTree = "<group>"; };
 		60A0E2A4B1C92D3E67A301A3 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdateService.swift; sourceTree = "<group>"; };
 		620B8F52759F74FEBF46E0F1 /* ScriptableClip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptableClip.swift; sourceTree = "<group>"; };
 		630C393A150A0A2DD37B2D11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -617,6 +619,7 @@
 				B568AF6FB9258E40D337D6ED /* run_action_overlay_smoke.sh */,
 				F463F26A92EF04F7985764EF /* run_clipboard_security_smoke.sh */,
 				C4FF6003B6A03BD09B4D4CA8 /* run_core_services_smoke.sh */,
+				5EF31D5848CB222054303F25 /* run_idle_cpu_smoke.sh */,
 				DC8DDD48BF33B68B77682962 /* run_preview_ax_smoke.sh */,
 				42616BA48C29D291F57406F7 /* run_script_security_smoke.sh */,
 				FE93C0B8AD59FE466773D1A7 /* run_storage_security_smoke.sh */,
@@ -624,6 +627,7 @@
 				0FBBF111E4F000E0BDD2AA40 /* test_clipboard_security.swift */,
 				FF1FF4635FC447B0F449DB11 /* test_core_services.swift */,
 				520A1C33A4ED0E4BEEDD86E3 /* test_filter_slash.swift */,
+				37336145C7FD3080EED42BD8 /* test_idle_cpu.swift */,
 				6D517EEF41F574940FADD6EB /* test_real_preview.swift */,
 				68E108C0578568776F9A29D7 /* test_script_security.swift */,
 				F49AAC8504FF10F5999451CB /* test_storage_security.swift */,
@@ -1020,7 +1024,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1035,7 +1039,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				SDKROOT = macosx;
@@ -1109,7 +1113,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1127,7 +1131,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
@@ -1146,7 +1150,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1161,7 +1165,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipMenuTest;
 				PRODUCT_NAME = ClipMenuTest;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1201,7 +1205,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1220,7 +1224,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
@@ -1321,7 +1325,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1339,7 +1343,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				SDKROOT = macosx;
@@ -1358,7 +1362,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 97988GNC59;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1377,7 +1381,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = org.unitedvisions.ClipM;
 				PRODUCT_NAME = clipM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
