@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/a3fcba1e-ff3d-429c-b1cf-18425b03aacb
 ## Installation
 
 - **Homebrew** (Apple silicon): `brew install --cask frazer/clipm/clipm`
-- **Direct download**: [clipM-1.0.6.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.6.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
+- **Direct download**: [clipM-1.0.7.dmg](https://github.com/Frazer/clipM/releases/latest/download/clipM-1.0.7.dmg) from [GitHub](https://github.com/Frazer/clipM/releases/latest)
 
 Requires **macOS 14 (Sonoma) or later**.
 
@@ -17,7 +17,7 @@ The [Mac App Store](https://apps.apple.com/app/id6818600547) version requires a 
 
 Open the DMG and drag **clip'M** into Applications.
 
-**1.0.6** stays quiet in the menu bar instead of using a processor core while you are not using it.
+**1.0.7** keeps Edit Snippets clickable after you start a search.
 
 ## Features
 
