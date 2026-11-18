@@ -3431,6 +3431,11 @@ private final class HotkeyPopupActionTarget: NSObject {
     /// When true, only clipboard rows with image data remain visible.
     private(set) var isImagesOnlyFilter = false
     private var isSuppressingContentHighlight = false
+    /// History row that was highlighted when filtering started. Only that row
+    /// stays unhighlighted, so `/` does not look like it selected the clip
+    /// under the pointer. Cleared once the pointer moves to a different row.
+    private weak var filterEntryHighlightItem: NSMenuItem?
+    private var filterEntryHighlightReleased = false
     /// Rows briefly disabled so AppKit drops the tracking highlight. Restored
     /// on the menu-tracking run loop. A main-queue async does not run while
     /// the menu is open, which left the row drawn gray.
@@ -3594,6 +3599,8 @@ private final class HotkeyPopupActionTarget: NSObject {
 
     private func enterFilterMode() {
         isFilterModeActive = true
+        filterEntryHighlightReleased = false
+        filterEntryHighlightItem = highlightedContentItem(in: filterRootMenu)
         // IMPORTANT: never setHighlightedItem(filterRow). AppKit cannot highlight a
         // view-backed row and jumps to the first real menu item — the bug users saw.
         clearMenuHighlight()
@@ -3605,6 +3612,8 @@ private final class HotkeyPopupActionTarget: NSObject {
     private func exitFilterMode(clearQuery: Bool) {
         restoreHighlightMutedItems()
         isFilterModeActive = false
+        filterEntryHighlightItem = nil
+        filterEntryHighlightReleased = false
         if clearQuery, let field = filterSearchField {
             field.stringValue = ""
             setImagesOnlyFilter(false)
@@ -3636,6 +3645,23 @@ private final class HotkeyPopupActionTarget: NSObject {
         item.submenu != nil || menu.supermenu != nil
     }
 
+    /// History/snippet rows only. Command rows are never muted.
+    private func shouldSuppressHighlightWhileFiltering(_ item: NSMenuItem, in menu: NSMenu) -> Bool {
+        if keepsHighlightWhileFiltering(item, in: menu) { return false }
+        if isMenuCommandRow(item) { return false }
+        if filterEntryHighlightReleased { return false }
+        let isContentRow = item.clipMenuFilterHaystack != nil
+            || item.representedObject is ClipEntry
+            || item.representedObject is Snippet
+        guard isContentRow else { return false }
+        // A known row from filter entry: ignore only that one. With no known
+        // row, keep clearing content highlights so a slash cannot look selected.
+        if let stuck = filterEntryHighlightItem {
+            return item === stuck
+        }
+        return true
+    }
+
     /// Drops the blue menu highlight without a private `highlightItem:` call.
     /// Disabling the tracked row clears it. Enabling the row again does not
     /// bring the highlight back. A row AppKit is about to highlight has to stay
@@ -3658,10 +3684,38 @@ private final class HotkeyPopupActionTarget: NSObject {
         guard item.view == nil || isCompactRow else { return }
         // Disabling a folder cancels its submenu and draws the title gray.
         guard item.submenu == nil else { return }
+        // Edit Snippets, Preferences, Quit, and Clear History. Disabling them
+        // while the pointer sits on the row makes AppKit highlight, drop, and
+        // highlight again — the title flashes and the click is lost.
+        guard !isMenuCommandRow(item) else { return }
         guard !highlightMutedItems.contains(where: { $0 === item }) else { return }
         item.isEnabled = false
         item.view?.needsDisplay = true
         highlightMutedItems.append(item)
+    }
+
+    /// Commands along the bottom of the menu. They are not search results.
+    private func isMenuCommandRow(_ item: NSMenuItem) -> Bool {
+        guard item.action != nil, item.submenu == nil else { return false }
+        if item.clipMenuFilterHaystack != nil { return false }
+        if item.representedObject is ClipEntry || item.representedObject is Snippet { return false }
+        return true
+    }
+
+    /// Deepest highlighted history or snippet row, if one is highlighted.
+    private func highlightedContentItem(in menu: NSMenu?) -> NSMenuItem? {
+        func walk(_ menu: NSMenu?) -> NSMenuItem? {
+            guard let menu, let item = menu.highlightedItem else { return nil }
+            if let deeper = walk(item.submenu) { return deeper }
+            guard item.submenu == nil, !isMenuCommandRow(item) else { return nil }
+            if item.clipMenuFilterHaystack != nil
+                || item.representedObject is ClipEntry
+                || item.representedObject is Snippet {
+                return item
+            }
+            return nil
+        }
+        return walk(menu)
     }
 
     private func scheduleHighlightRestore() {
@@ -3765,14 +3819,22 @@ private final class HotkeyPopupActionTarget: NSObject {
             return
         }
         if isFilterModeActive {
-            // Suppress content highlight while filtering — otherwise AppKit immediately
-            // re-highlights the row under the cursor and `/` looks like it "selected" it.
-            // Folders and the rows inside them must stay enabled, or the submenu
-            // never opens and the folder title is drawn gray.
-            if let item, !keepsHighlightWhileFiltering(item, in: menu), !isSuppressingContentHighlight {
+            // Mute can synchronously ask to highlight another row. Ignore that
+            // re-entry so it cannot undo the row we are clearing.
+            if isSuppressingContentHighlight { return }
+            // The row under the pointer when filtering started must not stay
+            // selected, or `/` looks like it chose that clip. Folders stay
+            // highlighted so their submenus open. Command rows (Edit Snippets
+            // and the rest) stay highlighted too — muting them flickers the
+            // title and swallows the click.
+            if let item, shouldSuppressHighlightWhileFiltering(item, in: menu) {
                 isSuppressingContentHighlight = true
                 defer { isSuppressingContentHighlight = false }
                 clearMenuHighlight(cancelling: item, restoreImmediately: false)
+                return
+            }
+            if let item, let stuck = filterEntryHighlightItem, item !== stuck {
+                filterEntryHighlightReleased = true
             }
             return
         }
@@ -3782,6 +3844,8 @@ private final class HotkeyPopupActionTarget: NSObject {
         restoreHighlightMutedItems()
         MainActor.assumeIsolated { ActionOverlayPresenter.shared.parentMenuDidClose() }
         isFilterModeActive = false
+        filterEntryHighlightItem = nil
+        filterEntryHighlightReleased = false
         setImagesOnlyFilter(false)
         removeModifierMonitor()
         ClipMenuFilterKeyHook.clearActiveTarget(self)
